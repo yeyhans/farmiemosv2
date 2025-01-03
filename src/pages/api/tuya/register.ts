@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         device_name,
         registered_at: new Date().toISOString(),
       },
-      { onConflict: "device_id" }
+      { onConflict: "user_id" }
     )
     .single();
 

@@ -1,36 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { authenticate } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
-const accessToken = Astro.cookies.get("sb-access-token");
-const refreshToken = Astro.cookies.get("sb-refresh-token");
+const { redirect, user } = await authenticate(Astro);
 
-if (!accessToken || !refreshToken) {
-  return Astro.redirect("/signin");
+if (redirect) {
+  return Astro.redirect(redirect);
 }
-
-let sessionData;
-try {
-  const { data, error } = await supabase.auth.setSession({
-    refresh_token: refreshToken.value,
-    access_token: accessToken.value,
-  });
-  if (error) throw error;
-  sessionData = data;
-} catch (error) {
-  Astro.cookies.delete("sb-access-token", { path: "/" });
-  Astro.cookies.delete("sb-refresh-token", { path: "/" });
-  return Astro.redirect("/signin");
-}
-
-if (!sessionData.user) {
-  Astro.cookies.delete("sb-access-token", { path: "/" });
-  Astro.cookies.delete("sb-refresh-token", { path: "/" });
-  return Astro.redirect("/signin");
-}
-
-// Obtener o crear el perfil
-const user = sessionData.user;
 const { data: profile } = await supabase
   .from("profiles")
   .select("*")

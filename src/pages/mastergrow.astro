@@ -1,0 +1,28 @@
+---
+import Mastergrow from "../components/Mastergrow.astro";
+import Layout from "../layouts/Layout.astro";
+import { authenticate } from "../lib/auth";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const email = user.email;
+---
+<Layout title="dashboard">
+
+  <div class="container mx-auto px-4 py-8 space-y-8">
+
+      <h1 class="text-3xl font-bold text-gray-800">Bienvenido, {email} 👋</h1>
+
+
+    <!-- Sección de estadísticas -->
+    <section>
+        <h2 class="text-xl font-semibold">Calculadora Mastergrow</h2>
+        <p class="text-gray-600">Ingresa tu duda de cultivo y una imagen para obtener una respuesta en tiempo real.</p>
+        <Mastergrow />
+    </section>
+
+  </div>
+</Layout>
