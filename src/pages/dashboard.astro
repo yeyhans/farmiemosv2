@@ -1,4 +1,6 @@
 ---
+import Chat from "../components/Chat.astro";
+import Upload from "../components/Upload.astro";
 import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
 
@@ -44,6 +46,9 @@ const email = session.data.user?.email;
   </form>
 
   <section>
+    <Chat />
 
   </section>
+
+
 </Layout>

@@ -56,82 +56,56 @@ const objetivos_mejora = profile?.objetivos_mejora ?? "";
 const interes_tecnologia = profile?.interes_tecnologia ?? "";
 ---
 
-
----
-
 <Layout title="Perfil">
-<!-- Contenedor principal -->
-<div class="max-w-2xl mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">Completa tu perfil</h1>
-      <!-- Mostramos el email desde la sesión (auth.users) -->
-      <p class="mb-6">Correo electrónico: <strong>{user.email}</strong></p>
+  <div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Completa tu perfil</h1>
+    <p class="mb-6">Correo electrónico: <strong>{user.email}</strong></p>
 
-  <!-- Formulario que envía los datos a /api/profile vía POST -->
-  <form 
-    action="/api/profile" 
-    method="POST" 
-    class="space-y-8 bg-white p-6 rounded-md shadow-md"
-  >
-    <!-- Sección: Datos personales básicos -->
-    <section>
-      <h2 class="text-xl font-semibold mb-4">Datos personales</h2>
+    <!-- Formulario que envía los datos a /api/profile vía POST -->
+    <form id="profile-form" action="/api/profile" method="POST" class="space-y-8 bg-white p-6 rounded-md shadow-md">
+      <!-- Datos personales básicos -->
+      <section>
+        <h2 class="text-xl font-semibold mb-4">Datos personales</h2>
+        <div class="mb-4">
+          <label for="user_name" class="block mb-1 font-medium text-gray-700">Nombre de usuario</label>
+          <input
+            type="text"
+            id="user_name"
+            name="user_name"
+            value={user_name}
+            class="w-full border border-gray-300 rounded-md px-3 py-2"
+          />
+        </div>
 
-      <div class="mb-4">
-        <label 
-          for="user_name" 
-          class="block mb-1 font-medium text-gray-700"
-        >
-          Nombre de usuario
-        </label>
-        <input
-          type="text"
-          id="user_name"
-          name="user_name"
-          value={user_name}
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2"
-        />
-      </div>
-
-      <div class="mb-4">
-        <label 
-          for="experience_level" 
-          class="block mb-1 font-medium text-gray-700"
-        >
-          Nivel de experiencia en jardinería o agricultura
-        </label>
-        <select
-          id="experience_level"
-          name="experience_level"
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-        >
-        <option value="">
-          {experience_level === "" ? "Selecciona una opción" : experience_level}
-        </option>
-          <option value="Principiante">Principiante</option>
-          <option value="Intermedio">Intermedio</option>
-          <option value="Avanzado">Avanzado</option>
-        </select>
-      </div>
-
-      <div class="mb-4">
-        <label 
-          for="comuna" 
-          class="block mb-1 font-medium text-gray-700"
-        >
-          Comuna de residencia
-        </label>
-        <input
-          type="text"
-          id="comuna"
-          name="comuna"
-          value={comuna}
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2"
-        />
-      </div>
-    </section>
+        <div class="mb-4">
+          <label 
+            for="experience_level" 
+            class="block mb-1 font-medium text-gray-700"
+          >
+            Nivel de experiencia
+          </label>
+          <select 
+            id="experience_level" 
+            name="experience_level" 
+            class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+            >
+            <option value="" selected={experience_level === ""}>Selecciona una opción</option>
+            <option value="Principiante" selected={experience_level === "Principiante"}>Principiante</option>
+            <option value="Intermedio" selected={experience_level === "Intermedio"}>Intermedio</option>
+            <option value="Avanzado" selected={experience_level === "Avanzado"}>Avanzado</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="comuna" class="block mb-1 font-medium text-gray-700">Comuna</label>
+          <input
+            type="text"
+            id="comuna"
+            name="comuna"
+            value={comuna}
+            class="w-full border border-gray-300 rounded-md px-3 py-2"
+          />
+        </div>
+      </section>
 
     <!-- Sección: Objetivo u orientación del cultivo -->
     <section>
@@ -147,17 +121,14 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="cultivo_principal"
           name="cultivo_principal"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {cultivo_principal === "" ? "Selecciona una opción" : cultivo_principal}
-          </option>
-          <option value="Cannabis">Cannabis</option>
-          <option value="Hortalizas">Hortalizas</option>
-          <option value="Frutales">Frutales</option>
-          <option value="Flores">Flores</option>
-          <option value="Plantas ornamentales">Plantas ornamentales</option>
+          <option value="" selected={cultivo_principal === ""}>Selecciona una opción</option>
+          <option value="Cannabis" selected={cultivo_principal === "Cannabis"}>Cannabis</option>
+          <option value="Hortalizas" selected={cultivo_principal === "Hortalizas"}>Hortalizas</option>
+          <option value="Frutales" selected={cultivo_principal === "Frutales"}>Frutales</option>
+          <option value="Flores" selected={cultivo_principal === "Flores"}>Flores</option>
+          <option value="Plantas ornamentales" selected={cultivo_principal === "Plantas ornamentales"}>Plantas ornamentales</option>
         </select>
       </div>
 
@@ -171,16 +142,13 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="escala_cultivo"
           name="escala_cultivo"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {escala_cultivo === "" ? "Selecciona una opción" : escala_cultivo}
-          </option>
-          <option value="Doméstico">Doméstico</option>
-          <option value="Producción comercial">Producción comercial</option>
-          <option value="Producción medicinal">Producción medicinal</option>
-          <option value="Jardín urbano">Jardín urbano</option>
+          <option value="" selected={escala_cultivo === ""}>Selecciona una opción</option>
+          <option value="Doméstico" selected={escala_cultivo === "Doméstico"}>Doméstico</option>
+          <option value="Producción comercial" selected={escala_cultivo === "Producción comercial"}>Producción comercial</option>
+          <option value="Producción medicinal" selected={escala_cultivo === "Producción medicianl"}>Producción medicinal</option>
+          <option value="Jardín urbano" selected={escala_cultivo === "Jardín urbano"}>Jardín urbano</option>
         </select>
       </div>
 
@@ -194,17 +162,14 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="motivacion"
           name="motivacion"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {motivacion === "" ? "Selecciona una opción" : motivacion}
-          </option>
-          <option value="Autoconsumo">Autoconsumo</option>
-          <option value="Venta">Venta</option>
-          <option value="Investigación">Investigación</option>
-          <option value="Hobbies">Hobbies</option>
-          <option value="Conservación">Conservación</option>
+          <option value="" selected={motivacion === ""}>Selecciona una opcion</option>
+          <option value="Autoconsumo" selected={motivacion === "Autoconsumo"}>Autoconsumo</option>
+          <option value="Venta" selected={motivacion === "Venta"}>Venta</option>
+          <option value="Investigación" selected={motivacion === "Investigación"}>Investigación</option>
+          <option value="Hobbies" selected={motivacion === "Hobbies"}>Hobbies</option>
+          <option value="Conservación" selected={motivacion === "Conservación"}>Conservación</option>
         </select>
       </div>
     </section>
@@ -225,7 +190,6 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
           id="tamano_espacio"
           name="tamano_espacio"
           value={tamano_espacio}
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2"
         />
       </div>
@@ -240,16 +204,13 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="tipo_suelo"
           name="tipo_suelo"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {tipo_suelo === "" ? "Selecciona una opción" : tipo_suelo}
-          </option>
-          <option value="Light Mix">Light Mix</option>
-          <option value="Fibra de coco">Fibra de coco</option>
-          <option value="Compost">Compost</option>
-          <option value="Sustratos especializados">Sustratos especializados</option>
+          <option value="" selected={tipo_suelo === ""}>Selecciona una opcion</option>
+          <option value="Light Mix" selected={tipo_suelo === "Light Mix"}>Light Mix</option>
+          <option value="Fibra de coco" selected={tipo_suelo === "Fibra de coco"}>Fibra de coco</option>
+          <option value="Compost" selected={tipo_suelo === "Compost"}>Compost</option>
+          <option value="Sustratos especializados" selected={tipo_suelo === "Sustratos especializados"}>Sustratos especializados</option>
         </select>
       </div>
 
@@ -263,16 +224,13 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="tipo_iluminacion"
           name="tipo_iluminacion"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {tipo_iluminacion === "" ? "Selecciona una opción" : tipo_iluminacion}
-          </option>
-          <option value="Solar">Solar</option>
-          <option value="Luz Led">Luz Led</option>
-          <option value="HPS">HPS</option>
-          <option value="LEC">LEC</option>
+          <option value="" selected={tipo_iluminacion === ""}>Selecciona una opcion</option>
+          <option value="Solar" selected={tipo_iluminacion === "Solar"}>Solar</option>
+          <option value="Led" selected={tipo_iluminacion === "Led"}>Luz Led</option>
+          <option value="HPS" selected={tipo_iluminacion === "HPS"}>HPS</option>
+          <option value="LEC" selected={tipo_iluminacion === "LEC"}>LEC</option>
         </select>
       </div>
 
@@ -286,17 +244,14 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="fuente_riego"
           name="fuente_riego"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {fuente_riego === "" ? "Selecciona una opción" : fuente_riego}
-          </option>
-          <option value="Agua de pozo">Agua de pozo</option>
-          <option value="Agua de lluvia">Agua de lluvia</option>
-          <option value="Red pública">Red pública</option>
-          <option value="Riego por goteo">Riego por goteo</option>
-          <option value="Aspersión">Aspersión</option>
+          <option value="" selected={fuente_riego === ""}>Selecciona una opcion</option>
+          <option value="Agua de pozo" selected={fuente_riego === "Agua de pozo"}>Agua de pozo</option>
+          <option value="Agua de lluvia" selected={fuente_riego === "Agua de lluvia"}>Agua de lluvia</option>
+          <option value="Red pública" selected={fuente_riego === "Red pública"}>Red pública</option>
+          <option value="Riego por goteo" selected={fuente_riego === "Riego por goteo"}>Riego por goteo</option>
+          <option value="Aspersión" selected={fuente_riego === "Aspersión"}>Aspersión</option>
         </select>
       </div>
     </section>
@@ -315,15 +270,12 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="fertilizacion"
           name="fertilizacion"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {fertilizacion === "" ? "Selecciona una opción" : fertilizacion}
-          </option>
-          <option value="Abonos orgánicos">Abonos orgánicos</option>
-          <option value="Fertilizantes químicos">Fertilizantes químicos</option>
-          <option value="Combinación">Combinación</option>
+          <option value="" selected={fertilizacion === ""}>Selecciona una opcion</option>
+          <option value="Abonos orgánicos" selected={fertilizacion === "Abonos orgánicos"}>Abonos orgánicos</option>
+          <option value="Fertilizantes químicos" selected={fertilizacion === "Fertilizantes químicos"}>Fertilizantes químicos</option>
+          <option value="Combinación" selected={fertilizacion === "Combinación"}>Combinación</option>
         </select>
       </div>
 
@@ -337,15 +289,12 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="control_plagas"
           name="control_plagas"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {control_plagas === "" ? "Selecciona una opción" : control_plagas}
-          </option>
-          <option value="Métodos ecológicos">Métodos ecológicos</option>
-          <option value="Uso de pesticidas">Uso de pesticidas</option>
-          <option value="Control biológico">Control biológico</option>
+          <option value="" selected={control_plagas === ""}>Selecciona una opcion</option>
+          <option value="Métodos ecológicos" selected={control_plagas === "Métodos ecológicos"}>Métodos ecológicos</option>
+          <option value="Uso de pesticidas" selected={control_plagas === "Uso de pesticidas"}>Uso de pesticidas</option>
+          <option value="Control biológico" selected={control_plagas === "Control biológico"}>Control biológico</option>
         </select>
       </div>
 
@@ -359,15 +308,12 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="frecuencia_riego"
           name="frecuencia_riego"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {frecuencia_riego === "" ? "Selecciona una opción" : frecuencia_riego}
-          </option>
-          <option value="Diaria">Diaria</option>
-          <option value="Semanal">Semanal</option>
-          <option value="Según estación">Según estación</option>
+          <option value="" selected={control_plagas === ""}>Selecciona una opcion</option>
+          <option value="Diaria" selected={control_plagas === "Diaria"}>Diaria</option>
+          <option value="Semanal" selected={control_plagas === "Semanal"}>Semanal</option>
+          <option value="Según estación" selected={control_plagas === "Según estación"}>Según estación</option>
         </select>
       </div>
     </section>
@@ -386,16 +332,13 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="problemas_enfrentados"
           name="problemas_enfrentados"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {problemas_enfrentados === "" ? "Selecciona una opción" : problemas_enfrentados}
-          </option>
-          <option value="Falta de tiempo">Falta de tiempo</option>
-          <option value="Plagas específicas">Plagas específicas</option>
-          <option value="Malezas">Malezas</option>
-          <option value="Variaciones climáticas">Variaciones climáticas</option>
+          <option value="" selected={problemas_enfrentados === ""}>Selecciona una opcion</option>
+          <option value="Falta de tiempo" selected={problemas_enfrentados === "Falta de tiempo"}>Falta de tiempo</option>
+          <option value="Plagas específicas" selected={problemas_enfrentados === "Plagas específicas"}>Plagas específicas</option>
+          <option value="Malezas" selected={problemas_enfrentados === "Melazas"}>Malezas</option>
+          <option value="Variaciones climáticas" selected={problemas_enfrentados === "Variaciones climáticas"}>Variaciones climáticas</option>
         </select>
       </div>
 
@@ -409,16 +352,13 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="objetivos_mejora"
           name="objetivos_mejora"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {objetivos_mejora === "" ? "Selecciona una opción" : objetivos_mejora}
-          </option>
-          <option value="Aumento de la producción">Aumento de la producción</option>
-          <option value="Mejorar la calidad de producción">Mejorar la calidad de producción</option>
-          <option value="Sostenibilidad">Sostenibilidad</option>
-          <option value="Embellecimiento del espacio">Embellecimiento del espacio</option>
+          <option value="" selected={objetivos_mejora === ""}>Selecciona una opcion</option>
+          <option value="Aumento de la producción" selected={objetivos_mejora === "Aumento de la producción"}>Aumento de la producción</option>
+          <option value="Mejorar la calidad de producción" selected={objetivos_mejora === "Mejorar la calidad de producción"}>Mejorar la calidad de producción</option>
+          <option value="Sostenibilidad" selected={objetivos_mejora === "Sostenibilidad"}>Sostenibilidad</option>
+          <option value="Eficacia" selected={objetivos_mejora === "Eficacia"}>Embellecimiento del espacio</option>
         </select>
       </div>
 
@@ -432,27 +372,47 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         <select
           id="interes_tecnologia"
           name="interes_tecnologia"
-          required
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="">
-            {interes_tecnologia === "" ? "Selecciona una opción" : interes_tecnologia}
-          </option>
-          <option value="Monitoreo de cultivos">Monitoreo de cultivos</option>
-          <option value="Sistemas de riego automatizado">Sistemas de riego automatizado</option>
-          <option value="Sensores de humedad">Sensores de humedad</option>
+          <option value="" selected={interes_tecnologia === ""}>Selecciona una opcion</option>
+          <option value="Monitoreo de cultivos" selected={interes_tecnologia === "Monitoreo de cultivos"}>Monitoreo de cultivos</option>
+          <option value="Sistemas de riego automatizado" selected={interes_tecnologia === "Sistemas de riego automatizado"}>Sistemas de riego automatizado</option>
+          <option value="Sensores de humedad" selected={interes_tecnologia === "Sensores de humedad"}>Sensores de humedad</option>
         </select>
       </div>
     </section>
 
-    <!-- Botón para enviar el formulario -->
-    <button
-      type="submit"
-      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md"
-    >
-      Actualizar perfil
-    </button>
-  </form>
-</div>
+      <!-- Botón para enviar -->
+      <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md"
+      >
+        Actualizar perfil
+      </button>
+    </form>
+  </div>
 
-<Layout/>
+  <script>
+    const form = document.getElementById("profile-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); // Previene la recarga de la página
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert("Perfil actualizado correctamente.");
+          location.reload(); // Recarga los datos actualizados
+        } else {
+          alert("Error al actualizar el perfil: " + result.error);
+        }
+      } catch (err) {
+        console.error("Error en la solicitud:", err);
+        alert("Ocurrió un error al actualizar el perfil.");
+      }
+    });
+  </script>
+</Layout>

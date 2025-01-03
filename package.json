@@ -17,6 +17,7 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "astro": "^5.1.1",
+    "openai": "^4.77.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }
