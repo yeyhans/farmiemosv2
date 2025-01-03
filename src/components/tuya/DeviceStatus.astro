@@ -1,0 +1,74 @@
+---
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtenemos el device_id y device_name
+const { data: tuya_devices } = await supabase
+  .from("tuya_devices")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+
+const device_id = tuya_devices?.device_id ?? "";  
+const device_name = tuya_devices?.device_name ?? "";
+
+// Hacemos fetch con el device_id al endpoint /api/tuya/status
+let deviceInfo = null;
+
+if (device_id) {
+  const res = await fetch(`http://localhost:4321/api/tuya/status?deviceId=${device_id}`);
+  if (res.ok) {
+    deviceInfo = await res.json();
+  } else {
+    console.error("No se pudo obtener la información del dispositivo", await res.json());
+  }
+}
+
+// Normalizar temperatura y humedad
+const normalizeTemperature = (value) => value / 10;
+const getValueByCode = (code) => deviceInfo?.deviceStatus.find(x => x.code === code)?.value ?? null;
+
+const temperature = normalizeTemperature(getValueByCode('va_temperature'));
+const humidity = getValueByCode('va_humidity');
+const battery = getValueByCode('battery_percentage');
+
+// Cálculo de Dew Point (Punto de Rocío) usando fórmula de Magnus-Tetens
+const calculateDewPoint = (temp, hum) => {
+  const A = 17.27;
+  const B = 237.7;
+  const alpha = (A * temp) / (B + temp) + Math.log(hum / 100);
+  return (B * alpha) / (A - alpha);
+};
+
+// Cálculo del VPD (Déficit de Presión de Vapor) en kPa
+const calculateVPD = (temp, hum) => {
+  const es = 0.6108 * Math.exp((17.27 * temp) / (237.7 + temp));  // Presión de vapor de saturación
+  const ea = es * (hum / 100);                                    // Presión de vapor actual
+  return es - ea;
+};
+
+const dewPoint = calculateDewPoint(temperature, humidity).toFixed(2);
+const vpd = calculateVPD(temperature, humidity).toFixed(2);
+---
+
+<h1>Estado del Dispositivo</h1>
+<p><strong>Device Name:</strong> {device_name}</p>
+<p><strong>Device ID:</strong> {device_id}</p>
+
+<!-- Renderización de valores con cálculo actualizado -->
+{deviceInfo && deviceInfo.deviceStatus ? (
+    <ul>
+        <li>🌡️ Temperatura: {temperature.toFixed(1)} °C</li>
+        <li>💧 Humedad: {humidity}%</li>
+        <li>🔋 Batería: {battery}%</li>
+        <li>🌡️ Punto de Rocío (Dewpoint): {dewPoint} °C</li>
+        <li>💨 VPD: {vpd} kPa</li>
+    </ul>
+) : (
+    <p>No hay datos disponibles o error al cargar.</p>
+)}

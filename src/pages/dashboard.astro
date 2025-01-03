@@ -1,56 +1,44 @@
 ---
-import Chat from "../components/Chat.astro";
 import Mastergrow from "../components/Mastergrow.astro";
-import Upload from "../components/Upload.astro";
+import DeviceStatus from "../components/tuya/DeviceStatus.astro";
+import TuyaRegister from "../components/tuya/TuyaRegister.astro";
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { authenticate } from "../lib/auth";
 
-const accessToken = Astro.cookies.get("sb-access-token");
-const refreshToken = Astro.cookies.get("sb-refresh-token");
-
-if (!accessToken || !refreshToken) {
-  return Astro.redirect("/signin");
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
 }
 
-let session;
-try {
-  session = await supabase.auth.setSession({
-    refresh_token: refreshToken.value,
-    access_token: accessToken.value,
-  });
-  if (session.error) {
-    Astro.cookies.delete("sb-access-token", {
-      path: "/",
-    });
-    Astro.cookies.delete("sb-refresh-token", {
-      path: "/",
-    });
-    return Astro.redirect("/signin");
-  }
-} catch (error) {
-  Astro.cookies.delete("sb-access-token", {
-    path: "/",
-  });
-  Astro.cookies.delete("sb-refresh-token", {
-    path: "/",
-  });
-  return Astro.redirect("/signin");
-}
-
-const email = session.data.user?.email;
+const email = user.email;
 ---
 <Layout title="dashboard">
-  <h1>Welcome {email}</h1>
-  <p>We are happy to see you here</p>
-  <form action="/api/auth/signout">
-    <button type="submit">Sign out</button>
-  </form>
+
+  <div class="container mx-auto px-4 py-8 space-y-8">
+
+      <h1 class="text-3xl font-bold text-gray-800">Bienvenido, {email} 👋</h1>
 
 
+    <!-- Sección de estadísticas -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-6 border rounded-lg shadow-lg bg-white">
+        <h2 class="text-xl font-semibold">Calculadora de Temperatura</h2>
+        <p class="text-gray-600">Calculadora en tiempo real de temperatura, humedad, VPD</p>
+        <DeviceStatus />
+        <TuyaRegister />
+      </div>
 
-  <section>
-    <Mastergrow/>
-  </section>
+      <div class="p-6 border rounded-lg shadow-lg bg-white">
+        <h2 class="text-xl font-semibold">Calculadora Mastergrow</h2>
+        <p class="text-gray-600">Ingresa tu duda de cultivo y una imagen para obtener una respuesta en tiempo real.</p>
+        <Mastergrow />
+      </div>
 
+      <div class="p-6 border rounded-lg shadow-lg bg-white">
+        <h2 class="text-xl font-semibold">Contenido del Blog</h2>
+        <p class="text-gray-600">Consulta nuestro blog con las últimas noticias sobre cultivo.</p>
+      </div>
+    </section>
 
+  </div>
 </Layout>
