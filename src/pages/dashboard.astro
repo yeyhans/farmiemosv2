@@ -1,5 +1,6 @@
 ---
 import Chat from "../components/Chat.astro";
+import Mastergrow from "../components/Mastergrow.astro";
 import Upload from "../components/Upload.astro";
 import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
@@ -45,9 +46,10 @@ const email = session.data.user?.email;
     <button type="submit">Sign out</button>
   </form>
 
-  <section>
-    <Chat />
 
+
+  <section>
+    <Mastergrow/>
   </section>
 
 

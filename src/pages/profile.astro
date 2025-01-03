@@ -310,10 +310,10 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
           name="frecuencia_riego"
           class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
         >
-          <option value="" selected={control_plagas === ""}>Selecciona una opcion</option>
-          <option value="Diaria" selected={control_plagas === "Diaria"}>Diaria</option>
-          <option value="Semanal" selected={control_plagas === "Semanal"}>Semanal</option>
-          <option value="Según estación" selected={control_plagas === "Según estación"}>Según estación</option>
+          <option value="" selected={frecuencia_riego === ""}>Selecciona una opcion</option>
+          <option value="Diaria" selected={frecuencia_riego === "Diaria"}>Diaria</option>
+          <option value="Semanal" selected={frecuencia_riego === "Semanal"}>Semanal</option>
+          <option value="Según estación" selected={frecuencia_riego === "Según estación"}>Según estación</option>
         </select>
       </div>
     </section>
@@ -392,7 +392,7 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
     </form>
   </div>
 
-  <script>
+  <script is:inline>
     const form = document.getElementById("profile-form");
     form.addEventListener("submit", async (e) => {
       e.preventDefault(); // Previene la recarga de la página

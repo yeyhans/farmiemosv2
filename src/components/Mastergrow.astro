@@ -1,0 +1,87 @@
+---
+---
+
+<h1>MasterGrow</h1>
+
+<form id="mastergrowForm" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;">
+  <label for="prompt">Ingresa tu pregunta:</label>
+  <input
+    type="text"
+    name="prompt"
+    id="prompt"
+    placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?"
+    required
+  />
+
+  <label for="file">Sube una imagen de la planta (opcional):</label>
+  <input
+    type="file"
+    name="file"
+    id="file"
+    accept="image/*"
+  />
+
+  <button type="submit">Enviar</button>
+</form>
+
+
+<section style="margin-top: 1rem;">
+  <h2>System Message</h2>
+  <pre id="systemMessage"></pre>
+
+  <h2>Prompt del usuario</h2>
+  <pre id="userPrompt"></pre>
+
+  <h2>Análisis de la imagen</h2>
+  <pre id="imageAnalysis"></pre>
+
+  <h2>Respuesta de OpenAI</h2>
+  <pre id="aiResponse"></pre>
+</section>
+
+
+<script is:inline>
+  const form = document.getElementById('mastergrowForm');
+  const systemMessageEl = document.getElementById('systemMessage');
+  const userPromptEl = document.getElementById('userPrompt');
+  const imageAnalysisEl = document.getElementById('imageAnalysis');
+  const aiResponseEl = document.getElementById('aiResponse');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+      // 1. Crear FormData con los campos del formulario
+      const formData = new FormData(form);
+
+      // 2. Hacer la petición a /api/mastergrow (método POST)
+      const res = await fetch('/api/mastergrow', {
+        method: 'POST',
+        body: formData,
+        // Notar que al usar FormData, no se define 'Content-Type',
+        // el navegador se encarga de setear el boundary.
+        credentials: 'include', 
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error al llamar /api/mastergrow:', res.status, errorText);
+        aiResponseEl.textContent = `Error: ${res.status} - ${errorText}`;
+        return;
+      }
+
+      // 3. Parsear la respuesta
+      const data = await res.json();
+
+
+      // 4. Mostrar en pantalla
+      systemMessageEl.textContent = data.systemMessage || "(No hay systemMessage)";
+      userPromptEl.textContent = data.userPrompt || "(No hay userPrompt)";
+      imageAnalysisEl.textContent = data.imageAnalysis || "(No hay imageAnalysis)";
+      aiResponseEl.textContent = data.aiResponse || "(No hay aiResponse)";
+    } catch (error) {
+      console.error('Error en fetch:', error);
+      aiResponseEl.textContent = "Error inesperado al llamar la API.";
+    }
+  });
+</script>
