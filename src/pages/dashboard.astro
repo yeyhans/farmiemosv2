@@ -4,6 +4,7 @@ import Calculator from "../components/calculator/Calculator.astro";
 import InfoBlog from "../components/InfoBlog.astro";
 import Layout from "../layouts/Layout.astro";
 import { authenticate } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {
@@ -11,6 +12,28 @@ if (redirect) {
 }
 
 const email = user.email;
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+
+// Verificar si los campos obligatorios están completos
+const isProfileComplete = profile?.user_name && 
+                          profile?.experience_level && 
+                          profile?.comuna && 
+                          profile?.cultivo_principal && 
+                          profile?.tipo_suelo && 
+                          profile?.tipo_iluminacion &&
+                          profile?.fuente_riego && 
+                          profile?.fertilizacion && 
+                          profile?.frecuencia_riego && 
+                          profile?.problemas_enfrentados;
+
+if (!isProfileComplete) {
+  return Astro.redirect("/profile-requiered"); // Redirigir a la página de perfil
+}
 ---
 <Layout title="dashboard">
   <div class="container mx-auto px-4 py-8 space-y-8">

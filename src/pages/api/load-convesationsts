@@ -1,0 +1,37 @@
+// src/pages/api/load-conversations.ts
+import type { APIRoute } from "astro";
+import { supabase } from "../../lib/supabase";
+
+export const GET: APIRoute = async ({ cookies }) => {
+  try {
+    const accessToken = cookies.get("sb-access-token")?.value;
+
+    if (!accessToken) {
+      return new Response(JSON.stringify({ error: "No autorizado" }), { status: 401 });
+    }
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+    
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Error al obtener el usuario" }), { status: 401 });
+    }
+
+    const { data: conversations, error: conversationsError } = await supabase
+      .from("conversaciones")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (conversationsError) {
+      return new Response(JSON.stringify({ error: "Error al cargar conversaciones" }), { status: 500 });
+    }
+
+    return new Response(JSON.stringify(conversations), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Error interno" }), { status: 500 });
+  }
+};

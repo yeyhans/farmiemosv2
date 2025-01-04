@@ -1,44 +1,45 @@
 ---
 ---
 
-<h1>MasterGrow</h1>
+<h1 class="text-2xl font-bold mb-4">MasterGrow</h1>
 
-<form id="mastergrowForm" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;">
-  <label for="prompt">Ingresa tu pregunta:</label>
-  <input
-    type="text"
+<form id="mastergrowForm" class="flex flex-col gap-4 max-w-md">
+  <label for="prompt" class="font-semibold">Ingresa tu pregunta:</label>
+  <textarea
     name="prompt"
     id="prompt"
     placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?"
     required
-  />
+    class="border border-gray-300 rounded p-2"
+    rows="4"
+  ></textarea>
 
-  <label for="file">Sube una imagen de la planta (opcional):</label>
+  <label for="file" class="font-semibold">Sube una imagen de la planta (opcional):</label>
   <input
     type="file"
     name="file"
     id="file"
     accept="image/*"
+    class="border border-gray-300 rounded p-2"
+    capture="camera"  
   />
 
-  <button type="submit">Enviar</button>
+  <button type="submit" class="bg-blue-500 text-white rounded p-2 hover:bg-blue-600">Enviar</button>
 </form>
 
+<section class="mt-4">
+  <h2 class="text-xl font-semibold">System Message</h2>
+  <pre id="systemMessage" class="border border-gray-300 p-2"></pre>
 
-<section style="margin-top: 1rem;">
-  <h2>System Message</h2>
-  <pre id="systemMessage"></pre>
+  <h2 class="text-xl font-semibold">Prompt del usuario</h2>
+  <pre id="userPrompt" class="border border-gray-300 p-2"></pre>
 
-  <h2>Prompt del usuario</h2>
-  <pre id="userPrompt"></pre>
+  <h2 class="text-xl font-semibold">Análisis de la imagen</h2>
+  <pre id="imageAnalysis" class="border border-gray-300 p-2"></pre>
 
-  <h2>Análisis de la imagen</h2>
-  <pre id="imageAnalysis"></pre>
-
-  <h2>Respuesta de OpenAI</h2>
-  <pre id="aiResponse"></pre>
+  <h2 class="text-xl font-semibold">Respuesta de OpenAI</h2>
+  <pre id="aiResponse" class="border border-gray-300 p-2"></pre>
 </section>
-
 
 <script is:inline>
   const form = document.getElementById('mastergrowForm');
@@ -51,15 +52,10 @@
     event.preventDefault();
 
     try {
-      // 1. Crear FormData con los campos del formulario
       const formData = new FormData(form);
-
-      // 2. Hacer la petición a /api/mastergrow (método POST)
       const res = await fetch('/api/mastergrow', {
         method: 'POST',
         body: formData,
-        // Notar que al usar FormData, no se define 'Content-Type',
-        // el navegador se encarga de setear el boundary.
         credentials: 'include', 
       });
 
@@ -70,11 +66,7 @@
         return;
       }
 
-      // 3. Parsear la respuesta
       const data = await res.json();
-
-
-      // 4. Mostrar en pantalla
       systemMessageEl.textContent = data.systemMessage || "(No hay systemMessage)";
       userPromptEl.textContent = data.userPrompt || "(No hay userPrompt)";
       imageAnalysisEl.textContent = data.imageAnalysis || "(No hay imageAnalysis)";
