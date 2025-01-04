@@ -1,6 +1,7 @@
 ---
-import DeviceStatus from "../components/tuya/DeviceStatus.astro";
-import TuyaRegister from "../components/tuya/TuyaRegister.astro";
+
+import Calculator from "../components/calculator/Calculator.astro";
+import InfoBlog from "../components/InfoBlog.astro";
 import Layout from "../layouts/Layout.astro";
 import { authenticate } from "../lib/auth";
 
@@ -12,30 +13,65 @@ if (redirect) {
 const email = user.email;
 ---
 <Layout title="dashboard">
-
   <div class="container mx-auto px-4 py-8 space-y-8">
 
-      <h1 class="text-3xl font-bold text-gray-800">Bienvenido, {email} 👋</h1>
+    <!-- Título Centrado -->
+    <h1 class="text-4xl font-bold text-gray-800 text-center mb-8">
+      Bienvenido, {email} 👋
+    </h1>
 
+    <!-- Grid Principal: Calculadora Grande Izquierda + 3 Cards Derecha -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Lado Izquierdo: Calculadora de Temperatura (componente grande) -->
+      <div class="p-8 border rounded-xl shadow-lg bg-white row-span-3 flex flex-col justify-between">
 
-    <!-- Sección de estadísticas -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="p-6 border rounded-lg shadow-lg bg-white">
-        <h2 class="text-xl font-semibold">Calculadora de Temperatura</h2>
-        <p class="text-gray-600">Calculadora en tiempo real de temperatura, humedad, VPD</p>
-        <DeviceStatus />
-        <TuyaRegister />
-      </div>
-
-      <div class="p-6 border rounded-lg shadow-lg bg-white">
-        <h2 class="text-xl font-semibold">Calculadora Mastergrow</h2>
-        <p class="text-gray-600">Ingresa tu duda de cultivo y una imagen para obtener una respuesta en tiempo real.</p>
+        <Calculator />
 
       </div>
 
-      <div class="p-6 border rounded-lg shadow-lg bg-white">
-        <h2 class="text-xl font-semibold">Contenido del Blog</h2>
-        <p class="text-gray-600">Consulta nuestro blog con las últimas noticias sobre cultivo.</p>
+      <!-- Lado Derecho: Grid con 3 Tarjetas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:grid-cols-2">
+        
+        <!-- Tarjeta 1: Calculadora Mastergrow -->
+        <div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
+          <h2 class="text-2xl font-semibold">📊 Calculadora Mastergrow</h2>
+          <p class="text-gray-600">Ingresa tu duda de cultivo con una imagen y obtén respuestas.</p>
+          <a href="/mastergrow" class="text-white"><button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md mt-4">
+            Ingresar a la Calculadora </a>
+        </div>
+
+<!-- Tarjeta 2: Calculadora Adicional -->
+<div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
+  <h2 class="text-2xl font-semibold">🧪 Vincula tu dispositivo IoT</h2>
+  <p class="text-gray-600">Vincula dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
+
+  <!-- Contenedor Flex para los Botones -->
+  <div class="flex gap-4 mt-4">
+      <!-- Botón 1 -->
+      <a href="/iot" class="text-white">
+          <button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
+              Acceder aquí
+          </button>
+      </a>
+
+      <!-- Botón 2 -->
+      <a href="/iot" class="text-white">
+          <button class="bg-red-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
+              Comprar Dispositivo
+          </button>
+      </a>
+  </div>
+</div>
+
+
+        <!-- Tarjeta 3: Contenido del Blog -->
+        <div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
+          <h2 class="text-2xl font-semibold">📰 Contenido del Blog</h2>
+          <p class="text-gray-600">Consulta nuestro blog con las últimas noticias sobre cultivo.</p>
+          <InfoBlog />
+        </div>
+        
       </div>
     </section>
 
