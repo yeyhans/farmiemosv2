@@ -1,3 +1,4 @@
+// /src/pages/api/auth/signin.ts
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
 import type { Provider } from "@supabase/supabase-js";
@@ -35,6 +36,10 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   });
 
   if (error) {
+    // Verificar si el error es de email no confirmado
+    if (error.message.includes("Email not confirmed")) {
+      return redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+    }
     return new Response(error.message, { status: 500 });
   }
 
