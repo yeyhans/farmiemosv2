@@ -16,28 +16,52 @@ const { data: logs, error } = await supabase
 if (error) {
     console.error("Error al obtener registros:", error.message);
 }
+// Variables de paginación
+const recordsPerPage = 5; // Registros por página
+let currentPage = 1;
+const totalPages = Math.ceil(logs.length / recordsPerPage);
+
+// Función para obtener registros de la página actual
+function getCurrentPageLogs() {
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    const endIndex = startIndex + recordsPerPage;
+    return logs.slice(startIndex, endIndex);
+}
 ---
 
-<div class="bg-white p-8 rounded-lg shadow-lg">
-    <h1 class="text-2xl font-bold text-center text-blue-600">Calculadora VPD y Dewpoint</h1>
+
+    <h1 class="text-2xl font-bold text-center text-green-900">Calculadora VPD y Dewpoint</h1>
+    <p class="text-sm text-center text-gray-600">
+        Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
+        de tu cultivo junto a farmiemos, si quieres saber más detalles de 
+        su funcionamiento  
+        <a href="/calculator" class="text-green-900 font-semibold">
+        Haz click aquí!
+    </a></p>
+
+
+
+
+
+
 
     <!-- Formulario de Entrada -->
     <form id="calculator-form" class="space-y-4">
         <div>
-            <label class="block text-lg font-medium">Temperatura (°C)</label>
+            <label class="block text-base font-medium text-green-900">Temperatura (°C)</label>
             <input type="number" id="tempInput" name="temp"
                    class="w-full p-2 border rounded" oninput="calcularValores()">
         </div>
 
         <div>
-            <label class="block text-lg font-medium">Humedad Relativa (%)</label>
+            <label class="block text-base font-medium text-green-700">Humedad Relativa (%)</label>
             <input type="number" id="humInput" name="humidity"
                    class="w-full p-2 border rounded" oninput="calcularValores()">
         </div>
 
         <!-- Botón para registrar -->
         <button type="button" onclick="registrarValores()"
-                class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                class="w-full bg-green-900 text-white py-2 rounded-lg hover:bg-green-700 transition duration-300">
             Registrar Valores
         </button>
     </form>
@@ -45,55 +69,105 @@ if (error) {
     <!-- Resultados -->
     <div class="grid grid-cols-2 gap-4 mt-4">
         <div class="bg-blue-100 p-4 rounded-lg text-center">
-            <h2 class="text-lg font-semibold">VPD (kPa)</h2>
-            <p class="text-xl font-bold text-blue-700" id="vpdResult">0.00</p>
+            <h2 class="text-sm font-semibold">VPD (kPa)</h2>
+            <p class="text-xs font-bold text-blue-700 " id="vpdResult">0.00</p>
         </div>
 
         <div class="bg-green-100 p-4 rounded-lg text-center">
-            <h2 class="text-lg font-semibold">Dewpoint (°C)</h2>
-            <p class="text-xl font-bold text-green-700" id="dewpointResult">0.00</p>
+            <h2 class="text-sm font-semibold">Dewpoint (°C)</h2>
+            <p class="text-xs font-bold text-green-700" id="dewpointResult">0.00</p>
         </div>
     </div>
 
-    <!-- Tabla de Registros -->
-    <div class="mt-8">
-        <h2 class="text-xl font-semibold text-gray-700 mb-4">Registros Previos</h2>
-        <table class="w-full table-auto border-collapse border border-gray-200">
-            <thead>
-                <tr class="bg-gray-300">
-                    <th class="border p-2">Fecha</th>
-                    <th class="border p-2">Temp (°C)</th>
-                    <th class="border p-2">Humedad (%)</th>
-                    <th class="border p-2">VPD (kPa)</th>
-                    <th class="border p-2">Dewpoint (°C)</th>
-                    <th class="border p-2">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {Array.isArray(logs) && logs.length > 0 ? (
-                    logs.map(log => (
-                        <tr>
-                            <td class="border p-2">{log.recorded_at}</td>
-                            <td class="border p-2">{log.temp}</td>
-                            <td class="border p-2">{log.humidity}</td>
-                            <td class="border p-2">{log.vpd}</td>
-                            <td class="border p-2">{log.dewpoint}</td>
-                            <td class="border p-2">
-                                <button class="text-red-500" onclick={`eliminarRegistro('${log.id}')`}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))
-                ) : (
-                    <tr>
-                        <td colspan="6" class="border p-2 text-center">No hay registros disponibles.</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
+    <div class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
+        {logs.map((log, index) => (
+            <div 
+                class="log-card p-2 border border-gray-300 shadow-md rounded-lg bg-white text-xs leading-tight"
+                style="display: none;" 
+            >
+                <div class="mb-1">
+                    <p class="text-gray-400">{log.recorded_at}</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">🌡️ :</strong>
+                    <p class="text-green-800"><strong>{log.temp}</strong> °C</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">💧 :</strong>
+                    <p class="text-green-800"><strong>{log.humidity}</strong> %</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">💨:</strong>
+                    <p class="text-blue-700"><strong>{log.vpd}</strong> kPa</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">🌡️ :</strong>
+                    <p class="text-green-700"><strong>{log.dewpoint}</strong> °C</p>
+                </div>
+                <div class="mt-1 text-center">
+                    <button 
+                        class="text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs w-full" 
+                        onclick={`eliminarRegistro('${log.id}')`}
+                    >
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        ))}
     </div>
-</div>
+    
+    <!-- Botones de paginación -->
+    <div class="flex justify-center items-center mt-4 space-x-2">
+        {Array.from({ length: totalPages }).map((_, index) => (
+            <button 
+                class="pagination-button px-4 py-2 rounded bg-gray-200"
+                onclick={`cambiarPagina(${index + 1})`}
+            >
+                {index + 1}
+            </button>
+        ))}
+    </div>
+
+    <a href="/iot" class="text-white mt-4">
+        <p class="text-sm text-center text-green-900">¡Vincula aquí tu dispositivo ioT!</p>
+    </a>
+    
+
 
 <script is:inline>
+    let currentPage = 1; // Inicializa la página actual.
+    const recordsPerPage = 5; // Registros por página.
+
+    function cambiarPagina(page) {
+        currentPage = page;
+        renderCurrentPageLogs(); // Actualiza los registros en pantalla.
+    }
+
+    function renderCurrentPageLogs() {
+        const logs = [...document.querySelectorAll('.log-card')];
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = startIndex + recordsPerPage;
+
+        // Oculta todos los registros.
+        logs.forEach((log, index) => {
+            log.style.display = index >= startIndex && index < endIndex ? 'block' : 'none';
+        });
+
+        // Actualiza el estilo activo de los botones de paginación.
+        document.querySelectorAll('.pagination-button').forEach((btn, index) => {
+            btn.classList.toggle('bg-blue-500', index + 1 === currentPage);
+            btn.classList.toggle('text-white', index + 1 === currentPage);
+            btn.classList.toggle('bg-gray-200', index + 1 !== currentPage);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCurrentPageLogs); // Inicializa al cargar.
+</script>
+
+
+<script is:inline>
+
+
     function calcularValores() {
         const temp = parseFloat(document.getElementById('tempInput').value);
         const hum = parseFloat(document.getElementById('humInput').value);
