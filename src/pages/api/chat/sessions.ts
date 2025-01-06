@@ -65,8 +65,9 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
 
       const { data: inserted, error } = await supabase
-        .from("sessions")
-        .insert([{ user_id: user.id, session_name, session_description, system_message, updated_at: new Date().toISOString(),}])
+        .from("chats")
+        .insert([{ user_id: user.id, session_name, session_description, system_message, image_analysis: "",
+          user_prompt: [],  ai_response: [],  updated_at: new Date().toISOString(),}])
         .single();
 
       if (error) {
@@ -93,7 +94,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
       }
 
       const { error } = await supabase
-        .from("sessions")
+        .from("chats")
         .delete()
         .eq("user_id", user.id)
         .eq("id", id);

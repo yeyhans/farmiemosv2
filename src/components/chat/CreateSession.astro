@@ -8,7 +8,7 @@ if (redirect) {
 }
 
 const { data: logs, error } = await supabase
-  .from("sessions")
+  .from("chats")
   .select("*")
   .eq("user_id", user.id)
   .order("created_at", { ascending: false });
