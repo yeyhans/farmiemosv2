@@ -56,6 +56,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
+    // 4. Inicializar conversationHistory desde el frontend
+    const conversationHistory = formData.get("conversationHistory") 
+    ? JSON.parse(formData.get("conversationHistory")?.toString() || '[]')
+    : [];
+    
+
     // 4. (Opcional) Procesar la imagen si existe
     let imageAnalysis = "";
     if (imageFile && imageFile.size > 0) {
@@ -109,34 +115,28 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       Interés tecnología: ${profile.interes_tecnologia}.
 
       Información de la imagen (si se subió): ${imageAnalysis}
-
-      Ahora, el usuario pregunta: "${userPrompt}"
     `;
+          // Agregar el mensaje del usuario al historial
+    conversationHistory.push({ role: 'user', content: userPrompt });
+    conversationHistory.push({ role: 'system', content: systemMessage });
 
     // 6. Llamar a la API de OpenAI con el prompt final
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: systemMessage,
-        },
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
+      messages: conversationHistory,
       temperature: 0.7,
     });
 
     const aiResponse = chatCompletion.choices[0]?.message?.content || "";
+
+    conversationHistory.push({ role: 'assistant', content: aiResponse });
 
     const saveConversation = async (
       userId: string,
       systemMessage: string,
       userPrompt: string,
       imageAnalysis: string,
-      aiResponse: string
+      aiResponse: string,
     ) => {
       const { data, error } = await supabase
         .from("conversations")
@@ -179,6 +179,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         userPrompt,
         imageAnalysis,
         aiResponse,
+        conversationHistory
       }),
       {
         status: 200,

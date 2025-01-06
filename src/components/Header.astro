@@ -3,13 +3,15 @@ import HeaderLink from './HeaderLink.astro';
 import { SITE_TITLE } from '../consts';
 import { authenticate } from '../lib/auth';
 
+
 const { user } = await authenticate(Astro);
 ---
 
 <header>
     <nav>
         <div class="menu-left">
-            <h2><a href="/">{SITE_TITLE}</a></h2>
+            
+            <h2><a href="/"><img src="/logo.png" alt="Farmiemos logo" width="90" height="90"></a></h2>
         </div>
         <div class="menu-right text-black">
             <HeaderLink href="/dashboard">Dashboard</HeaderLink>
