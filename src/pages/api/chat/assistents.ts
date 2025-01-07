@@ -80,9 +80,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const conversationHistory: ChatMessage[] = [];
 
     // Mensaje del sistema
-    const systemMessage = `Eres un asistente especializado en agricultura y cultivos. 
-    Por favor, proporciona respuestas específicas y prácticas basadas en conocimientos agrícolas.
-    ${chatSession?.system_message || ''}`;
+    const systemMessage = `Eres un experto en programacion sobre todo en framework astro, utilizando html y js nativo integrado con tailwind css`;
     
     conversationHistory.push({ role: "system", content: systemMessage });
 
@@ -101,7 +99,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // 7. Llamada a OpenAI
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o",
       messages: conversationHistory,
       temperature: 0.7,
       max_tokens: 1000,

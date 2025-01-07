@@ -36,7 +36,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
     if (method === "GET") {
       // Lógica para obtener registros
       const { data: logs, error } = await supabase
-        .from("profiles")
+        .from("chats")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });

@@ -158,6 +158,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 };
 
 
+
 export const DELETE: APIRoute = async ({ request, cookies }) => {
     try {
       // 1. Verificar tokens de sesión
