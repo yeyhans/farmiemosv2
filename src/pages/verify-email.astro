@@ -5,6 +5,13 @@ import { supabase } from "../lib/supabase";
 
 const { url } = Astro;
 const email = url.searchParams.get("email");
+if (!email) {
+  return (
+    <div class="text-center text-red-500">
+      No se proporcionó un correo electrónico válido para la verificación.
+    </div>
+  );
+}
 
 // Función para reenviar el email de verificación
 if (Astro.request.method === "POST") {

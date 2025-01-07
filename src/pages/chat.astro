@@ -1,0 +1,38 @@
+---
+import CreateSession from "../components/chat/CreateSession.astro";
+import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabase";
+import { authenticate } from "../lib/auth";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Consulta la lista de sesiones
+const { data: sessions, error } = await supabase
+  .from('chats')
+  .select('id, session_name')
+  .eq('user_id', user.id);
+
+if (error) {
+  console.error(error);
+}
+---
+
+<Layout title="Chat">
+  <!-- Lista de sesiones -->
+  <ul id="session-list">
+    {sessions.map((session) => (
+      <li>
+        <button onclick={`window.location.href = '/c/${session.id}'`} class="bg-blue-500 text-white rounded p-3 w-full hover:bg-blue-600">
+          {session.session_name}
+        </button>
+      </li>
+    ))}
+  </ul>
+
+
+  <CreateSession />
+</Layout>
+

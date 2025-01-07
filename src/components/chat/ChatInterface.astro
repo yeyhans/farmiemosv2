@@ -1,0 +1,179 @@
+---
+import { supabase } from '../../lib/supabase';
+
+const { id } = Astro.params;
+
+const { data: session } = await supabase
+  .from("chats")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", session.user_id)
+  .single();
+
+  console.log(profile.user_name); // Verificar si es correcto
+  console.log(session.ai_response); // Verificar si es correcto
+---
+
+<h1 class="text-center text-green-900 font-bold whitespace-nowrap" style="font-size: clamp(1rem, 5vw, 2rem);">
+  {session.session_name} - Conversacion con la IA
+</h1>
+
+<section class="text-sm mt-8 mx-auto px-2 sm:px-6 md:px-8">  
+  <div id="conversationContainer" class="space-y-4 overflow-y-auto h-[600px] p-2 bg-white rounded-lg shadow-md scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"> 
+    {session.user_prompt.map((userPrompt, index) => ( 
+      <div key={index}> 
+        <div class="bg-gray-100 p-2 mt-2 rounded-lg"> 
+          <strong class="text-green-800">{profile.user_name}:</strong> {userPrompt} 
+        </div> 
+        {session.ai_response[index] && ( 
+          <div class="bg-blue-100 p-4 mt-2 rounded-lg"> 
+            <strong>Asistente:</strong> {session.ai_response[index]} 
+          </div> 
+        )} 
+      </div> 
+    ))} 
+  </div> 
+</section>
+
+<!-- Agregar estos estilos en tu head o en un archivo CSS global -->
+<style>
+  /* Estilos personalizados para el scrollbar */
+  #conversationContainer::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #conversationContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  #conversationContainer::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  #conversationContainer::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  /* Para Firefox */
+  #conversationContainer {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+  }
+</style>
+
+<!-- Sección para el formulario de preguntas y subir imágenes -->
+<section class="text-sm mt-8 mx-auto px-4 sm:px-6 md:px-8"> 
+  <form id="mastergrowForm" class="bg-white p-2 rounded-lg shadow-md mx-auto space-y-4">
+    <input type="hidden" name="sessionId" value={id} />
+    <div>
+      <label for="prompt" class="block text-lg font-medium text-green-800">
+        Ingresa tu pregunta:
+      </label>
+      <textarea name="prompt" id="prompt" placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?" required 
+        class="w-full border border-gray-300 rounded p-3 mt-1 focus:ring focus:ring-green-300"></textarea>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 items-center">
+      <div class="flex flex-col">
+        <input type="file" name="file" id="file" accept="image/*" class="w-full border border-gray-300 rounded p-3 mt-1 focus:ring focus:ring-green-300">
+      </div>
+
+      <button type="submit" class="w-full bg-green-900 text-white py-3 rounded-lg hover:bg-green-700 transition duration-300">
+        Enviar
+      </button>
+    </div>
+  </form>
+</section>
+
+<script is:inline>
+  const form = document.getElementById('mastergrowForm');
+  const conversationContainer = document.getElementById('conversationContainer');
+  const profile = { user_name: "Tú" }; 
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+      const formData = new FormData(form);
+      const userPrompt = formData.get("prompt").toString(); 
+
+      // Limpiar el textarea después del envío
+      form.querySelector('#prompt').value = '';
+
+      // Agregar el mensaje del usuario inmediatamente
+      const userMessageHtml = `
+        <div>
+          <div class="bg-gray-100 p-2 mt-2 rounded-lg">
+            <strong class="text-green-800">${profile.user_name}:</strong> ${userPrompt}
+          </div>
+        </div>
+      `;
+      
+      // Agregar el mensaje del usuario al contenedor
+      conversationContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+
+      // Mostrar indicador de carga
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'bg-blue-50 p-4 mt-2 rounded-lg';
+      loadingDiv.innerHTML = '<strong>Asistente:</strong> Escribiendo...';
+      conversationContainer.appendChild(loadingDiv);
+
+      // Hacer scroll al fondo
+      conversationContainer.scrollTop = conversationContainer.scrollHeight;
+
+      const res = await fetch('/api/chat/assistents', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error al llamar /api/chat/assistents:', res.status, errorText);
+        
+        // Reemplazar el indicador de carga con el mensaje de error
+        loadingDiv.className = 'bg-red-100 p-4 mt-2 rounded-lg text-red-600';
+        loadingDiv.innerHTML = `<strong>Error:</strong> ${res.status} - ${errorText}`;
+        return;
+      }
+
+      const data = await res.json();
+      
+      // Verificar que la respuesta contiene los datos necesarios
+      if (data && data.response && data.response.aiResponse) {
+        // Reemplazar el indicador de carga con la respuesta real
+        loadingDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
+        loadingDiv.innerHTML = `<strong>Asistente:</strong> ${data.response.aiResponse}`;
+      } else {
+        throw new Error('Respuesta inválida del servidor');
+      }
+
+      // Hacer scroll al fondo después de recibir la respuesta
+      conversationContainer.scrollTop = conversationContainer.scrollHeight;
+      
+    } catch (error) {
+      console.error('Error en fetch:', error);
+      // Mostrar error en la UI
+      conversationContainer.insertAdjacentHTML('beforeend', `
+        <div class="bg-red-100 p-4 mt-2 rounded-lg text-red-600">
+          <strong>Error:</strong> ${error.message || 'Error inesperado al llamar la API.'}
+        </div>
+      `);
+    }
+  });
+
+  // Función para hacer scroll automático
+  function scrollToBottom() {
+    conversationContainer.scrollTop = conversationContainer.scrollHeight;
+  }
+
+  // Hacer scroll inicial al cargar la página
+  scrollToBottom();
+</script>

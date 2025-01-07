@@ -66,7 +66,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
       const { data: inserted, error } = await supabase
         .from("chats")
-        .insert([{ user_id: user.id, session_name, session_description, system_message, image_analysis: "",
+        .insert([{ user_id: user.id, session_name, session_description, system_message,
           user_prompt: [],  ai_response: [],  updated_at: new Date().toISOString(),}])
         .single();
 

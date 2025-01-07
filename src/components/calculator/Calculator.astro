@@ -47,26 +47,41 @@ function getCurrentPageLogs() {
 
     <!-- Formulario de Entrada -->
     <form id="calculator-form" class="space-y-4">
-        <div>
-            <label class="block text-base font-medium text-green-900">Temperatura (°C)</label>
-            <input type="number" id="tempInput" name="temp"
-                   class="w-full p-2 border rounded" oninput="calcularValores()">
+        <div class="space-y-4">
+            <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+                <!-- Campo de temperatura -->
+                <div class="flex-1">
+                    <label for="tempInput" class="block text-sm font-medium text-gray-700">
+                        Temperatura (°C)
+                    </label>
+                    <input
+                        type="number"
+                        id="tempInput"
+                        name="temp"
+                        class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                        placeholder="Introduce la temperatura"
+                        oninput="calcularValores()"
+                    />
+                </div>
+        
+                <!-- Campo de humedad -->
+                <div class="flex-1">
+                    <label for="humInput" class="block text-sm font-medium text-gray-700">
+                        Humedad Relativa (%)
+                    </label>
+                    <input
+                        type="number"
+                        id="humInput"
+                        name="humidity"
+                        class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                        placeholder="Introduce la humedad relativa"
+                        oninput="calcularValores()"
+                    />
+                </div>
+            </div>
         </div>
 
-        <div>
-            <label class="block text-base font-medium text-green-700">Humedad Relativa (%)</label>
-            <input type="number" id="humInput" name="humidity"
-                   class="w-full p-2 border rounded" oninput="calcularValores()">
-        </div>
-
-        <!-- Botón para registrar -->
-        <button type="button" onclick="registrarValores()"
-                class="w-full bg-green-900 text-white py-2 rounded-lg hover:bg-green-700 transition duration-300">
-            Registrar Valores
-        </button>
-    </form>
-
-    <!-- Resultados -->
+            <!-- Resultados -->
     <div class="grid grid-cols-2 gap-4 mt-4">
         <div class="bg-blue-100 p-4 rounded-lg text-center">
             <h2 class="text-sm font-semibold">VPD (kPa)</h2>
@@ -78,8 +93,48 @@ function getCurrentPageLogs() {
             <p class="text-xs font-bold text-green-700" id="dewpointResult">0.00</p>
         </div>
     </div>
+        
+        
+    <div class="flex gap-2">
+        <!-- Add Session Button -->
+  <!-- Botón para registrar valores -->
+  <button type="button" onclick="registrarValores()"
+    class="flex items-center justify-center gap-1 bg-green-900 hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+    </svg>
+    Registrar Valores
+  </button>
 
-    <div class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
+  <!-- Botón Ver Más -->
+  <button
+    id="view-more"
+    class="flex items-center justify-center gap-1 bg-green-900 hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+    </svg>
+    Ver más
+  </button>
+
+  <!-- Botón para ocultar logs con ícono -->
+  <button 
+    id="toggleVisibilityBtn" 
+    class="ml-auto flex items-center justify-center  text-sm p-2 rounded-full transition-colors"
+    onclick="toggleVisibility()"
+  >
+  Ocultar logs
+  </button>
+
+
+      </div>
+
+    </form>
+
+
+    <div id="logsContainer">
+    <div  class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
         {logs.map((log, index) => (
             <div 
                 class="log-card p-2 border border-gray-300 shadow-md rounded-lg bg-white text-xs leading-tight"
@@ -114,23 +169,70 @@ function getCurrentPageLogs() {
                 </div>
             </div>
         ))}
-    </div>
-    
-    <!-- Botones de paginación -->
-    <div class="flex justify-center items-center mt-4 space-x-2">
-        {Array.from({ length: totalPages }).map((_, index) => (
-            <button 
-                class="pagination-button px-4 py-2 rounded bg-gray-200"
-                onclick={`cambiarPagina(${index + 1})`}
-            >
-                {index + 1}
-            </button>
-        ))}
-    </div>
 
-    <a href="/iot" class="text-white mt-4">
-        <p class="text-sm text-center text-green-900">¡Vincula aquí tu dispositivo ioT!</p>
-    </a>
+        
+    </div>
+        <!-- Botones de paginación -->
+        <div class="flex justify-center items-center mt-4 space-x-2">
+            {Array.from({ length: totalPages }).map((_, index) => (
+                <button 
+                    class="pagination-button px-4 py-2 rounded bg-gray-200"
+                    onclick={`cambiarPagina(${index + 1})`}
+                >
+                    {index + 1}
+                </button>
+            ))}
+        </div>
+    
+
+
+    </div>
+    <script is:inline>
+        // Función para ocultar/mostrar los logs y guardar el estado en cookies
+        function toggleVisibility() {
+            const logsContainer = document.getElementById('logsContainer');
+            const toggleBtn = document.getElementById('toggleVisibilityBtn');
+            
+            if (logsContainer.style.display === 'none') {
+                logsContainer.style.display = 'grid';
+                toggleBtn.textContent = '⬇️';
+                // Guardar estado en cookie
+                document.cookie = "logsVisibility=visible; path=/; max-age=31536000"; // Expira en 1 año
+            } else {
+                logsContainer.style.display = 'none';
+                toggleBtn.textContent = '⬆️';
+                // Guardar estado en cookie
+                document.cookie = "logsVisibility=hidden; path=/; max-age=31536000"; // Expira en 1 año
+            }
+        }
+    
+        // Función para recuperar el valor de una cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+        }
+    
+        // Restaurar estado al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const logsContainer = document.getElementById('logsContainer');
+            const toggleBtn = document.getElementById('toggleVisibilityBtn');
+            const visibility = getCookie('logsVisibility');
+    
+            if (visibility === 'hidden') {
+                logsContainer.style.display = 'none';
+                toggleBtn.textContent = '⬇️';
+            } else {
+                logsContainer.style.display = 'grid';
+                toggleBtn.textContent = '⬆️';
+            }
+        });
+    </script>
+    
+    
+
     
 
 

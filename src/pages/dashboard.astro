@@ -1,10 +1,19 @@
 ---
 
 import Calculator from "../components/calculator/Calculator.astro";
+import SessionComponent from "../components/chat/SessionComponent.astro";
 import InfoBlog from "../components/InfoBlog.astro";
 import Layout from "../layouts/Layout.astro";
 import { authenticate } from "../lib/auth";
 import { supabase } from "../lib/supabase";
+
+const { id } = Astro.params;
+
+const { data: session } = await supabase
+  .from("chats")
+  .select("*")
+  .eq("id", id)
+  .single();
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {
@@ -34,15 +43,11 @@ const isProfileComplete = profile?.user_name &&
 if (!isProfileComplete) {
   return Astro.redirect("/profile-requiered"); // Redirigir a la página de perfil
 }
+
+
 ---
 <Layout title="dashboard">
   <div class="container mx-auto px-4 py-8 space-y-8">
-
-    <!-- Título Centrado -->
-    <h1 class="text-4xl font-bold text-gray-800 text-center mb-8">
-      Bienvenido, {email} 👋
-    </h1>
-
     <!-- Grid Principal: Calculadora Grande Izquierda + 3 Cards Derecha -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       
@@ -51,68 +56,59 @@ if (!isProfileComplete) {
 
         <Calculator />
 
+        <div class="mt-4 p-4 border rounded-lg shadow-md bg-gray-50">
+          <h3 class="text-lg font-medium text-gray-800">📈 Vincula aquí tu dispositivo ioT</h3>
+          <p class="text-sm text-gray-600">Vincula tu dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
+          <a href="/iot" class="text-white mt-4">
+            <p class="text-sm text-center text-green-900">¡Descubre más haciendo click aquí!</p>
+          </a>
+
+        </div>
+
       </div>
+      
 
       <!-- Lado Derecho: Grid con 3 Tarjetas -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:grid-cols-2">
-        
-        <!-- Tarjeta 1: Calculadora Mastergrow -->
+      <!-- Tarjeta 1: Calculadora Mastergrow -->
         <div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
-          <h2 class="text-2xl font-semibold">📊 Calculadora Mastergrow</h2>
-          <p class="text-gray-600">Ingresa tu duda de cultivo con una imagen y obtén respuestas.</p>
-          <a href="/mastergrow" class="text-white"><button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md mt-4">
-            Ingresar a la Calculadora </a>
+          <h2 class="text-2xl font-semibold">🧑‍🌾 {profile.user_name}</h2>
+          <p class="text-gray-600">Tarjeta de cultivo.</p>
+          <p class="text-gray-600">{profile.cultivo_principal}</p>
+          <a href="/profile" class="text-white">
+            <button class="flex items-center justify-center gap-1 bg-green-500 hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors">
+            Modifica tu perfil </a>
         </div>
 
-<!-- Tarjeta 2: Calculadora Adicional -->
-<div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
-  <h2 class="text-2xl font-semibold">🧪 Vincula tu dispositivo IoT</h2>
-  <p class="text-gray-600">Vincula dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
-
-  <!-- Contenedor Flex para los Botones -->
-  <div class="flex gap-4 mt-4">
-      <!-- Botón 1 -->
-      <a href="/iot" class="text-white">
-          <button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
-              Acceder aquí
-          </button>
-      </a>
-
-      <!-- Botón 2 -->
-      <a href="/iot" class="text-white">
-          <button class="bg-red-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
-              Comprar Dispositivo
-          </button>
-      </a>
-  </div>
-</div>
-
-<!-- Tarjeta 2: Calculadora Adicional -->
-<div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
-  <h2 class="text-2xl font-semibold">🧪 Vincula tu dispositivo IoT</h2>
-  <p class="text-gray-600">Vincula dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
-
-  <!-- Contenedor Flex para los Botones -->
-  <div class="flex gap-4 mt-4">
-      <!-- Botón 1 -->
-      <a href="/iot" class="text-white">
-          <button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
-              Acceder aquí
-          </button>
-      </a>
-
-      <!-- Botón 2 -->
-      <a href="/iot" class="text-white">
-          <button class="bg-red-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
-              Comprar Dispositivo
-          </button>
-      </a>
-  </div>
-</div>
-
-
-
+        <!-- Tarjeta 2: Calculadora Adicional -->
+      <div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
+      <h2 class="text-2xl font-semibold">🤖 Mastergrower AI</h2>
+        <SessionComponent />
+      </div>
         
+        <!-- Tarjeta 3: Calculadora Adicional -->
+        <div class="p-6 border rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300 col-span-2">
+        <h2 class="text-2xl font-semibold">🧪 Vincula tu dispositivo IoT</h2>
+        <p class="text-gray-600">Vincula dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
+
+        <!-- Contenedor Flex para los Botones -->
+       <div class="flex gap-4 mt-4">
+      <!-- Botón 1 -->
+      <a href="/iot" class="text-white">
+          <button class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
+              Acceder aquí
+          </button>
+      </a>
+
+      <!-- Botón 2 -->
+      <a href="/iot" class="text-white">
+          <button class="bg-red-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md">
+              Comprar Dispositivo
+          </button>
+      </a>
+  </div>
+</div>
+      
       </div>
     </section>
     <section id="blog">

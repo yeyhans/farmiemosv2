@@ -6,111 +6,159 @@ const openai = new OpenAI({
   apiKey: import.meta.env.OPENAI_API_KEY,
 });
 
-export const POST: APIRoute = async ({ request, cookies, params }) => {
-    try {
-      // 1. Validación de sesión con Supabase
-      const accessToken = cookies.get("sb-access-token")?.value;
-      const refreshToken = cookies.get("sb-refresh-token")?.value;
-  
-      if (!accessToken || !refreshToken) {
-        console.error("Tokens no presentes");
-        return new Response(JSON.stringify({ error: "No autorizado (no hay tokens)" }), { status: 401 });
-      }
-  
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        refresh_token: refreshToken,
-        access_token: accessToken,
-      });
-  
-      if (sessionError || !sessionData?.user) {
-        console.error("Error de sesión o usuario no encontrado");
-        return new Response(JSON.stringify({ error: "Tokens inválidos" }), { status: 401 });
-      }
-  
-      const { data: chatSession, error: chatSessionError } = await supabase
-        .from("chats")
-        .select("*")
-        .eq("user_id", sessionData.user.id)
-        .order("created_at", { ascending: false });
-  
-      if (chatSessionError || !chatSession || chatSession.length === 0) {
-        console.error("Error al obtener la sesión del chat o sesión no encontrada");
-        return new Response(JSON.stringify({ error: "No se pudo encontrar la sesión para el usuario" }), { status: 404 });
-      }
-  
-      let systemMessage = chatSession[0].system_message || '';
-  
-      // 2. Leer datos del cuerpo de la solicitud
-      const formData = await request.formData();
-      const userPrompt = formData.get("prompt")?.toString();
-      const imageFile = formData.get("file") as File | null;
-      const conversationHistory = formData.get("conversation_history")
-        ? JSON.parse(formData.get("conversation_history")?.toString() || "[]")
-        : [];
-  
-      let imageAnalysis = "";
-      if (imageFile && imageFile.size > 0) {
-        console.log("Procesando imagen...");
-        const buffer = await imageFile.arrayBuffer();
-        const base64Image = Buffer.from(buffer).toString("base64");
-  
-        const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            { role: "user", content: "Describe el detalle de la planta que se visualiza en la imagen." },
-            { role: "user", content: `data:${imageFile.type};base64,${base64Image}` },
-          ],
-        });
-  
-        console.log("Respuesta del análisis de imagen:", response);
-        imageAnalysis = response.choices[0]?.message?.content || "No se pudo analizar la imagen.";
-      }
-  
-      conversationHistory.push({ role: "user", content: userPrompt });
-      conversationHistory.push({ role: "system", content: systemMessage });
-      if (imageAnalysis) {
-        conversationHistory.push({ role: "assistant", content: imageAnalysis });
-      }
-  
-      const chatCompletion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: conversationHistory,
-        temperature: 0.7,
-      });
-  
-      const aiResponse = chatCompletion.choices[0]?.message?.content || "";
-      conversationHistory.push({ role: "assistant", content: aiResponse });
-  
-      // 3. Actualización de la sesión existente en lugar de crear una nueva
-      const { data, error } = await supabase.from("chats").upsert([{
-        id: chatSession[0].id, // Asegura que actualice la fila correcta
-        user_id: sessionData.user.id,
-        session_name: "Nombre de sesión",  // Puedes actualizar estos valores si es necesario
-        session_description: "Descripción de sesión",  // Igual
-        system_message: systemMessage,
-        image_analysis: imageAnalysis,
-        user_prompt: [...chatSession[0]?.user_prompt || [], userPrompt], // Agrega el prompt al arreglo existente
-        ai_response: [...chatSession[0]?.ai_response || [], aiResponse], // Agrega la respuesta al arreglo existente
-      }]);
-  
-      if (error) {
-        console.error("Error al guardar en la base de datos:", error);
-        throw new Error("Error al guardar la conversación");
-      }
-  
+interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export const POST: APIRoute = async ({ request, cookies }) => {
+  try {
+    // 1. Obtener datos del formulario primero
+    const formData = await request.formData();
+    const sessionId = formData.get("sessionId")?.toString();
+    const userPrompt = formData.get("prompt")?.toString();
+
+    // 2. Validar datos del formulario
+    if (!sessionId) {
       return new Response(
-        JSON.stringify({
-          userPrompt,
-          imageAnalysis,
-          aiResponse,
-          conversationHistory,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "ID de sesión no proporcionado" }), 
+        { status: 400 }
       );
-    } catch (error: any) {
-      console.error("Error en la API de chat:", error);
-      return new Response(JSON.stringify({ error: "Error interno", details: error.message }), {
-        status: 500,
-      });
     }
+
+    if (!userPrompt) {
+      return new Response(
+        JSON.stringify({ error: "Prompt vacío" }), 
+        { status: 400 }
+      );
+    }
+
+    // 3. Validación de tokens
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
+
+    if (!accessToken || !refreshToken) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }), 
+        { status: 401 }
+      );
+    }
+
+    // 4. Validación de sesión
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      refresh_token: refreshToken,
+      access_token: accessToken,
+    });
+
+    if (sessionError || !sessionData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Sesión inválida" }), 
+        { status: 401 }
+      );
+    }
+
+    // 5. Obtener chat específico por ID
+    const { data: chatSession, error: chatSessionError } = await supabase
+      .from("chats")
+      .select("*")
+      .eq("id", sessionId)
+      .eq("user_id", sessionData.user.id)
+      .single();
+
+    if (chatSessionError) {
+      console.error("Error al obtener chat:", chatSessionError);
+      return new Response(
+        JSON.stringify({ error: "Error al obtener el chat" }), 
+        { status: 500 }
+      );
+    }
+
+    // 6. Preparar el historial de conversación
+    const previousUserPrompts = chatSession?.user_prompt || [];
+    const previousAiResponses = chatSession?.ai_response || [];
+    
+    const conversationHistory: ChatMessage[] = [];
+
+    // Mensaje del sistema
+    const systemMessage = `Eres un asistente especializado en agricultura y cultivos. 
+    Por favor, proporciona respuestas específicas y prácticas basadas en conocimientos agrícolas.
+    ${chatSession?.system_message || ''}`;
+    
+    conversationHistory.push({ role: "system", content: systemMessage });
+
+    // Agregar mensajes previos
+    for (let i = 0; i < previousUserPrompts.length; i++) {
+      if (previousUserPrompts[i]) {
+        conversationHistory.push({ role: "user", content: previousUserPrompts[i] });
+      }
+      if (previousAiResponses[i]) {
+        conversationHistory.push({ role: "assistant", content: previousAiResponses[i] });
+      }
+    }
+
+    // Agregar el nuevo prompt
+    conversationHistory.push({ role: "user", content: userPrompt });
+
+    // 7. Llamada a OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: conversationHistory,
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const aiResponse = completion.choices[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No se pudo generar una respuesta");
+    }
+
+    // 8. Actualizar la base de datos
+    const updatedUserPrompts = [...previousUserPrompts, userPrompt];
+    const updatedAiResponses = [...previousAiResponses, aiResponse];
+
+    const { error: updateError } = await supabase
+      .from("chats")
+      .update({
+        user_prompt: updatedUserPrompts,
+        ai_response: updatedAiResponses,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", sessionId)
+      .eq("user_id", sessionData.user.id);
+
+    if (updateError) {
+      console.error("Error al actualizar chat:", updateError);
+      throw new Error("Error al guardar la conversación");
+    }
+
+    // 9. Enviar respuesta
+    return new Response(
+      JSON.stringify({
+        success: true,
+        response: {
+          userPrompt,
+          aiResponse,
+          history: {
+            userPrompts: updatedUserPrompts,
+            aiResponses: updatedAiResponses
+          }
+        }
+      }),
+      { 
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+
+  } catch (error) {
+    console.error("Error en el procesamiento:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Error del servidor",
+        details: error instanceof Error ? error.message : "Error desconocido"
+      }),
+      { status: 500 }
+    );
+  }
 };
