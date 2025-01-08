@@ -1,7 +1,7 @@
 ---
 import { authenticate } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
-import Interpretator from "./Interpretator.astro";
+
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {
@@ -28,14 +28,6 @@ function getCurrentPageLogs() {
     const endIndex = startIndex + recordsPerPage;
     return logs.slice(startIndex, endIndex);
 }
-
-let datos = {
-  temp: '',
-  humidity: '',
-  vpd: '',
-  dewpoint: '',
-  recorded_at: ''
-};
 ---
 
 
@@ -53,9 +45,6 @@ let datos = {
         
   
       </div>
-
-
-
 
     <!-- Formulario de Entrada -->
     <form id="calculator-form" class="space-y-4">
@@ -106,8 +95,7 @@ let datos = {
             <p class="text-xs font-bold text-green-700" id="dewpointResult">0.00</p>
         </div>
     </div>
-        
-        
+               
     <div class="flex gap-2">
         <!-- Add Session Button -->
   <!-- Botón para registrar valores -->
@@ -131,12 +119,11 @@ let datos = {
       Ver más
     </button>
 
-
-
   <!-- Botón para ocultar logs con ícono -->
   <button 
     id="toggleVisibilityBtn" 
     class="ml-auto flex items-center justify-center  text-sm p-2 rounded-full transition-colors"
+    type="button"
     onclick="toggleVisibility()"
   >
   Ocultar logs
@@ -175,7 +162,7 @@ let datos = {
                 </div>
                 <div class="mt-1 text-center">
                     <button 
-                        class="text-white bg-custom-red hover:bg-red-600 px-2 py-1 rounded text-xs w-full" 
+                        class="text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs w-full" 
                         onclick={`eliminarRegistro('${log.id}')`}
                     >
                         Eliminar
@@ -264,7 +251,7 @@ let datos = {
 
         // Actualiza el estilo activo de los botones de paginación.
         document.querySelectorAll('.pagination-button').forEach((btn, index) => {
-            btn.classList.toggle('bg-blue-500', index + 1 === currentPage);
+            btn.classList.toggle('bg-custom-blue', index + 1 === currentPage);
             btn.classList.toggle('text-white', index + 1 === currentPage);
             btn.classList.toggle('bg-gray-200', index + 1 !== currentPage);
         });
@@ -322,7 +309,7 @@ let datos = {
             if (result.success) {
  
                 alert('Datos registrados exitosamente.');
-                console.log(datos);
+                location.reload()
                 return true;
             } else {
                 alert('Error: ' + result.error);
@@ -344,7 +331,8 @@ let datos = {
             });
             const result = await response.json();
             if (result.success) {
-                alert('Registro eliminado exitosamente.');
+                console.log('Registro eliminado exitosamente.' + id);
+                location.reload();
             } else {
                 alert('Error: ' + result.error);
             }
@@ -386,12 +374,7 @@ let datos = {
             <button type="button" class="flex items-center justify-center gap-1 bg-custom-blue hover:bg-blue-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
           >
             🚀 Visualización
-          </button></a>
-        
-
-        
-        
-        
+          </button></a>    
         
               </div>
             
@@ -409,6 +392,4 @@ let datos = {
     function cerrarPopUp() {
         document.getElementById('popupContainer').classList.add('hidden');
     }
-
-
 </script>

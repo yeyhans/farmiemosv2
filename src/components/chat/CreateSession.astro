@@ -121,23 +121,6 @@ const system_message = `
             }
         });
 
-        async function eliminarRegistro(id) {
-            if (!confirm('¿Estás seguro de que deseas eliminar este registro?')) return;
 
-            try {
-                const response = await fetch(`/api/sessions?id=${id}`, {
-                    method: 'DELETE',
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Registro eliminado exitosamente.');
-                    location.reload();
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (error) {
-                alert('Error de red: ' + error.message);
-            }
-        }
     </script>
 
