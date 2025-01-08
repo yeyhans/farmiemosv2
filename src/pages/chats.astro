@@ -64,7 +64,7 @@ const sessionCount = sessions ? sessions.length : 0;
   <!-- Add Session Button -->
   <button
     id="add-session"
-    class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-green-500 hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+    class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
   >
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -99,15 +99,16 @@ const sessionCount = sessions ? sessions.length : 0;
       class="flex items-center justify-between p-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
     >
       <div class="flex-grow flex-col items-center">
-        <div>
-
-          <label for={`session-${session.id}`} class="ml-2">
-            🗪 <a
+        <a
               href={`/c/${session.id}`}
               class="text-lg font-bold text-gray-900 hover:text-gray-700"
             >
+              <div>
+
+          <label for={`session-${session.id}`} class="ml-2">
+            🗪 
               {session.session_name}
-            </a>
+            
           </label>
         </div>
         <div class="flex min-h-5 gap-5">
@@ -117,6 +118,7 @@ const sessionCount = sessions ? sessions.length : 0;
             </span>
           </p>
         </div>
+        </a>
       </div>
 
       <button

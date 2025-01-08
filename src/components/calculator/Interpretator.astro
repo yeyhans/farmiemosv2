@@ -1,0 +1,117 @@
+---
+// Interpretator.astro
+const { datos } = Astro.props;
+---
+
+<div id="interpretator-container" class="p-4">
+    <h2 class="text-lg font-bold mb-4">Interpretación de Datos</h2>
+    <div id="interpretator-content" class="space-y-2">
+        <p>No hay datos para interpretar</p>
+    </div>
+    
+    <!-- Sección para la interpretación de la API -->
+    <div id="api-interpretation" class="mt-4 hidden">
+        <h3 class="font-semibold text-lg mb-2">Análisis del Cultivo</h3>
+        <div id="interpretation-content" class="p-4 bg-gray-50 rounded-lg">
+            <!-- Aquí se mostrará la interpretación de la API -->
+        </div>
+    </div>
+
+    <!-- Botón de interpretación -->
+    <button 
+        id="interpret-button"
+        class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors hidden"
+        onclick="solicitarInterpretacion()"
+    >
+        Analizar Condiciones
+    </button>
+
+    <!-- Indicador de carga -->
+    <div id="loading-indicator" class="hidden mt-4 text-center">
+        <div class="animate-spin inline-block w-6 h-6 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <p class="text-sm text-gray-600">Analizando datos...</p>
+    </div>
+</div>
+
+<script is:inline>
+    let datosActuales = null;
+
+    // Función para actualizar el contenido del interpretador
+    function actualizarInterpretador(datos) {
+        datosActuales = datos; // Guardamos los datos actuales
+        const container = document.getElementById('interpretator-content');
+        const button = document.getElementById('interpret-button');
+        
+        if (!container) return;
+
+        if (!datos.temp || !datos.humidity) {
+            container.innerHTML = '<p>No hay datos para interpretar</p>';
+            button.classList.add('hidden');
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="space-y-2">
+                <p>Temperatura: ${datos.temp}°C</p>
+                <p>Humedad: ${datos.humidity}%</p>
+                <p>VPD: ${datos.vpd} kPa</p>
+                <p>Punto de Rocío: ${datos.dewpoint}°C</p>
+                <p>Registrado: ${new Date(datos.recorded_at).toLocaleString()}</p>
+            </div>
+        `;
+        
+        // Mostrar el botón cuando hay datos
+        button.classList.remove('hidden');
+    }
+
+    async function solicitarInterpretacion() {
+        if (!datosActuales) return;
+
+        // Mostrar indicador de carga
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const button = document.getElementById('interpret-button');
+        const apiInterpretation = document.getElementById('api-interpretation');
+        const interpretationContent = document.getElementById('interpretation-content');
+
+        loadingIndicator.classList.remove('hidden');
+        button.disabled = true;
+
+        try {
+            const response = await fetch('/api/interpret', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(datosActuales)
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la respuesta de la API');
+            }
+
+            const data = await response.json();
+            
+            // Mostrar la interpretación
+            apiInterpretation.classList.remove('hidden');
+            interpretationContent.innerHTML = `
+                <div class="prose prose-green">
+                    ${data.interpretacion}
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error:', error);
+            interpretationContent.innerHTML = `
+                <div class="text-red-600">
+                    Hubo un error al analizar los datos. Por favor, intenta nuevamente.
+                </div>
+            `;
+        } finally {
+            loadingIndicator.classList.add('hidden');
+            button.disabled = false;
+        }
+    }
+
+    // Hacer las funciones disponibles globalmente
+    window.actualizarInterpretador = actualizarInterpretador;
+    window.solicitarInterpretacion = solicitarInterpretacion;
+</script>

@@ -3,22 +3,74 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
-
-const { title, description} = Astro.props;
+const { title, description } = Astro.props;
 ---
 
 <html lang="en">
-	<head>
-		<BaseHead title={title} description={description} />
-	</head>
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
 
-	<body>
-		<Header />
-		<main class="container mx-auto px-4  mt-20">
+  <body>
+    <Header />
+    <main class="container mx-auto px-4 mt-20">
+      <slot />
+    </main>
+    <Footer />
 
-					<slot />
+<!-- Modal -->
+<div id="ageModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+	<div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+	  <h2 class="text-xl font-bold mb-2 ">Este sitio está diseñado para un público adulto responsable</h2>
+	  <h3 class="text-md font-semibold mb-4 ">⚠️🛑🔞🚷</h3>
+	  <div class="flex justify-between">
+		<button class="bg-custom-blue text-white px-4 py-2 rounded hover:bg-blue-600 transition mt-2 mr-2" onclick="handleUserResponse(true)">Soy Mayor de Edad</button>
+		<button class="bg-custom-red text-white px-4 py-2 rounded hover:bg-red-600 transition mt-2 mr-2" onclick="handleUserResponse(false)">Soy Menor de Edad</button>
+	  </div>
+	  <p class="mb-6 text-gray-700 p-2 text-sm">
+		Por políticas de privacidad y normativa legal, solicitamos confirmar tu mayoría de edad para garantizar un uso adecuado de esta página.
+	</p>
+	</div>
+	
+  </div>
 
-		</main>
-		<Footer />
-	</body>
+    <script is:inline>
+      // Función para obtener el valor de una cookie
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+
+      // Función para establecer una cookie
+      function setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + date.toUTCString();
+        document.cookie = `${name}=${value}; ${expires}; path=/`;
+      }
+
+      // Función para mostrar el popup
+      function showAgePopup() {
+        const ageConfirmed = getCookie('ageConfirmed');
+        if (!ageConfirmed) {
+          document.getElementById('ageModal').classList.remove('hidden');
+        }
+      }
+
+      // Función para manejar la respuesta del usuario
+      function handleUserResponse(isAdult) {
+        if (isAdult) {
+          setCookie('ageConfirmed', 'true', 30); // Guardar cookie por 30 días
+        } else {
+          alert("Lo siento, debes tener más de 18 años para acceder a este sitio.");
+          window.location.href = "/politicas/terminos-de-uso"; // Redirigir a otra página
+        }
+        document.getElementById('ageModal').classList.add('hidden'); // Cerrar el modal
+      }
+
+      // Llamar a la función al cargar la página
+      window.onload = showAgePopup;
+    </script>
+  </body>
 </html>
