@@ -102,9 +102,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return isNaN(num) ? null : num;
     };
 
-    const recordedAtField = formData.get("recorded_at"); 
-    const recorded_at = recordedAtField?.toString().trim() || new Date().toLocaleString();
-
+    const notes = formData.get("notes");
     const temp = validateNumber(formData.get("temp"));
     const humidity = validateNumber(formData.get("humidity"));
     const vpd = validateNumber(formData.get("vpd"));
@@ -127,7 +125,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .insert([
         {
           user_id: user.id,
-          recorded_at,
+          notes,
           temp,
           humidity,
           vpd,
@@ -156,8 +154,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 };
-
-
 
 export const DELETE: APIRoute = async ({ request, cookies }) => {
     try {

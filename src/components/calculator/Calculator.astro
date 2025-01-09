@@ -1,6 +1,6 @@
 ---
 import { authenticate } from "../../lib/auth";
-import { supabase } from "../../lib/supabase";
+
 
 
 const { user, redirect } = await authenticate(Astro);
@@ -8,52 +8,36 @@ if (redirect) {
     return Astro.redirect(redirect);
 }
 
-const { data: logs, error } = await supabase
-  .from("calculator_logs")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false });
 
-if (error) {
-    console.error("Error al obtener registros:", error.message);
-}
+
+const {logs} = Astro.props;
 // Variables de paginación
 const recordsPerPage = 5; // Registros por página
 let currentPage = 1;
 const totalPages = Math.ceil(logs.length / recordsPerPage);
 
-// Función para obtener registros de la página actual
-function getCurrentPageLogs() {
-    const startIndex = (currentPage - 1) * recordsPerPage;
-    const endIndex = startIndex + recordsPerPage;
-    return logs.slice(startIndex, endIndex);
-}
+const formatDate = (isoDate) => {
+  const date = new Date(isoDate);
+  return date.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
 ---
 
-
-    <h1 class="text-2xl font-bold text-center">Farmiemos AI Calculator</h1>
-    <p class="text-sm text-center text-gray-600">
-        Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
-        de tu cultivo junto a farmiemos, si quieres saber más detalles de 
-        su funcionamiento  
-        <a href="/grow-calculator" class="text-green-900 font-semibold">
-        Haz click aquí!
-    </a></p>
-
-
-    <div>
-        
-  
-      </div>
 
     <!-- Formulario de Entrada -->
     <form id="calculator-form" class="space-y-4">
         <div class="space-y-4">
-            <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+            <div class="text-center flex flex-col sm:flex-row sm:space-x-8 sm:items-center justify-center">
                 <!-- Campo de temperatura -->
-                <div class="flex-1">
-                    <label for="tempInput" class="block text-sm font-medium text-gray-700">
-                        Temperatura (°C)
+                <div class="flex flex-col items-center space-y-2">
+                    <label for="tempInput" class="text-sm font-medium text-gray-700">
+                        🌡️ (°C)
                     </label>
                     <input
                         type="number"
@@ -62,13 +46,14 @@ function getCurrentPageLogs() {
                         class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                         placeholder="Introduce la temperatura"
                         oninput="calcularValores()"
+                        step="any"  
                     />
                 </div>
         
                 <!-- Campo de humedad -->
-                <div class="flex-1">
+                <div class="flex flex-col items-center space-y-2">
                     <label for="humInput" class="block text-sm font-medium text-gray-700">
-                        Humedad Relativa (%)
+                        💧 (%)
                     </label>
                     <input
                         type="number"
@@ -77,22 +62,43 @@ function getCurrentPageLogs() {
                         class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                         placeholder="Introduce la humedad relativa"
                         oninput="calcularValores()"
+                        min="0"  
+                        max="100" 
                     />
                 </div>
             </div>
+        
+            <div class="flex">
+                <label for="notesInput" class="text-sm font-medium text-gray-700">
+                    Notas:
+                </label>
+                <textarea
+                    id="notesInput"
+                    name="notes"
+                    class="block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    placeholder="Introduce tus notas"
+                    rows="2">
+                </textarea>
+            </div>
         </div>
+        
+        
 
             <!-- Resultados -->
     <div class="grid grid-cols-2 gap-4 mt-4">
         <div class="bg-blue-100 p-4 rounded-lg text-center">
             
-            <h2 class="text-sm font-semibold">VPD (kPa)</h2>
-            <p class="text-xs font-bold text-blue-700 " id="vpdResult">0.00</p>
+            <h2 class="text-sm font-semibold">VPD 💨</h2>
+            <p class="text-xs font-bold text-blue-700" id="vpdResult">
+                0.00 <span class="text-xs font-bold text-custom-black">kPa</span>
+            </p>
         </div>
 
         <div class="bg-green-100 p-4 rounded-lg text-center">
-            <h2 class="text-sm font-semibold">Dewpoint (°C)</h2>
-            <p class="text-xs font-bold text-green-700" id="dewpointResult">0.00</p>
+            <h2 class="text-sm font-semibold">Dewpoint 🌡️</h2>
+            <p class="text-xs font-bold text-blue-700" id="dewpointResult">
+                0.00 <span class="text-xs font-bold text-custom-black">°C</span>
+            </p>
         </div>
     </div>
                
@@ -129,20 +135,17 @@ function getCurrentPageLogs() {
   Ocultar logs
   </button>
 
-
-
-
       </div>
     </form>
-    <div id="logsContainer">
-    <div  class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
+
+    <div  id="logsContainer" class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
         {logs.map((log, index) => (
             <div 
                 class="log-card p-2 border border-gray-300 shadow-md rounded-lg bg-white text-xs leading-tight"
                 style="display: none;" 
             >
                 <div class="mb-1">
-                    <p class="text-gray-400">{log.recorded_at}</p>
+                    <p class="text-gray-400">{formatDate(log.created_at)}</p>
                 </div>
                 <div class="mb-1 flex justify-between">
                     <strong class="text-gray-600">🌡️ :</strong>
@@ -160,21 +163,82 @@ function getCurrentPageLogs() {
                     <strong class="text-gray-600">🌡️ :</strong>
                     <p class="text-green-700"><strong>{log.dewpoint}</strong> °C</p>
                 </div>
-                <div class="mt-1 text-center">
-                    <button 
-                        class="text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs w-full" 
-                        onclick={`eliminarRegistro('${log.id}')`}
-                    >
-                        Eliminar
-                    </button>
-                </div>
+                <div class="mt-1 flex w-full justify-between">
+    <button 
+        class="text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs w-3/4"
+        onclick={`eliminarRegistro('${log.id}')`}
+    >
+        Eliminar
+    </button>
+    <button 
+        class="px-2 py-1 rounded-full text-xs flex justify-center items-center text-left"
+        onclick={`mostrarPopUpNotas('${log.id}', '${log.notes || "Sin notas"}')`}
+    >
+        📝
+    </button>
+
+<div 
+    id="popupNotasContainer" 
+    class="fixed inset-0 top-8 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    
+    <div class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative">
+        <button 
+            class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
+            onclick="cerrarPopUpNotas()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <div class="p-4">
+            <h2 class="text-lg font-semibold mb-2">Notas del Registro</h2>
+            <div id="notasContenido" class="mt-2 p-3 bg-yellow-100 rounded-lg">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script is:inline>
+    function mostrarPopUpNotas(id, notas) {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        const notasContenido = document.getElementById('notasContenido');
+        
+        // Decodificar las notas (por si contienen caracteres especiales)
+        const notasDecodificadas = decodeURIComponent(notas);
+        
+        // Insertar las notas en el contenido
+        notasContenido.textContent = notasDecodificadas;
+        
+        // Mostrar el popup
+        popupContainer.classList.remove('hidden');
+    }
+
+    function cerrarPopUpNotas() {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        popupContainer.classList.add('hidden');
+    }
+
+
+    document.getElementById('popupNotasContainer').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarPopUpNotas();
+        }
+    });
+</script>
+
+
+
+        </div>
+
+
             </div>
         ))}
 
         
     </div>
         <!-- Botones de paginación -->
-        <div class="flex justify-center items-center mt-4 space-x-2">
+        <div class="flex justify-center items-center mt-4 space-x-2" id="pagination-container">
             {Array.from({ length: totalPages }).map((_, index) => (
                 <button 
                     class="pagination-button px-4 py-2 rounded bg-gray-200"
@@ -185,7 +249,87 @@ function getCurrentPageLogs() {
             ))}
         </div>
 
-    </div>
+        <script is:inline>
+            let currentPage = 1; // Página actual inicial.
+            const recordsPerPage = 5; // Registros por página.
+            let totalPages = 0; // Total de páginas (se calculará dinámicamente).
+
+            function calcularTotalPages() {
+            const logs = [...document.querySelectorAll('.log-card')];
+            totalPages = Math.ceil(logs.length / recordsPerPage); // Calcula el total de páginas.
+            }
+            const buttonsPerPage = 5; // Botones visibles al mismo tiempo.
+        
+            function cambiarPagina(page) {
+                currentPage = page;
+                renderCurrentPageLogs(); // Actualiza los registros en pantalla.
+                renderPaginationButtons(); // Actualiza los botones de paginación.
+            }
+        
+            function renderCurrentPageLogs() {
+                const logs = [...document.querySelectorAll('.log-card')];
+                const startIndex = (currentPage - 1) * recordsPerPage;
+                const endIndex = startIndex + recordsPerPage;
+        
+                // Oculta todos los registros.
+                logs.forEach((log, index) => {
+                    log.style.display = index >= startIndex && index < endIndex ? 'block' : 'none';
+                });
+            }
+        
+            function renderPaginationButtons() {
+                const container = document.getElementById('pagination-container');
+                container.innerHTML = ''; // Limpia el contenedor antes de renderizar.
+        
+                // Calcula los límites del rango visible.
+                const startButton = Math.max(1, currentPage - Math.floor(buttonsPerPage / 2));
+                const endButton = Math.min(totalPages, startButton + buttonsPerPage - 1);
+        
+                for (let i = startButton; i <= endButton; i++) {
+                    const button = document.createElement('button');
+                    button.textContent = i;
+                    button.className = `pagination-button px-4 py-2 rounded ${
+                        i === currentPage ? 'bg-custom-blue text-white' : 'bg-gray-200'
+                    }`;
+                    button.onclick = () => cambiarPagina(i);
+                    container.appendChild(button);
+                }
+        
+                // Agrega flechas para navegar (opcional).
+                if (currentPage > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.textContent = '«';
+                    prevButton.className = 'pagination-button px-4 py-2 rounded bg-gray-200';
+                    prevButton.onclick = () => cambiarPagina(currentPage - 1);
+                    container.prepend(prevButton);
+                }
+        
+                if (currentPage < totalPages) {
+                    const nextButton = document.createElement('button');
+                    nextButton.textContent = '»';
+                    nextButton.className = 'pagination-button px-4 py-2 rounded bg-gray-200';
+                    nextButton.onclick = () => cambiarPagina(currentPage + 1);
+                    container.appendChild(nextButton);
+                }
+            }
+        
+            // Inicializa todo al cargar la página.
+            document.addEventListener('DOMContentLoaded', () => {
+                calcularTotalPages();
+                renderCurrentPageLogs();
+                renderPaginationButtons();
+            });
+        </script>
+
+                <div class="mt-2 p-2 border rounded-lg shadow-md bg-gray-50">
+          <h3 class="text-lg font-medium text-gray-800">📈 Vincula aquí tu dispositivo ioT</h3>
+          <p class="text-sm text-gray-600">Vincula tu dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
+          <a href="/iot" class="text-white mt-2">
+            <p class="text-sm text-center text-green-900">¡Descubre más haciendo click aquí!</p>
+          </a>
+
+        </div>
+    
     <script is:inline>
         // Función para ocultar/mostrar los logs y guardar el estado en cookies
         function toggleVisibility() {
@@ -230,35 +374,7 @@ function getCurrentPageLogs() {
         });
     </script>
 
-<script is:inline>
-    let currentPage = 1; // Inicializa la página actual.
-    const recordsPerPage = 5; // Registros por página.
 
-    function cambiarPagina(page) {
-        currentPage = page;
-        renderCurrentPageLogs(); // Actualiza los registros en pantalla.
-    }
-
-    function renderCurrentPageLogs() {
-        const logs = [...document.querySelectorAll('.log-card')];
-        const startIndex = (currentPage - 1) * recordsPerPage;
-        const endIndex = startIndex + recordsPerPage;
-
-        // Oculta todos los registros.
-        logs.forEach((log, index) => {
-            log.style.display = index >= startIndex && index < endIndex ? 'block' : 'none';
-        });
-
-        // Actualiza el estilo activo de los botones de paginación.
-        document.querySelectorAll('.pagination-button').forEach((btn, index) => {
-            btn.classList.toggle('bg-custom-blue', index + 1 === currentPage);
-            btn.classList.toggle('text-white', index + 1 === currentPage);
-            btn.classList.toggle('bg-gray-200', index + 1 !== currentPage);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', renderCurrentPageLogs); // Inicializa al cargar.
-</script>
 
 
 <script is:inline>
@@ -286,6 +402,7 @@ function getCurrentPageLogs() {
     }
     
     async function registrarValores() {
+        const notes = document.getElementById('notesInput').value.trim();
         const temp = parseFloat(document.getElementById('tempInput').value);
         const hum = parseFloat(document.getElementById('humInput').value);
         const vpd = parseFloat(document.getElementById('vpdResult').textContent);
@@ -296,7 +413,7 @@ function getCurrentPageLogs() {
         formData.append('humidity', hum.toFixed(2));
         formData.append('vpd', vpd.toFixed(2));
         formData.append('dewpoint', dewpoint.toFixed(2));
-        formData.append('recorded_at', new Date().toISOString());
+        formData.append('notes', notes);
 
  
 
@@ -309,7 +426,7 @@ function getCurrentPageLogs() {
             if (result.success) {
  
                 alert('Datos registrados exitosamente.');
-                location.reload()
+                location.reload();
                 return true;
             } else {
                 alert('Error: ' + result.error);
@@ -352,29 +469,39 @@ function getCurrentPageLogs() {
         <button 
             class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
             onclick="cerrarPopUp()">
-            ✖
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
         </button>
         
         <!-- Contenido del PopUp -->
         <div class="p-4">
+            <h2 class="text-lg font-semibold mb-2">¿Necesitas ayuda?</h2>
+            <p class="text-sm">¡Estamos aqui para ayudarte! Ponte en contacto con nuestro equipo de expertos para obtener asesoramiento personalizado.</p>
+            <p class="text-sm">Tambien puedes explorar nuestra AI para obtener información sobre el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint).</p>
             <div class="flex gap-2">
-      
-            <a href="/ai">
-                <button 
-            id="openPopupBtn"
-            type="button" 
-            class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
-            onclick="mostrarPopUp()">
-            🤖 Interpretar
-            </button>
-        </a>
-        
 
-          <a href="/grow-calculator">
-            <button type="button" class="flex items-center justify-center gap-1 bg-custom-blue hover:bg-blue-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+                <a href="/grow-calculator">
+                    <button type="button" class="flex items-center justify-center gap-1 bg-custom-blue  text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+                  >
+                  🤖 Interpretar
+                  </button></a> 
+      
+                  <a href="/grow/calculator">
+            <button type="button" class="flex items-center justify-center gap-1 bg-custom-greey  text-white font-medium text-sm py-2 px-3 rounded transition-colors"
           >
             🚀 Visualización
-          </button></a>    
+          </button></a>  
+          
+          <a href="/contacto">
+            <button 
+        type="button" 
+        class="flex items-center justify-center gap-1 bg-custom-green text-white font-medium text-sm py-2 px-3 rounded transition-colors">
+        📞 Contactanos
+        </button>
+    </a>
+    
+        
         
               </div>
             

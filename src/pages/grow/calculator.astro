@@ -1,8 +1,8 @@
 ---
-import Interpretator from "../components/calculator/Interpretator.astro";
-import Layout from "../layouts/Layout.astro";
-import { authenticate } from "../lib/auth";
-import { supabase } from "../lib/supabase";
+import Interpretator from "../../components/calculator/Interpretator.astro";
+import Layout from "../../layouts/Layout.astro";
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {

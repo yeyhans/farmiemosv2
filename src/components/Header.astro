@@ -8,14 +8,101 @@ const { user } = await authenticate(Astro);
 ---
 
 <header>
-    <nav>
+    <nav class="flex justify-between items-center px-4 py-2 relative">
         <div class="menu-left">
-            
-            <h2><a href="/"><img src="/logo.png" alt="Farmiemos logo" width="90" height="90"></a></h2>
+            <h2>
+                <a href="/">
+                    <img src="/logo.png" alt="Farmiemos logo" width="90" height="90" class="object-contain">
+                </a>
+            </h2>
         </div>
-        <div class="menu-right text-black">
-            <HeaderLink href="/dashboard">Dashboard</HeaderLink>
-            <a href="https://instagram.com/farmiemos" target="_blank">
+        
+        <!-- Menú móvil - Se muestra/oculta con JavaScript -->
+        <div id="mobile-menu" class="fixed inset-0 bg-white transform translate-x-full transition-transform duration-300 lg:hidden">
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h2>Menú</h2>
+                    <button id="close-menu" class="text-2xl">&times;</button>
+                </div>
+                <div class="flex flex-col space-y-4 p-4">
+                    {user ? (
+                        <>
+                            <HeaderLink href="/dashboard" class="block w-full">
+                                <button type="submit" class="w-full text-left px-4 py-2 border rounded-md shadow-sm text-sm font-medium text-white bg-custom-blue hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                                    Dashboard
+                                </button>
+                            </HeaderLink>
+                            <HeaderLink href="/profile" class="block w-full px-4 py-2">
+                                ⚙️ Configuración
+                            </HeaderLink>
+                        </>
+                    ) : (
+                        <form action="/api/auth/signin" method="post" class="w-full">
+                            <button
+                                value="google"
+                                name="provider"
+                                type="submit"
+                                class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                            >
+                                Ingresar con&nbsp;
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
+                                    <path d="M20.945 11a9 9 0 1 1 -3.284 -5.997l-2.655 2.392a5.5 5.5 0 1 0 2.119 6.605h-4.125v-3h7.945z"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    )}
+                    <a href="https://instagram.com/farmiemos" target="_blank" class="flex items-center px-4 py-2">
+                        <span>Síguenos en Instagram</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2" class="ml-2">
+                            <path d="M4 4m0 4a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4z"></path>
+                            <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+                            <path d="M16.5 7.5l0 .01"></path>
+                        </svg>
+                    </a>
+                    {user ? (
+                        <form action="/api/auth/signout">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-custom-red hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">Sign out</button>
+                        </form>
+                        ) : ''}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menú desktop -->
+        <div class="menu-right text-black items-center space-x-2 hidden sm:flex lg:flex">
+            {user ? (
+                <>
+                    <div class="flex items-center"></div>
+                    <HeaderLink href="/dashboard" class="inline-block">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium text-white bg-custom-blue hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            Dashboard
+                        </button>
+                    </HeaderLink>
+                    <HeaderLink href="/profile" class="inline-block">
+                        ⚙️
+                    </HeaderLink>
+                    </div>
+                    
+                </>
+            ) : (
+                <form action="/api/auth/signin" method="post" class="inline-flex items-center m-0 -mt-2">
+                    <div>
+                        <button
+                            value="google"
+                            name="provider"
+                            type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        >
+                            Ingresar con&nbsp;
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
+                                <path d="M20.945 11a9 9 0 1 1 -3.284 -5.997l-2.655 2.392a5.5 5.5 0 1 0 2.119 6.605h-4.125v-3h7.945z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            )}
+    
+            <a href="https://instagram.com/farmiemos" target="_blank" class="inline-flex items-center">
                 <span class="sr-only">Follow Farmiemos on Instagram</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="32" height="32" stroke-width="2">
                     <path d="M4 4m0 4a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4z"></path>
@@ -23,30 +110,56 @@ const { user } = await authenticate(Astro);
                     <path d="M16.5 7.5l0 .01"></path>
                 </svg>
             </a>
-            <button class="burger-menu">☰</button>
         </div>
+        
+        <!-- Botón hamburguesa - Solo visible en móvil -->
+        <button class="burger-menu lg:hidden sm:hidden text-2xl" aria-label="Menu">☰</button>
     </nav>
-    <div class="mobile-menu">
-        <HeaderLink href="/">Home</HeaderLink>
-		{user ? (
-        <HeaderLink href="/profile">Profile</HeaderLink>
-		) : ''}
-		{user ? (
-		<HeaderLink href="/mastergrow">Mastergrow</HeaderLink>
-		) : ''}
-        <HeaderLink href="/blog">Blog</HeaderLink>
-        <HeaderLink href="/about">About</HeaderLink>
-        {user ? (
-        <form action="/api/auth/signout">
-            <button type="submit">Sign out</button>
-        </form>
-        ) : ''}
-    </div>
+    
+    <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+        const burgerMenu = document.querySelector('.burger-menu');
+        const closeMenu = document.querySelector('#close-menu');
+        const mobileMenu = document.querySelector('#mobile-menu');
+        const body = document.body;
+    
+        function toggleMenu() {
+            const isOpen = mobileMenu.classList.contains('translate-x-0');
+            
+            if (isOpen) {
+                mobileMenu.classList.remove('translate-x-0');
+                mobileMenu.classList.add('translate-x-full');
+                body.classList.remove('overflow-hidden');
+            } else {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenu.classList.add('translate-x-0');
+                body.classList.add('overflow-hidden');
+            }
+        }
+    
+        burgerMenu?.addEventListener('click', toggleMenu);
+        closeMenu?.addEventListener('click', toggleMenu);
+    
+        // Cerrar menú al hacer clic en un enlace
+        const menuLinks = mobileMenu?.querySelectorAll('a');
+        menuLinks?.forEach(link => {
+            link.addEventListener('click', toggleMenu);
+        });
+    
+        // Cerrar menú al redimensionar a desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024 && mobileMenu?.classList.contains('translate-x-0')) {
+                toggleMenu();
+            }
+        });
+    });
+    </script>
+
 </header>
 
 <style>
     header {
-        position: fixed;
+        position: sticky;
         top: 0;
         width: 100%;
         z-index: 1000;
@@ -89,9 +202,3 @@ const { user } = await authenticate(Astro);
     }
 </style>
 
-<script is:inline>
-    document.querySelector('.burger-menu').addEventListener('click', function() {
-        const menu = document.querySelector('.mobile-menu');
-        menu.classList.toggle('active');
-    });
-</script>

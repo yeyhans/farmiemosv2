@@ -1,35 +1,5 @@
 ---
-import { authenticate } from "../../lib/auth";
-import { supabase } from "../../lib/supabase";
-
-const { user, redirect } = await authenticate(Astro);
-if (redirect) {
-    return Astro.redirect(redirect);
-}
-
-const { data: logs, error } = await supabase
-  .from("chats")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false });
-
-if (error) {
-    console.error("Error al obtener sessions:", error.message);
-}
-
-const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profileError || !profile) {
-
-        return new Response(JSON.stringify({ success: false, error: "No se pudo obtener el perfil" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-            });
-        }
+const { profile } = Astro.props;
 
 const system_message = `
         El usuario se llama: ${profile.user_name}.
@@ -53,14 +23,12 @@ const system_message = `
 ---
 
 
-    <h1 class="text-3xl font-bold text-center text-green-800 mb-6">Gestión de Sesiones</h1>
-
     <!-- Feedback Section -->
     <div id="feedbackMessage" class="hidden p-4 mb-4 rounded-lg"></div>
 
     <!-- Formulario de Entrada -->
-    <div class="bg-white shadow-md p-6 rounded-lg">
-        <h2 class="text-xl font-bold text-green-700 mb-4">Crear Nueva Sesión</h2>
+
+        <h2 class="text-lg font-bold text-green-700 mb-4">Crear Nueva Sesión</h2>
         <form id="sessionsForm" action="/api/chat/sessions" method="POST" class="space-y-6">
             <!-- Session Name -->
             <div>
@@ -92,7 +60,7 @@ const system_message = `
                 Registrar Sesión
             </button>
         </form>
-    </div>
+
 
     <!-- Scripts -->
     <script is:inline>
