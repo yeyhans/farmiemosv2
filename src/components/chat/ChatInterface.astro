@@ -15,82 +15,70 @@ const { data: profile } = await supabase
   .eq("user_id", session.user_id)
   .single();
 
-  console.log(profile.user_name); // Verificar si es correcto
-  console.log(session.ai_response); // Verificar si es correcto
----
 
-<h1 class="text-center text-green-900 font-bold whitespace-nowrap" style="font-size: clamp(1rem, 5vw, 2rem);">
-  {session.session_name} - Conversacion con la IA
-</h1>
+--- 
 
-<section class="text-sm mt-8 mx-auto px-2 sm:px-6 md:px-8">  
-  <div id="conversationContainer" class="space-y-4 overflow-y-auto h-[600px] p-2 bg-white rounded-lg shadow-md scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"> 
-    {session.user_prompt.map((userPrompt, index) => ( 
-      <div key={index}> 
-        <div class="bg-gray-100 p-2 mt-2 rounded-lg"> 
-          <strong class="text-green-800">{profile.user_name}:</strong> {userPrompt} 
-        </div> 
-        {session.ai_response[index] && ( 
-          <div class="bg-blue-100 p-4 mt-2 rounded-lg"> 
-            <strong>Asistente:</strong> {session.ai_response[index]} 
+
+ <h1 class="text-center text-green-900 font-bold whitespace-normal text-2xl">
+    {session.session_name} - Conversacion con la IA
+  </h1>
+  
+  <!-- Chat Section -->
+  <section class="w-full max-w-[90%] mx-auto flex-1">  
+    <div id="conversationContainer" class="h-[calc(100vh-8rem)] p-3 bg-white rounded-xl shadow-lg scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"> 
+      {session.user_prompt.map((userPrompt, index) => ( 
+        <div key={index} class="flex flex-col gap-3"> 
+          <div class="bg-gray-100 p-3 rounded-lg max-w-[85%] self-end"> 
+            <div class="text-base">{userPrompt}</div>
           </div> 
-        )} 
-      </div> 
-    ))} 
-  </div> 
-</section>
+          
+          {session.ai_response[index] && ( 
+            <div class="bg-blue-100 p-3 rounded-lg max-w-[85%]">  
+              <div class="text-base">{session.ai_response[index]}</div>
+            </div> 
+          )} 
+        </div> 
+      ))} 
+    </div> 
+  </section>
 
-<!-- Agregar estos estilos en tu head o en un archivo CSS global -->
-<style>
-  /* Estilos personalizados para el scrollbar */
-  #conversationContainer::-webkit-scrollbar {
-    width: 8px;
-  }
+  <!-- Form Section -->
+  <section class="text-sm w-full max-w-[90%] mx-auto fixed bottom-0 left-0 right-0 px-2"> 
+    <form id="mastergrowForm" class="bg-white p-3 rounded-t-lg shadow-md border-t border-gray-200">
+      <input type="hidden" name="sessionId" value={id} />
+      
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <textarea 
+            name="prompt" 
+            id="prompt" 
+            placeholder="Ingresa tu pregunta..." 
+            required 
+            class="w-full border border-gray-300 rounded p-2 focus:ring focus:ring-green-300 text-sm"
+            rows="1"
+          ></textarea>
+        </div>
 
-  #conversationContainer::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
+        <div class="flex gap-2 items-center">
+          <input 
+            type="file" 
+            name="file" 
+            id="file" 
+            accept="image/*" 
+            class="w-32 text-xs border border-gray-300 rounded p-1 focus:ring focus:ring-green-300"
+          >
 
-  #conversationContainer::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
-
-  #conversationContainer::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-
-  /* Para Firefox */
-  #conversationContainer {
-    scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
-  }
-</style>
-
-<!-- Sección para el formulario de preguntas y subir imágenes -->
-<section class="text-sm mt-8 mx-auto px-4 sm:px-6 md:px-8"> 
-  <form id="mastergrowForm" class="bg-white p-2 rounded-lg shadow-md mx-auto space-y-4">
-    <input type="hidden" name="sessionId" value={id} />
-    <div>
-      <label for="prompt" class="block text-lg font-medium text-green-800">
-        Ingresa tu pregunta:
-      </label>
-      <textarea name="prompt" id="prompt" placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?" required 
-        class="w-full border border-gray-300 rounded p-3 mt-1 focus:ring focus:ring-green-300"></textarea>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4 items-center">
-      <div class="flex flex-col">
-        <input type="file" name="file" id="file" accept="image/*" class="w-full border border-gray-300 rounded p-3 mt-1 focus:ring focus:ring-green-300">
+          <button 
+            type="submit" 
+            class="bg-green-900 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-sm"
+          >
+            Enviar
+          </button>
+        </div>
       </div>
+    </form>
+  </section>
 
-      <button type="submit" class="w-full bg-green-900 text-white py-3 rounded-lg hover:bg-green-700 transition duration-300">
-        Enviar
-      </button>
-    </div>
-  </form>
-</section>
 
 <script is:inline>
   const form = document.getElementById('mastergrowForm');
@@ -150,7 +138,25 @@ const { data: profile } = await supabase
       if (data && data.response && data.response.aiResponse) {
         // Reemplazar el indicador de carga con la respuesta real
         loadingDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
-        loadingDiv.innerHTML = `<strong>Asistente:</strong> ${data.response.aiResponse}`;
+        loadingDiv.innerHTML = `<strong>Asistente:</strong> <div id="assistant-response">${data.response.aiResponse}</div>
+                <div class="mt-2 border-t border-gray-200 pt-2"> 
+              <button 
+              class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition"
+              onclick="handleFeedback('like', {index})"
+            >
+              👍
+            </button>
+            <button 
+              class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
+              onclick="handleFeedback('dislike', {index})"
+            >
+              👎
+            </button>
+            <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition"
+            onclick="copiarTexto()">
+              📋
+            </button> 
+            </div>`;
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
@@ -176,4 +182,32 @@ const { data: profile } = await supabase
 
   // Hacer scroll inicial al cargar la página
   scrollToBottom();
+
+
+  //Script para copiar los textos
+  function copiarTexto() {
+    // Seleccionamos el elemento con el ID "texto-a-copiar"// Suponiendo que data.response.id contiene un valor válido
+
+    var textoACopiar = document.getElementById('.assistant-response');
+    // Creamos un nuevo elemento temporal para almacenar el texto
+    var tempInput = document.createElement("input");
+
+    // Asignamos el texto a copiar al valor del elemento temporal
+    tempInput.value = textoACopiar.textContent;
+
+    // Agregamos el elemento temporal al documento
+    document.body.appendChild(tempInput);
+
+    // Seleccionamos el texto del elemento temporal
+    tempInput.select();
+    document.execCommand("copy");
+
+    // Eliminamos el elemento temporal
+    document.body.removeChild(tempInput);
+
+    // Opcional: Mostrar un mensaje de confirmación al usuario
+    alert("¡Texto copiado al portapapeles!");
+}
 </script>
+
+
