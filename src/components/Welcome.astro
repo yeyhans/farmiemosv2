@@ -2,41 +2,36 @@
 import Layout from "../layouts/Layout.astro";
 
 ---
-<Layout title="Bienvenido">
-    
-      
+ 
     <div class="container mx-auto px-4 py-12 space-y-12">
         <!-- Título principal -->
-        <section class="text-center">
-            <h1 class="relative text-3xl font-black text-custom-yellow md:text-4xl">¡Bienvenidos a <span class="text-custom-green">Farmiemos!</span></h1>
-            <p class="mt-3 text-lg font-medium">Transformando la agricultura juntos <span class="inline-block animate-bounce">🌱</span></p>
-        </section>
+
         
         <!-- Introducción -->
         <section class="rounded-xl p-6 backdrop-blur-sm bg-white shadow-md rounded-lg p-8">
             <p class="border-l-4 border-custom-blue pl-4 text-lg">
-                En <span class="font-bold">Farmiemos</span>, no somos solo una tienda: somos una herramienta al servicio de todos los jardineros y agricultores apasionados por el <span class="font-semibold">crecimiento sostenible</span>. Sabemos que practicar una <span class="font-semibold">agricultura orgánica eficiente</span> en Chile puede ser desafiante. Con más de una década de Investigación y Desarrollo (I+D), comprendemos lo complicado que puede ser acceder a tecnologías y servicios innovadores adaptados a las necesidades reales de los cultivos. Por eso, ¡estamos aquí para marcar la diferencia!
+                En <span class="font-bold">Farmiemos</span>, no somos solo una tienda: somos una herramienta al servicio de todos los jardineros y agricultores apasionados por el <span class="font-semibold">crecimiento sostenible</span>. Sabemos que practicar una <span class="font-semibold">agricultura eficiente</span> en Chile puede ser desafiante. Con más de una década de Investigación y Desarrollo (I+D), comprendemos lo complicado que puede ser acceder a tecnologías y servicios innovadores adaptados a las necesidades reales de los cultivos. Por eso, ¡estamos aquí para marcar la diferencia!
             </p>
         </section>
 
         <!-- Acordeón principal -->
         <section class="space-y-6">
             <h2 class="text-3xl font-bold text-green-600">🌾 ¿Qué hacemos en Farmiemos?</h2>
-            <p class="text-lg">Nuestro enfoque no es solo brindar productos, sino acompañarte en la adopción de herramientas de vanguardia para optimizar cada etapa de tu proceso agrícola. Estos son los pilares de nuestro compromiso contigo:</p>
+            <p class="text-lg">Nuestro enfoque no es solo brindar productos, sino acompañarte en la adopción de herramientas de vanguardia para optimizar cada etapa de tu jardín. Estos son los pilares de nuestro compromiso contigo:</p>
             <!-- Acordión Tecnología para la agricultura -->
             <div class="group relative overflow-hidden rounded-xl  p-6  bg-white shadow-md rounded-lg">
                 <button onclick="toggleAccordion('accordion-tech')" class="w-full text-left flex items-center justify-between px-6 py-4">
-                    <h3 class="text-xl font-semibold text-gray-800">🔧 Tecnología para la agricultura: Implementación IoT y análisis por IA</h3>
+                    <h3 class="text-xl font-semibold text-gray-800">🔧 Tecnología para la agricultura: Implementación IoT y Análisis por AI</h3>
                     <span id="icon-tech" class="transform transition-transform">&#x25BC;</span>
                 </button>
                 <div id="accordion-tech" class="hidden">
                     <p class="mt-2 text-gray-700">
-                        Ofrecemos dispositivos IoT de bajo costo (incluso compatibles con plataformas como AliExpress), que recopilan datos cruciales sobre el estado de tus cultivos. Estos datos son respaldados, visualizados y analizados utilizando inteligencia artificial mediante nuestra exclusiva herramienta: <span class="font-bold">Farmiemos AI Calculator</span>.
+                        Ofrecemos dispositivos IoT de bajo costo, que recopilan datos cruciales sobre el estado de tus cultivos. Estos datos son respaldados, visualizados y analizados utilizando inteligencia artificial mediante nuestra exclusiva herramientas: 
                     </p>
                     <ul class="mt-2 list-disc  space-y-2 text-gray-700">
-                        <li><span class="font-semibold">Obtención de conclusiones precisas:</span> Analizamos los datos en función de las condiciones únicas de tus cultivos, tanto en interiores como exteriores.</li>
-                        <li><span class="font-semibold">Modelos personalizados de cultivo:</span> Diseñamos estrategias basadas en las experiencias reales de nuestros cultivos y las compartimos contigo.</li>
-                        <li><span class="font-semibold">Soporte 24/7:</span> Te ofrecemos un "experto de cultivo virtual" capaz de resolver tus dudas con la mejor información disponible.</li>
+                        <li><span class="font-semibold">Obtención de conclusiones precisas:</span> Hemos generado <span>AI Calculator</span> quien es capaz de analizar los datos en función de las condiciones únicas de tus cultivos, tanto en interiores como exteriores.</li>
+                        <li><span class="font-semibold">Soporte 24/7:</span> Te ofrecemos a nuestro<span>AI Mastergrower</span> capaz de resolver tus dudas con la mejor información disponible, generando un algoritmo acorde a tus necesidades.</li>
+                        <li><span class="font-semibold">Modelos personalizados de cultivo:</span> Diseñamos e implementamos dispositivos ioT de bajo costo, que recopilan datos cruciales sobre el estado de tus cultivos.</li>
                     </ul>
                 </div>
             </div>
@@ -100,4 +95,3 @@ import Layout from "../layouts/Layout.astro";
             }
         }
     </script>
-</Layout>

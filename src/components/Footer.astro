@@ -2,28 +2,10 @@
 const today = new Date();
 ---
 
-<footer>
-	&copy; {today.getFullYear()} by <a href="https://instagram.com/chocolohans" class="text-green-900" target="_blank">@Chocolopeison</a>, Todos los derechos reservados.
-	<p><a href="/politicas/terminos-de-uso" class="text-green-900">Terminos de uso</a> | <a href="/politicas/politicas-de-privacidad" class="text-green-900">Politicas de privacidad</a></p>
+<footer class="pt-20 pb-8 px-4 bg-gradient-to-b from-white to-custom-green">
+	<div class="container mx-auto justify-between items-center gap-4">
+		<p class="text-sm text-black text-center">Hecho con ❤️ por <a class="text-black hover:text-gray-800" href="https://instagram.com/chocolohans">Chocolopeison</p>
+	</div>
+	
 </footer>
-<style>
-	footer {
-		padding: 2em 1em 6em 1em;
-		background: linear-gradient(var(--gray-gradient)) no-repeat;
-		color: rgb(var(--green));
-		text-align: center;
-	}
-	.social-links {
-		display: flex;
-		justify-content: center;
-		gap: 1em;
-		margin-top: 1em;
-	}
-	.social-links a {
-		text-decoration: none;
-		color: rgb(var(--green));
-	}
-	.social-links a:hover {
-		color: rgb(var(--gray-dark));
-	}
-</style>
+
