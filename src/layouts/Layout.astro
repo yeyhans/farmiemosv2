@@ -12,14 +12,9 @@ const { title, description } = Astro.props;
     <BaseHead title={title} description={description} />
   </head>
 
-  <body>
-    <Header />
-    <main class="container">
-      <slot />
-    </main>
-    <Footer />
 
-<!-- Modal -->
+  
+  <!-- Modal -->
 <div id="ageModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
 	<div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
 	  <h2 class="text-xl font-bold mb-2 ">Este sitio está diseñado para un público adulto responsable</h2>
@@ -73,5 +68,13 @@ const { title, description } = Astro.props;
       // Llamar a la función al cargar la página
       window.onload = showAgePopup;
     </script>
+
+  <body>
+    <Header />
+    <main class="container">
+      <slot />
+    </main>
+    <Footer />
+
   </body>
 </html>

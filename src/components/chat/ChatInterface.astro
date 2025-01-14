@@ -15,6 +15,7 @@ const { data: profile } = await supabase
   .eq("user_id", session.user_id)
   .single();
 
+<<<<<<< HEAD
 
 ---
 
@@ -103,12 +104,73 @@ const { data: profile } = await supabase
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
+=======
+
+--- 
+
+
+ <h1 class="text-center text-green-900 font-bold whitespace-normal text-2xl">
+    {session.session_name} - Conversacion con la IA
+  </h1>
+  
+  <!-- Chat Section -->
+  <section class="w-full max-w-[90%] mx-auto flex-1">  
+    <div id="conversationContainer" class="h-[calc(100vh-8rem)] p-3 bg-white rounded-xl shadow-lg scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100"> 
+      {session.user_prompt.map((userPrompt, index) => ( 
+        <div key={index} class="flex flex-col gap-3"> 
+          <div class="bg-gray-100 p-3 rounded-lg max-w-[85%] self-end"> 
+            <div class="text-base">{userPrompt}</div>
+          </div> 
+          
+          {session.ai_response[index] && ( 
+            <div class="bg-blue-100 p-3 rounded-lg max-w-[85%]">  
+              <div class="text-base">{session.ai_response[index]}</div>
+            </div> 
+          )} 
+        </div> 
+      ))} 
+    </div> 
+  </section>
+
+  <!-- Form Section -->
+  <section class="text-sm w-full max-w-[90%] mx-auto fixed bottom-0 left-0 right-0 px-2"> 
+    <form id="mastergrowForm" class="bg-white p-3 rounded-t-lg shadow-md border-t border-gray-200">
+      <input type="hidden" name="sessionId" value={id} />
+      
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <textarea 
+            name="prompt" 
+            id="prompt" 
+            placeholder="Ingresa tu pregunta..." 
+            required 
+            class="w-full border border-gray-300 rounded p-2 focus:ring focus:ring-green-300 text-sm"
+            rows="1"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <input 
+            type="file" 
+            name="file" 
+            id="file" 
+            accept="image/*" 
+            class="w-32 text-xs border border-gray-300 rounded p-1 focus:ring focus:ring-green-300"
+          >
+
+          <button 
+            type="submit" 
+            class="bg-green-900 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-sm"
+          >
+            Enviar
+>>>>>>> 26ab1b1fbe321d34f36ec9e11cf145c20e2d60a5
           </button>
         </div>
       </div>
     </form>
   </section>
 
+<<<<<<< HEAD
 
 <script is:inline>
   async function copyToClipboard(index) {
@@ -237,6 +299,8 @@ async function handleFeedback(index, isLiked) {
   }
 }
 </script>
+=======
+>>>>>>> 26ab1b1fbe321d34f36ec9e11cf145c20e2d60a5
 
 <script is:inline>
   const form = document.getElementById('mastergrowForm');
@@ -296,7 +360,25 @@ async function handleFeedback(index, isLiked) {
       if (data && data.response && data.response.aiResponse) {
         // Reemplazar el indicador de carga con la respuesta real
         loadingDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
-        loadingDiv.innerHTML = `<strong>Asistente:</strong> ${data.response.aiResponse}`;
+        loadingDiv.innerHTML = `<strong>Asistente:</strong> <div id="assistant-response">${data.response.aiResponse}</div>
+                <div class="mt-2 border-t border-gray-200 pt-2"> 
+              <button 
+              class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition"
+              onclick="handleFeedback('like', {index})"
+            >
+              👍
+            </button>
+            <button 
+              class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
+              onclick="handleFeedback('dislike', {index})"
+            >
+              👎
+            </button>
+            <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition"
+            onclick="copiarTexto()">
+              📋
+            </button> 
+            </div>`;
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
@@ -322,4 +404,32 @@ async function handleFeedback(index, isLiked) {
 
   // Hacer scroll inicial al cargar la página
   scrollToBottom();
+
+
+  //Script para copiar los textos
+  function copiarTexto() {
+    // Seleccionamos el elemento con el ID "texto-a-copiar"// Suponiendo que data.response.id contiene un valor válido
+
+    var textoACopiar = document.getElementById('.assistant-response');
+    // Creamos un nuevo elemento temporal para almacenar el texto
+    var tempInput = document.createElement("input");
+
+    // Asignamos el texto a copiar al valor del elemento temporal
+    tempInput.value = textoACopiar.textContent;
+
+    // Agregamos el elemento temporal al documento
+    document.body.appendChild(tempInput);
+
+    // Seleccionamos el texto del elemento temporal
+    tempInput.select();
+    document.execCommand("copy");
+
+    // Eliminamos el elemento temporal
+    document.body.removeChild(tempInput);
+
+    // Opcional: Mostrar un mensaje de confirmación al usuario
+    alert("¡Texto copiado al portapapeles!");
+}
 </script>
+
+
