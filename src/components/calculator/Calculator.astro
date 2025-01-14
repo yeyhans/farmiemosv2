@@ -36,7 +36,7 @@ const formatDate = (isoDate) => {
             <div class="text-center flex flex-col sm:flex-row sm:space-x-8 sm:items-center justify-center">
                 <!-- Campo de temperatura -->
                 <div class="flex flex-col items-center space-y-2">
-                    <label for="tempInput" class="text-sm font-medium text-gray-700">
+                    <label for="tempInput" class="block text-sm font-medium text-gray-700">
                         🌡️ (°C)
                     </label>
                     <input
@@ -45,8 +45,7 @@ const formatDate = (isoDate) => {
                         name="temp"
                         class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                         placeholder="Introduce la temperatura"
-                        oninput="calcularValores()"
-                        step="any"  
+                        oninput="calcularValores()" 
                     />
                 </div>
         
@@ -62,8 +61,6 @@ const formatDate = (isoDate) => {
                         class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                         placeholder="Introduce la humedad relativa"
                         oninput="calcularValores()"
-                        min="0"  
-                        max="100" 
                     />
                 </div>
             </div>
@@ -111,7 +108,7 @@ const formatDate = (isoDate) => {
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
     </svg>
-    Registrar Valores
+    Registrar Notas
   </button>
 
   <button 

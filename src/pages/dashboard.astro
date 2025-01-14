@@ -118,9 +118,9 @@ const description= "Farmiemos Dashboard"
       <!-- Lado Derecho: Tarjetas -->
       <div class="lg:col-span-1 grid auto-rows-min transition-all duration-300 space-y-2 rounded-lg" id="right-cards">
         <div class="border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-lg transition-all duration-300">
-          <div class="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-custom-blue to-custom-green">
+          <div class="flex items-center justify-between py-4 px-6">
             <div>
-              <h2 class="text-2xl font-bold text-left text-white">🤖 Mastergrower AI</h2>
+              <h2 class="text-2xl font-bold text-left">🤖 Mastergrower AI</h2>
               <p class="text-sm text-gray-600">Haz tus preguntas de cultivo!</p>
             </div>
             <button onclick="toggleAccordion('accordion-mastergrower')" class="flex items-center space-x-2">
@@ -135,19 +135,19 @@ const description= "Farmiemos Dashboard"
 
         <div>
          <div class="border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-lg transition-all duration-300">
-          <div class="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-custom-blue to-custom-green">
+          <div class="flex items-center justify-between py-4 px-6">
             <div>
-                <h2 class="text-2xl font-bold text-white">🧑‍🌾 {profile.user_name}</h2>
+                <h2 class="text-2xl font-bold ">🧑‍🌾 {profile.user_name}</h2>
                 <p class="text-sm text-gray-600">Tarjeta de cultivo</p>
               </div>
-              <button onclick="toggleAccordion('accordion-tarjet-profile')" class="flex items-center space-x-2 text-white">
+              <button onclick="toggleAccordion('accordion-tarjet-profile')" class="flex items-center space-x-2 ">
                 <span id="icon-tarjet-profile" class="w-6 h-6 flex items-center justify-center rounded-full bg-white text-green-600 transition-transform duration-300">
                   &#x25BC;
                 </span>
               </button>
             </div>
             <div id="accordion-tarjet-profile" class="hidden transition-all duration-300">
-              <div class="bg-gray-100 rounded-lg p-4 shadow-inner">
+              <div class="bg-green-100 rounded-lg p-4 shadow-inner">
                 <p class="text-sm text-gray-700">📝 notes: <span class="font-semibold">{count_logs}</span></p>
                 <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
                 <p class="text-sm text-gray-700">💬 prompts: <span class="font-semibold">{total_prompts}</span></p>
