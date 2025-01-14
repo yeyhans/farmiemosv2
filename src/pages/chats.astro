@@ -9,6 +9,12 @@ if (redirect) {
     return Astro.redirect(redirect);
 }
 
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+  
 const { data: sessions, error } = await supabase
   .from('chats')
   .select('id, session_name, updated_at')
@@ -55,7 +61,7 @@ const sessionCount = sessions ? sessions.length : 0;
         </svg>
       </button>
     </div>
-    <CreateSession />
+    <CreateSession profile={profile}/>
   </div>
 </div>
 
