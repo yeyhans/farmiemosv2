@@ -296,25 +296,7 @@ async function handleFeedback(index, isLiked) {
       if (data && data.response && data.response.aiResponse) {
         // Reemplazar el indicador de carga con la respuesta real
         loadingDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
-        loadingDiv.innerHTML = `<strong>Asistente:</strong> <div id="assistant-response">${data.response.aiResponse}</div>
-                <div class="mt-2 border-t border-gray-200 pt-2"> 
-              <button 
-              class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition"
-              onclick="handleFeedback('like', {index})"
-            >
-              👍
-            </button>
-            <button 
-              class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
-              onclick="handleFeedback('dislike', {index})"
-            >
-              👎
-            </button>
-            <button class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition"
-            onclick="copiarTexto()">
-              📋
-            </button> 
-            </div>`;
+        
       } else {
         throw new Error('Respuesta inválida del servidor');
       }

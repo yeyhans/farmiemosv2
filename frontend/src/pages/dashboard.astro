@@ -2,6 +2,8 @@
 
 import Calculator from "../components/calculator/Calculator.astro";
 import SessionComponent from "../components/chat/SessionComponent.astro";
+import ExplicacionAI from "../components/dashboard/ExplicacionAI.astro";
+import FeedbackDiscord from "../components/dashboard/FeedbackDiscord.astro";
 import Footer from "../components/Footer.astro";
 import InfoBlog from "../components/InfoBlog.astro";
 import Layout from "../layouts/DashboardLayout.astro";
@@ -162,24 +164,26 @@ const description= "Farmiemos Dashboard"
         </div>
       </div>
     </section>
+
     
     <section id="blog" class="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-4">
       <div class="border rounded-xl shadow-lg bg-white hover:shadow-lg transition-all duration-300 col-span-2">
         <div class="flex items-center justify-between py-4 px-6">
           <div>
-            <h2 class="text-2xl font-bold text-left">📰 Contenido del Blog</h2>
-            <p class="text-sm text-gray-600">Consulta nuestro blog con las últimas noticias sobre cultivo.</p>
+            <h2 class="text-2xl font-bold text-left">ℹ️ ¿Cómo funciona nuestra AI?</h2>
+            <p class="text-sm text-gray-600">Un asesor virtual para agricultores que, gracias a la inteligencia artificial, ofrece recomendaciones personalizadas para optimizar sus cultivos.</p>
           </div>
           <button onclick="toggleAccordion('accordion-blog')" class="flex items-center space-x-2">
             <span id="icon-blog" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
           </button>
         </div>
         <div id="accordion-blog" class="hidden px-4 pb-2">
-          <InfoBlog />
+          <ExplicacionAI />
+          
         </div>
       </div>
     </section>
-
+    <FeedbackDiscord />
   </main>
   <Footer />
 
@@ -257,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeAccordion("accordion-tarjet-profile");
   initializeAccordion("accordion-mastergrower");
   initializeAccordion("accordion-blog");
+
   
   // Ajustar el grid inicial
   adjustGridLayout();

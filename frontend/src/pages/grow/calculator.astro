@@ -1,0 +1,27 @@
+---
+import Interpretator from "../../components/calculator/Interpretator.astro";
+import Layout from "../../layouts/Layout.astro";
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { data: logs, error } = await supabase
+  .from("calculator_logs")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error al obtener registros:", error.message);
+}
+
+---
+
+<Layout title="Calculadora">
+
+    
+</Layout>
