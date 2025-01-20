@@ -2,3 +2,4 @@ fastapi==0.99.0
 uvicorn
 supabase
 openai
+dotenv
