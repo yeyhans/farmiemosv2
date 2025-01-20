@@ -9,10 +9,6 @@ import os
 load_dotenv()
 
 router = APIRouter()
-# Set up Supabase client
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @router.post("/openai/chat/")
 async def chat_with_openai(prompt: str):
