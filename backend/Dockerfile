@@ -17,8 +17,8 @@ COPY requirements.txt /app/requirements.txt
 # Crear un entorno virtual en el contenedor
 RUN python -m venv /opt/venv
 
-# Actualizar pip
-RUN /opt/venv/bin/python -m pip install --upgrade pip
+# Actualizar pip, setuptools y wheel
+RUN /opt/venv/bin/python -m pip install --upgrade pip setuptools wheel
 
 # Instalar las dependencias de Python
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt

@@ -1,5 +1,5 @@
 fastapi==0.99.0
-uvicorn
-supabase
+uvicorn==0.22.0
+supabase-py
 openai
-dotenv
+python-dotenv
