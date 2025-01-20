@@ -1,0 +1,4 @@
+fastapi==0.99.0
+hypercorn==0.14.3
+supabase==0.1.6
+openai==0.27.9

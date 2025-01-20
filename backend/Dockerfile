@@ -1,17 +1,21 @@
-# Usa una imagen base ligera de Python
-FROM python:3.10-slim
+# Usa la imagen base oficial de Python 3.11
+FROM python:3.11-slim
 
-# Establecer el directorio de trabajo
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar el código del backend
-COPY . .
+# Copia los archivos necesarios al contenedor
+COPY backend /app/backend
 
-# Instalar las dependencias
+# Cambia al directorio correcto dentro del contenedor
+WORKDIR /app/backend
+
+# Instala las dependencias del proyecto
+COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Exponer el puerto para el servicio (usualmente el 8000 para FastAPI)
+# Expone el puerto que será usado por la aplicación
 EXPOSE 8000
 
-# Comando para iniciar el servidor
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando para iniciar la aplicación
+CMD ["hypercorn", "app.main:app", "--bind", "[::]:8000"]
