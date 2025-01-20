@@ -27,7 +27,7 @@ RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Copiar archivo .env al contenedor
-COPY .env /app/.env
+COPY backend/.env /app/.env
 
 # Establecer la variable de entorno para usar el entorno virtual
 ENV PATH="/opt/venv/bin:$PATH"
