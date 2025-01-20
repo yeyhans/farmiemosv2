@@ -4,7 +4,7 @@ FROM python:3.10-slim
 # Establecer el directorio de trabajo en la imagen de Docker
 WORKDIR /app
 
-# Instalar dependencias del sistema (si es necesario para algunas dependencias de Python como compilar o enlazar)
+# Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
@@ -17,7 +17,10 @@ COPY requirements.txt /app/requirements.txt
 # Crear un entorno virtual en el contenedor
 RUN python -m venv /opt/venv
 
-# Activar el entorno virtual e instalar las dependencias de Python
+# Actualizar pip
+RUN /opt/venv/bin/python -m pip install --upgrade pip
+
+# Instalar las dependencias de Python
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código de la aplicación a la imagen de Docker
