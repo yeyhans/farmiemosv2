@@ -8,7 +8,7 @@ const { user } = await authenticate(Astro);
 
 ---
 
-<header class="bg-white shadow-md">
+<header class="">
     <nav class="flex justify-between items-center px-4 py-2">
         <!-- Logo (Izquierda) -->
         <div class="logo">
@@ -17,16 +17,10 @@ const { user } = await authenticate(Astro);
             </a>
         </div>
 
-        <!-- Menú centrado (solo en escritorio) -->
-        <div class="hidden lg:flex space-x-6">
-            <a href="/about" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Nosotros</a>
-            <a href="/services" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Servicios</a>
-            <a href="/blog" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Blog</a>
-            <a href="/contact" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Contacto</a>
-        </div>
+
 
         <!-- Botones (Derecha) -->
-        <div class="hidden lg:flex items-center space-x-4">
+        <div class="items-center space-x-4">
             {user ? (
                 <a href="/dashboard" class="px-4 py-2 text-sm font-medium text-white bg-custom-blue hover:bg-blue-700 rounded-md transition-colors">Dashboard</a>
             ) : (
@@ -47,54 +41,9 @@ const { user } = await authenticate(Astro);
             
         </div>
 
-        <!-- Menú móvil (burger) -->
-        <button id="burger-menu" class="lg:hidden text-2xl" aria-label="Menu">☰</button>
-        <div id="mobile-menu" class="fixed inset-0 bg-white transform translate-x-full transition-transform duration-300 z-10 lg:hidden">
-            <div class="flex flex-col h-full">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h2>Menú</h2>
-                    <button id="close-menu" class="text-2xl">&times;</button>
-                </div>
-                <div class="flex flex-col space-y-4 p-4">
-                    {user ? (
-                        <>
-                            <a href="/dashboard" class="block w-full text-center px-4 py-2 bg-custom-blue text-white rounded-md">Dashboard</a>
-                        </>
-                    ) : (
-                        <form action="/api/auth/signin" method="post" class="w-full">
-                            <button
-                                value="google"
-                                name="provider"
-                                type="submit"
-                                class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Ingresar con&nbsp;
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
-                                    <path d="M20.945 11a9 9 0 1 1 -3.284 -5.997l-2.655 2.392a5.5 5.5 0 1 0 2.119 6.605h-4.125v-3h7.945z"></path>
-                                </svg>
-                            </button>
-                        </form>
-                    )}
-                    <a href="/about" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Nosotros</a>
-                    <a href="/services" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Servicios</a>
-                    <a href="/blog" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Blog</a>
-                    <a href="/contact" class="text-sm font-medium text-gray-700 hover:text-custom-blue transition-colors">Contacto</a>
-                
-                                       
-                </div>
-            </div>
-        </div>
+       
     </nav>
 </header>
 
 
     
-<script is:inline>
-    document.getElementById('burger-menu').addEventListener('click', () => {
-    document.getElementById('mobile-menu').classList.remove('translate-x-full');
-});
-
-document.getElementById('close-menu').addEventListener('click', () => {
-    document.getElementById('mobile-menu').classList.add('translate-x-full');
-});
-</script>

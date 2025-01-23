@@ -1,4 +1,5 @@
 ---
+import { supabase } from "../../lib/supabase";
 const { profile } = Astro.props;
 
 const system_message = `
@@ -20,6 +21,15 @@ const system_message = `
         Interés tecnología: ${profile.interes_tecnologia}.
 
       `;
+
+const { id } = Astro.params;
+const { data: session } = await supabase
+  .from("chats")
+  .select("*")
+  .eq("id", id)
+
+
+
 ---
 
 
@@ -76,12 +86,17 @@ const system_message = `
                     body: formData,
                 });
                 const result = await response.json();
-                feedbackMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800');
-                feedbackMessage.classList.add('bg-green-100', 'text-green-800');
-                feedbackMessage.textContent = result.success
-                    ? 'Datos registrados exitosamente.'
-                    : 'Error: ' + result.error;
-                if (result.success) setTimeout(() => location.reload(), 1000);
+                if (result.success) {
+                    feedbackMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800');
+                    feedbackMessage.classList.add('bg-green-100', 'text-green-800');
+                    feedbackMessage.textContent = 'Datos registrados exitosamente.';
+                    // Redirigir a la nueva sesión
+                    window.location.href = `/c/${result.sessionId}`;
+                } else {
+                    feedbackMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800');
+                    feedbackMessage.classList.add('bg-red-100', 'text-red-800');
+                    feedbackMessage.textContent = 'Error: ' + result.error;
+                }
             } catch (error) {
                 feedbackMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800');
                 feedbackMessage.classList.add('bg-red-100', 'text-red-800');

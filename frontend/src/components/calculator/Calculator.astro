@@ -1,5 +1,6 @@
 ---
 import { authenticate } from "../../lib/auth";
+import TemperatureChart from "./charts/TemperatureChart.astro";
 
 
 
@@ -10,7 +11,9 @@ if (redirect) {
 
 
 
-const {logs} = Astro.props;
+const {logs } = Astro.props;
+
+
 // Variables de paginación
 const recordsPerPage = 5; // Registros por página
 let currentPage = 1;
@@ -27,8 +30,26 @@ const formatDate = (isoDate) => {
     hour12: false,
   });
 };
----
 
+
+
+// Suponiendo que ya tienes definidas las variables `user` y `logs`
+const currentUserId = user.id;
+
+// Filtrar los logs del usuario actual
+const userLogs = logs.filter(log => log.user_id === currentUserId);
+
+// Generar las variables con los valores y las fechas
+const userTemp = userLogs.map(log => ({ temp: log.temp, created_at: log.created_at }));
+const userHumidity = userLogs.map(log => ({ humidity: log.humidity, created_at: log.created_at }));
+const userVpd = userLogs.map(log => ({ vpd: log.vpd, created_at: log.created_at }));
+const userDewpoint = userLogs.map(log => ({ dewpoint: log.dewpoint, created_at: log.created_at }));
+
+
+
+
+---
+    
 
     <!-- Formulario de Entrada -->
     <form id="calculator-form" class="space-y-4">
@@ -122,19 +143,10 @@ const formatDate = (isoDate) => {
       Ver más
     </button>
 
-  <!-- Botón para ocultar logs con ícono -->
-  <button 
-    id="toggleVisibilityBtn" 
-    class="ml-auto flex items-center justify-center  text-sm p-2 rounded-full transition-colors"
-    type="button"
-    onclick="toggleVisibility()"
-  >
-  Ocultar logs
-  </button>
+
 
       </div>
     </form>
-
     <div  id="logsContainer" class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
         {logs.map((log, index) => (
             <div 
@@ -330,51 +342,6 @@ const formatDate = (isoDate) => {
 
         </div>
     
-    <script is:inline>
-        // Función para ocultar/mostrar los logs y guardar el estado en cookies
-        function toggleVisibility() {
-            const logsContainer = document.getElementById('logsContainer');
-            const toggleBtn = document.getElementById('toggleVisibilityBtn');
-            
-            if (logsContainer.style.display === 'none') {
-                logsContainer.style.display = 'grid';
-                toggleBtn.textContent = '-';
-                // Guardar estado en cookie
-                document.cookie = "logsVisibility=visible; path=/; max-age=31536000"; // Expira en 1 año
-            } else {
-                logsContainer.style.display = 'none';
-                toggleBtn.textContent = '+';
-                // Guardar estado en cookie
-                document.cookie = "logsVisibility=hidden; path=/; max-age=31536000"; // Expira en 1 año
-            }
-        }
-    
-        // Función para recuperar el valor de una cookie
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) {
-                return parts.pop().split(';').shift();
-            }
-        }
-    
-        // Restaurar estado al cargar la página
-        document.addEventListener('DOMContentLoaded', () => {
-            const logsContainer = document.getElementById('logsContainer');
-            const toggleBtn = document.getElementById('toggleVisibilityBtn');
-            const visibility = getCookie('logsVisibility');
-    
-            if (visibility === 'hidden') {
-                logsContainer.style.display = 'none';
-                toggleBtn.textContent = '-';
-            } else {
-                logsContainer.style.display = 'grid';
-                toggleBtn.textContent = '+';
-            }
-        });
-    </script>
-
-
 
 
 <script is:inline>
@@ -481,19 +448,19 @@ const formatDate = (isoDate) => {
             <p class="text-sm">Tambien puedes explorar nuestra AI para obtener información sobre el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint).</p>
             <div class="flex gap-2">
 
-                <a href="/grow-calculator">
+                <a href="/grow/interpretar">
                     <button type="button" class="flex items-center justify-center gap-1 bg-custom-blue  text-white font-medium text-sm py-2 px-3 rounded transition-colors"
                   >
                   🤖 Interpretar
                   </button></a> 
       
-                  <a href="/grow/calculator">
+                  <a href="/grow/visualizacion">
             <button type="button" class="flex items-center justify-center gap-1 bg-custom-greey  text-white font-medium text-sm py-2 px-3 rounded transition-colors"
           >
             🚀 Visualización
           </button></a>  
           
-          <a href="/contacto">
+          <a href="/grow/contactanos">
             <button 
         type="button" 
         class="flex items-center justify-center gap-1 bg-custom-green text-white font-medium text-sm py-2 px-3 rounded transition-colors">

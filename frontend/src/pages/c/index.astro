@@ -1,8 +1,8 @@
 ---
-import CreateSession from "../components/chat/CreateSession.astro";
-import { supabase } from "../lib/supabase";
-import { authenticate } from "../lib/auth";
-import Layout from "../layouts/Layout.astro";
+import CreateSession from "../../components/chat/CreateSession.astro";
+import { supabase } from "../../lib/supabase";
+import { authenticate } from "../../lib/auth";
+import Layout from "../../layouts/Layout.astro";
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {

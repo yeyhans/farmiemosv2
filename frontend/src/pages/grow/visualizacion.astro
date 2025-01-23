@@ -1,0 +1,429 @@
+---
+
+import Layout from "../../layouts/Layout.astro";
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { data: logs, error } = await supabase
+  .from("calculator_logs")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error al obtener registros:", error.message);
+}
+
+const recordsPerPage = 10; // Registros por página
+let currentPage = 1;
+const totalPages = Math.ceil(logs.length / recordsPerPage);
+
+const formatDate = (isoDate) => {
+  const date = new Date(isoDate);
+  return date.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
+---
+
+<Layout title="Calculadora">
+
+ 
+    <!-- Formulario de Entrada -->
+<form id="calculator-form" class="space-y-2">
+    <!-- Contenedor principal con grid de 12 columnas -->
+    <div class="grid grid-cols-12 gap-4">
+        <!-- Columna izquierda: Inputs y resultados (4 columnas) -->
+        <div class="col-span-4 flex flex-col space-y-2">
+            <!-- Campo de temperatura -->
+            <div class="flex flex-col space-y-1">
+                <label for="tempInput" class="block text-xs font-medium text-gray-700">
+                    🌡️ (°C)
+                </label>
+                <input
+                    type="number"
+                    id="tempInput"
+                    name="temp"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-xs"
+                    placeholder="Temp"
+                    oninput="calcularValores()" 
+                />
+            </div>
+        
+            <!-- Campo de humedad -->
+            <div class="flex flex-col space-y-1">
+                <label for="humInput" class="block text-xs font-medium text-gray-700">
+                    💧 (%)
+                </label>
+                <input
+                    type="number"
+                    id="humInput"
+                    name="humidity"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-xs"
+                    placeholder="Humedad"
+                    oninput="calcularValores()"
+                />
+            </div>
+
+            <!-- Campo de notas -->
+            <div class="flex flex-col space-y-1">
+                <label for="notesInput" class="block text-xs font-medium text-gray-700">
+                    Notas:
+                </label>
+                <textarea
+                    id="notesInput"
+                    name="notes"
+                    class="block w-full h-full rounded-md border-gray-900 shadow-sm focus:border-green-500 focus:ring-green-500 text-xs"
+                    placeholder="Introduce tus notas"
+                    rows="2">
+                </textarea>
+            </div>
+
+            <!-- Resultados -->
+            <div class="flex flex-col space-y-2">
+                <!-- Resultado VPD -->
+                <div class="bg-blue-100 p-2 rounded-lg text-center">
+                    <h2 class="text-xs font-semibold">VPD 💨</h2>
+                    <p class="text-xs font-bold text-blue-700" id="vpdResult">
+                        0.00 <span class="text-xs font-bold text-custom-black">kPa</span>
+                    </p>
+                </div>       
+                <!-- Resultado Dewpoint -->
+                <div class="bg-green-100 p-2 rounded-lg text-center">
+                    <h2 class="text-xs font-semibold">Dewpoint 🌡️</h2>
+                    <p class="text-xs font-bold text-blue-700" id="dewpointResult">
+                        0.00 <span class="text-xs font-bold text-custom-black">°C</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Calendario (8 columnas) -->
+        <div class="col-span-8 flex flex-col space-y-2">
+            <!-- Espacio para el calendario -->
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h2 class="text-xs font-semibold text-gray-700 mb-2">Calendario 📅</h2>
+                <!-- Contenedor para FullCalendar -->
+
+                
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón en la parte inferior -->
+    <div class="flex gap-2">
+        <button type="button" onclick="registrarValores()"
+        class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Registrar Notas
+      </button>
+      <button 
+      id="openPopupBtn"
+      type="button" 
+      class="flex items-center justify-center gap-1 bg-custom-yellow hover:bg-yellow-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+      onclick="mostrarPopUp()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+        Ver más
+      </button>
+    </div>
+</form>
+
+    
+
+    <div  id="logsContainer" class="grid grid-cols-1 sm:grid-cols-5 lg:grid-cols-15  mt-4">
+        {logs.map((log, index) => (
+            <div 
+                class="log-card p-2 border border-gray-300 shadow-md rounded-lg bg-white text-xs leading-tight"
+                style="display: none;" 
+            >
+                <div class="mb-1">
+                    <p class="text-gray-400">{formatDate(log.created_at)}</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">🌡️ :</strong>
+                    <p class="text-green-800"><strong>{log.temp}</strong> °C</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">💧 :</strong>
+                    <p class="text-green-800"><strong>{log.humidity}</strong> %</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">💨:</strong>
+                    <p class="text-blue-700"><strong>{log.vpd}</strong> kPa</p>
+                </div>
+                <div class="mb-1 flex justify-between">
+                    <strong class="text-gray-600">🌡️ :</strong>
+                    <p class="text-green-700"><strong>{log.dewpoint}</strong> °C</p>
+                </div>
+                <div class="mt-1 flex w-full justify-between">
+        <button 
+        class="text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs w-3/4"
+        onclick={`eliminarRegistro('${log.id}')`}
+        >
+        Eliminar
+        </button>
+        <button 
+        class="px-2 py-1 rounded-full text-xs flex justify-center items-center text-left"
+        onclick={`mostrarPopUpNotas('${log.id}', '${log.notes || "Sin notas"}')`}
+        >
+        📝
+        </button>
+
+        <div 
+        id="popupNotasContainer" 
+        class="fixed inset-0 top-8 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    
+        <div class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative">
+        <button 
+            class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
+            onclick="cerrarPopUpNotas()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <div class="p-4">
+            <h2 class="text-lg font-semibold mb-2">Notas del Registro</h2>
+            <div id="notasContenido" class="mt-2 p-3 bg-yellow-100 rounded-lg">
+            </div>
+        </div>
+        </div>
+    
+        </div>
+        
+    
+        <script is:inline>
+        function mostrarPopUpNotas(id, notas) {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        const notasContenido = document.getElementById('notasContenido');
+        
+        // Decodificar las notas (por si contienen caracteres especiales)
+        const notasDecodificadas = decodeURIComponent(notas);
+        
+        // Insertar las notas en el contenido
+        notasContenido.textContent = notasDecodificadas;
+        
+        // Mostrar el popup
+        popupContainer.classList.remove('hidden');
+        }
+
+        function cerrarPopUpNotas() {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        popupContainer.classList.add('hidden');
+        }
+
+
+        document.getElementById('popupNotasContainer').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarPopUpNotas();
+        }
+        });
+        </script>
+
+
+
+        </div>
+
+
+            </div>
+        ))}
+
+
+
+    </div>
+        <!-- Botones de paginación -->
+        <div class="flex justify-center items-center mt-4 space-x-2" id="pagination-container">
+            {Array.from({ length: totalPages }).map((_, index) => (
+            <button 
+                class="pagination-button px-4 py-2 rounded bg-gray-200"
+                onclick={`cambiarPagina(${index + 1})`}
+            >
+                {index + 1}
+            </button>
+            ))}
+        </div>
+
+
+        <script is:inline>
+            let currentPage = 1; // Página actual inicial.
+            const recordsPerPage = 5; // Registros por página.
+            let totalPages = 0; // Total de páginas (se calculará dinámicamente).
+
+            function calcularTotalPages() {
+            const logs = [...document.querySelectorAll('.log-card')];
+            totalPages = Math.ceil(logs.length / recordsPerPage); // Calcula el total de páginas.
+            }
+            const buttonsPerPage = 5; // Botones visibles al mismo tiempo.
+        
+            function cambiarPagina(page) {
+                currentPage = page;
+                renderCurrentPageLogs(); // Actualiza los registros en pantalla.
+                renderPaginationButtons(); // Actualiza los botones de paginación.
+            }
+        
+            function renderCurrentPageLogs() {
+                const logs = [...document.querySelectorAll('.log-card')];
+                const startIndex = (currentPage - 1) * recordsPerPage;
+                const endIndex = startIndex + recordsPerPage;
+        
+                // Oculta todos los registros.
+                logs.forEach((log, index) => {
+                    log.style.display = index >= startIndex && index < endIndex ? 'block' : 'none';
+                });
+            }
+        
+            function renderPaginationButtons() {
+                const container = document.getElementById('pagination-container');
+                container.innerHTML = ''; // Limpia el contenedor antes de renderizar.
+        
+                // Calcula los límites del rango visible.
+                const startButton = Math.max(1, currentPage - Math.floor(buttonsPerPage / 2));
+                const endButton = Math.min(totalPages, startButton + buttonsPerPage - 1);
+        
+                for (let i = startButton; i <= endButton; i++) {
+                    const button = document.createElement('button');
+                    button.textContent = i;
+                    button.className = `pagination-button px-4 py-2 rounded ${
+                        i === currentPage ? 'bg-custom-blue text-white' : 'bg-gray-200'
+                    }`;
+                    button.onclick = () => cambiarPagina(i);
+                    container.appendChild(button);
+                }
+        
+                // Agrega flechas para navegar (opcional).
+                if (currentPage > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.textContent = '«';
+                    prevButton.className = 'pagination-button px-4 py-2 rounded bg-gray-200';
+                    prevButton.onclick = () => cambiarPagina(currentPage - 1);
+                    container.prepend(prevButton);
+                }
+        
+                if (currentPage < totalPages) {
+                    const nextButton = document.createElement('button');
+                    nextButton.textContent = '»';
+                    nextButton.className = 'pagination-button px-4 py-2 rounded bg-gray-200';
+                    nextButton.onclick = () => cambiarPagina(currentPage + 1);
+                    container.appendChild(nextButton);
+                }
+            }
+        
+            // Inicializa todo al cargar la página.
+            document.addEventListener('DOMContentLoaded', () => {
+                calcularTotalPages();
+                renderCurrentPageLogs();
+                renderPaginationButtons();
+            });
+        </script>
+
+                <div class="mt-2 p-2 border rounded-lg shadow-md bg-gray-50">
+          <h3 class="text-lg font-medium text-gray-800">📈 Vincula aquí tu dispositivo ioT</h3>
+          <p class="text-sm text-gray-600">Vincula tu dispositivo Tuya asociados a nuestras API y descubre todos los beneficios de la AI.</p>
+          <a href="/iot" class="text-white mt-2">
+            <p class="text-sm text-center text-green-900">¡Descubre más haciendo click aquí!</p>
+          </a>
+
+        </div>
+
+        <script is:inline>
+
+
+            function calcularValores() {
+                const temp = parseFloat(document.getElementById('tempInput').value);
+                const hum = parseFloat(document.getElementById('humInput').value);
+        
+                if (isNaN(temp) || isNaN(hum) || hum < 0 || hum > 100) {
+                    return;
+                }
+        
+                const a = 17.27, b = 237.7;
+                const alpha = ((a * temp) / (b + temp)) + Math.log(hum / 100);
+                const dewpoint = (b * alpha) / (a - alpha);
+                const es = 0.6108 * Math.exp((a * temp) / (b + temp));  
+                const ea = es * (hum / 100);                             
+                const vpd = es - ea;      
+                
+        
+                document.getElementById('vpdResult').textContent = vpd.toFixed(2);
+                document.getElementById('dewpointResult').textContent = dewpoint.toFixed(2);
+          
+            }
+            
+            async function registrarValores() {
+                const notes = document.getElementById('notesInput').value.trim();
+                const temp = parseFloat(document.getElementById('tempInput').value);
+                const hum = parseFloat(document.getElementById('humInput').value);
+                const vpd = parseFloat(document.getElementById('vpdResult').textContent);
+                const dewpoint = parseFloat(document.getElementById('dewpointResult').textContent);
+        
+                const formData = new FormData();
+                formData.append('temp', temp.toFixed(2));
+                formData.append('humidity', hum.toFixed(2));
+                formData.append('vpd', vpd.toFixed(2));
+                formData.append('dewpoint', dewpoint.toFixed(2));
+                formData.append('notes', notes);
+        
+         
+        
+                try {
+                    const response = await fetch('/api/calculator', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+         
+                        alert('Datos registrados exitosamente.');
+                        location.reload();
+                        return true;
+                    } else {
+                        alert('Error: ' + result.error);
+                        console.error("Error al registrar los valores.");
+                        return false;
+                    }
+                } catch (error) {
+                    alert('Error de red: ' + error.message);
+                    return false;
+                }
+            }
+        
+            async function eliminarRegistro(id) {
+                if (!confirm('¿Estás seguro de que deseas eliminar este registro?')) return;
+        
+                try {
+                    const response = await fetch(`/api/calculator?id=${id}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Registro eliminado exitosamente.' + id);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Error de red: ' + error.message);
+                }
+            }
+        </script>
+
+    
+</Layout>

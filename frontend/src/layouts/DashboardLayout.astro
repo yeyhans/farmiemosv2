@@ -17,7 +17,7 @@ const avatarUrl = user?.user_metadata.avatar_url;
   </head>
   <body>
     <div class="min-h-screen flex flex-col bg-gray-50">
-      <header class="flex items-center justify-between bg-white px-4 py-2 shadow">
+      <header class="flex items-center justify-between bg-white px-4 py-2 shadow sticky top-0 z-10 ">
         <!-- Logo -->
         <div class="flex items-center">
           <a href="/" class="flex items-center">
@@ -51,6 +51,8 @@ const avatarUrl = user?.user_metadata.avatar_url;
       
 
         <slot />
+
+
 
     </div>
 
