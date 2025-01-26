@@ -1,0 +1,187 @@
+---
+---
+
+<section id="faqs" class="py-20">
+    <!-- Título de la página -->
+    <h1 class="text-center relative text-3xl font-black text-custom-yellow md:text-4xl">¡FAQ's de <span class="text-custom-green">Farmiemos!</span></h1>
+
+    <!-- Contenedor del chat -->
+    <div class="mx-auto bg-white rounded-lg shadow-lg p-6">
+
+
+        <!-- Historial del chat -->
+        <div id="chatContainer" class="h-96 overflow-y-auto mb-4 space-y-4">
+            <!-- Mensaje de bienvenida -->
+            <div class="flex justify-start">
+                <div class="bg-custom-green text-white rounded-lg p-3 max-w-[70%]">
+                    ¡Hola! Soy tu asistente de Farmiemos. ¿En qué puedo ayudarte?
+                </div>
+            </div>
+        </div>
+
+                    <!-- Globos de preguntas predefinidas -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                      <button
+                          onclick="setQuestion('¿Cómo usar Farmienda?')"
+                          class="bg-blue-900 text-custom-blue rounded-full px-4 py-2 hover:bg-custom-blue/20 transition-colors"
+                      >
+                          ¿Cómo usar Farmienda?
+                      </button>
+                      <button
+                          onclick="setQuestion('¿Qué servicios más tienen?')"
+                          class="bg-blue-900 text-custom-blue rounded-full px-4 py-2 hover:bg-custom-blue/20 transition-colors"
+                      >
+                          ¿Qué servicios más tienen?
+                      </button>
+                      <button
+                      onclick="setQuestion('¿Qué nutrientes base son compatibles con este producto?')"
+                      class="bg-blue-900 text-custom-blue rounded-full px-4 py-2 hover:bg-custom-blue/20 transition-colors"
+                  >
+                          ¿Qué nutrientes base son compatibles con este producto?
+                  </button>
+
+                      <!-- Puedes agregar más botones con otras preguntas aquí -->
+                  </div>
+
+        <!-- Formulario para enviar preguntas -->
+        <form id="faqsForm" class="flex gap-2">
+            <input
+                type="text"
+                name="prompt"
+                id="prompt"
+                placeholder="Escribe tu pregunta..."
+                required
+                class="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+            />
+            <button
+                type="submit"
+                class="bg-custom-blue text-white rounded-lg px-4 py-2 hover:bg-custom-blue/90 transition-colors"
+            >
+                Enviar
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- Script actualizado para manejar streaming -->
+<script is:inline>
+const form = document.getElementById('faqsForm');
+const chatContainer = document.getElementById('chatContainer');
+const promptInput = document.getElementById('prompt');
+
+// Función para autocompletar preguntas predefinidas (sin cambios)
+function setQuestion(question) {
+    promptInput.value = question;
+    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+}
+
+// Función de formateo (mejorada para streaming)
+function formatResponse(response) {
+    return response
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\d+\.\s/g, '<br><span class="text-custom-green">•</span> ')
+        .replace(/🌱|🌿|✅/g, match => 
+            `<span class="text-2xl">${match}</span>`);
+}
+
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+        const formData = new FormData(form);
+        const prompt = formData.get('prompt');
+
+        // Agregar pregunta del usuario
+        const userMessage = document.createElement('div');
+        userMessage.className = 'flex justify-end';
+        userMessage.innerHTML = `
+            <div class="bg-custom-blue text-white rounded-lg p-3 max-w-[70%]">
+                ${prompt}
+            </div>
+        `;
+        chatContainer.appendChild(userMessage);
+
+        // Crear elemento de respuesta con indicador de carga
+        const aiMessage = document.createElement('div');
+        aiMessage.className = 'flex justify-start';
+        aiMessage.innerHTML = `
+            <div class="bg-custom-green text-white rounded-lg p-3 max-w-[70%]">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        chatContainer.appendChild(aiMessage);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        form.reset();
+
+        // Hacer fetch y manejar streaming
+        const response = await fetch('/api/chat/faqs', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        if (!response.body) throw new Error('No se recibió respuesta');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let responseBuffer = '';
+        const responseDiv = aiMessage.querySelector('div');
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            // Procesar chunks
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const content = JSON.parse(line.replace('data: ', ''));
+                    responseBuffer += content;
+                    responseDiv.innerHTML = formatResponse(responseBuffer);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            }
+        }
+
+        // Eliminar indicador de carga al finalizar
+        responseDiv.querySelector('.typing-indicator')?.remove();
+
+    } catch (error) {
+        console.error('Error:', error);
+        // Reemplazar indicador de carga con mensaje de error
+        const errorDiv = aiMessage.querySelector('div');
+        errorDiv.innerHTML = `
+            <div class="bg-red-500 text-white rounded-lg p-3">
+                Error: ${error.message}
+            </div>
+        `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+});
+</script>
+
+<!-- Estilos para el indicador de escritura -->
+<style is:global>
+.typing-indicator span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 3px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+</style>

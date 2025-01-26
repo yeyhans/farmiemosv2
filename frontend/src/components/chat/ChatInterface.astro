@@ -341,99 +341,138 @@ function addActionButtons(index) {
   const conversationContainer = document.getElementById('conversationContainer');
   const profile = { user_name: "Tú" };
 
+  let isStreaming = false;
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (isStreaming) return;
 
-    try {
-      const formData = new FormData(form);
-      const userPrompt = formData.get("prompt").toString();
-      const imageFile = formData.get("file");
+  try {
+    const formData = new FormData(form);
+    const userPrompt = formData.get("prompt").toString();
+    const imageFile = formData.get("file");
 
-      // Limpiar el input de texto y la vista previa de la imagen
-      form.querySelector('#prompt').value = '';
-      imagePreviewContainer.innerHTML = '';
+    // Limpiar inputs
+    form.querySelector('#prompt').value = '';
+    imagePreviewContainer.innerHTML = '';
 
-      // Crear el HTML para el mensaje del usuario
-      let userMessageHtml = `
-        <div>
-          <div class="bg-gray-100 p-2 mt-2 rounded-lg">
-            <strong class="text-green-800">${profile.user_name}:</strong> ${userPrompt}
-          </div>
-      `;
+    // Mensaje del usuario
+    let userMessageHtml = `
+      <div>
+        <div class="bg-gray-100 p-2 mt-2 rounded-lg">
+          <strong class="text-green-800">${profile.user_name}:</strong> ${userPrompt}
+        </div>
+    `;
 
-      // Si hay una imagen, agregarla al mensaje del usuario
-      if (imageFile && imageFile.size > 0) {
-        const imageUrl = URL.createObjectURL(imageFile);
-        userMessageHtml += `
-          <div class="mt-2">
-            <img src="${imageUrl}" alt="Imagen subida por el usuario" class="rounded-lg shadow-sm" />
-          </div>
-        `;
-      }
-
-      userMessageHtml += `</div>`;
-
-      // Agregar el mensaje del usuario al contenedor de la conversación
-      conversationContainer.insertAdjacentHTML('beforeend', userMessageHtml);
-
-
-      // Mostrar indicador de carga
-      const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'bg-blue-50 p-4 mt-2 rounded-lg';
-      loadingDiv.innerHTML = '<strong>Asistente:</strong> Escribiendo...';
-      conversationContainer.appendChild(loadingDiv);
-
-      scrollToBottom();
-
-      // Enviar el formulario al backend
-      const res = await fetch('/api/chat/assistants', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Error al llamar /api/chat/assistants:', res.status, errorText);
-
-        // Reemplazar el indicador de carga con el mensaje de error
-        loadingDiv.className = 'bg-red-100 p-4 mt-2 rounded-lg text-red-600';
-        loadingDiv.innerHTML = `<strong>Error:</strong> ${res.status} - ${errorText}`;
-        return;
-      }
-
-      const data = await res.json();
-
-      // Verificar que la respuesta contiene los datos necesarios
-      if (data && data.response && data.response.aiResponse) {
-        // Reemplazar el indicador de carga con la respuesta real
-        loadingDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
-        loadingDiv.innerHTML = `
-        <div class="flex justify-between items-start">
-          <div class="flex-grow">
-            <strong>Asistente:</strong> ${data.response.aiResponse}
-          </div>
-          ${addActionButtons(session.ai_response.length)}
+    if (imageFile && imageFile.size > 0) {
+      const imageUrl = URL.createObjectURL(imageFile);
+      userMessageHtml += `
+        <div class="mt-2">
+          <img src="${imageUrl}" alt="Imagen subida" class="rounded-lg shadow-sm max-w-[300px]">
         </div>
       `;
-      scrollToBottom();
-      } else {
-        throw new Error('Respuesta inválida del servidor');
-      }
-
-
-    } catch (error) {
-      console.error('Error en fetch:', error);
-      // Mostrar error en la UI
-      conversationContainer.insertAdjacentHTML('beforeend', `
-        <div class="bg-red-100 p-4 mt-2 rounded-lg text-red-600">
-          <strong>Error:</strong> ${error.message || 'Error inesperado al llamar la API.'}
-        </div>
-      `);
-      
     }
-  });
-  
+
+    userMessageHtml += `</div>`;
+    conversationContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+
+    // Elemento para la respuesta en tiempo real
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
+    assistantDiv.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="flex-grow">
+          <strong>Asistente:</strong> <span id="streamingText"></span>
+        </div>
+        <div class="flex gap-2 ml-4">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    `;
+    conversationContainer.appendChild(assistantDiv);
+    scrollToBottom();
+
+    isStreaming = true;
+    const streamingText = assistantDiv.querySelector('#streamingText');
+    let fullResponse = '';
+
+    const res = await fetch('/api/chat/assistents', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        fullResponse += chunk;
+        
+        // Actualizar texto
+        streamingText.textContent = fullResponse;
+        
+        // Remover indicador de typing solo si existe
+        const typingIndicator = assistantDiv.querySelector('.typing-indicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+        
+        scrollToBottom();
+      }
+
+    // Finalizar stream
+    isStreaming = false;
+    
+    // Agregar botones de acciones
+    const actionsContainer = assistantDiv.querySelector('.flex.gap-2.ml-4');
+    if (actionsContainer) {
+      actionsContainer.innerHTML = addActionButtons(session.ai_response.length);
+    }
+
+    // Actualizar sesión local
+    session.ai_response.push(fullResponse);
+    
+  } catch (error) {
+    isStreaming = false;
+    console.error('Error:', error);
+    conversationContainer.insertAdjacentHTML('beforeend', `
+      <div class="bg-red-100 p-4 mt-2 rounded-lg text-red-600">
+        <strong>Error:</strong> ${error.message || 'Error en el servidor'}
+      </div>
+    `);
+    scrollToBottom();
+  }
+});
 </script>
 
+<style>
+/* Agregar animación de typing */
+.typing-indicator span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+  background: #4b5563;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out;
+}
 
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+</style>

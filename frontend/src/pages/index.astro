@@ -1,4 +1,6 @@
 ---
+import Features from '../components/Features.astro';
+import Faqs from '../components/Faqs.astro';
 import Layout from '../layouts/Layout.astro';
 
 ---
@@ -19,12 +21,6 @@ import Layout from '../layouts/Layout.astro';
 		  <div id="countdown" class="mt-4 text-2xl font-bold text-gray-800">
 			CUENTA REGRESIVA
 		</div>
-
-		<a href="/welcome">
-			<h2 class="text-xl mt-2">
-			  👉 ¡HAZ CLICK AQUI PARA SABER DE QUE TRATA!
-			</h2>
-		  </a>
 
 	</section>
 	
@@ -102,23 +98,18 @@ import Layout from '../layouts/Layout.astro';
 					</div>
 					<p class="text-sm text-center mr-2 mt-3"> COMPRAR AQUI!</p>
 				</button>
-			</a>
-
-
-			</div>
-
-
-		</div>
-		<div class="mt-8 space-x-4 items-center justify-center text-center">
-			<div class="">
-				<a href="/faq" class="text-grey-300 hover:underline">
-					<button>
-					<p class="m-0">❓🔍💬💡</p>
-					<p class="m-0">Farmienda FAQ</p>
-					</button>
 				</a>
+
+
 			</div>
+
+
 		</div>
+
 	</div>
+
+
+	<Faqs />
+	<Features />
 
 </Layout>

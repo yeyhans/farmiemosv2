@@ -2,6 +2,11 @@ import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
 import OpenAI from "openai";
 
+const deepseek = new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: import.meta.env.DEEPSEEK_API_KEY,
+});
+
 const openai = new OpenAI({
   apiKey: import.meta.env.OPENAI_API_KEY,
 });
@@ -11,53 +16,31 @@ interface ChatMessage {
   content: string;
 }
 
+async function searchRAG(query: string): Promise<string> {
+  return "Información relevante recuperada del sistema RAG.";
+}
+
 export const POST: APIRoute = async ({ request, cookies }) => {
+  const formData = await request.formData();
+  const sessionId = formData.get("sessionId")?.toString();
+  const userPrompt = formData.get("prompt")?.toString();
+  const imageFile = formData.get("file") as File | null;
+  const accessToken = cookies.get("sb-access-token")?.value;
+  const refreshToken = cookies.get("sb-refresh-token")?.value;
+
+  if (!sessionId || !userPrompt || !accessToken || !refreshToken) {
+    return new Response(
+      JSON.stringify({ error: !sessionId ? "ID de sesión no proporcionado" : !userPrompt ? "Prompt vacío" : "No autorizado" }), 
+      { status: !sessionId || !userPrompt ? 400 : 401 }
+    );
+  }
+
   try {
-    // 1. Obtener datos del formulario primero
-    const formData = await request.formData();
-    const sessionId = formData.get("sessionId")?.toString();
-    const userPrompt = formData.get("prompt")?.toString();
-
-    // 2. Validar datos del formulario
-    if (!sessionId) {
-      return new Response(
-        JSON.stringify({ error: "ID de sesión no proporcionado" }), 
-        { status: 400 }
-      );
-    }
-
-    if (!userPrompt) {
-      return new Response(
-        JSON.stringify({ error: "Prompt vacío" }), 
-        { status: 400 }
-      );
-    }
-
-    // 3. Validación de tokens
-    const accessToken = cookies.get("sb-access-token")?.value;
-    const refreshToken = cookies.get("sb-refresh-token")?.value;
-
-    if (!accessToken || !refreshToken) {
-      return new Response(
-        JSON.stringify({ error: "No autorizado" }), 
-        { status: 401 }
-      );
-    }
-
-    // 4. Validación de sesión
-    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-      refresh_token: refreshToken,
-      access_token: accessToken,
-    });
-
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({ refresh_token: refreshToken, access_token: accessToken });
     if (sessionError || !sessionData?.user) {
-      return new Response(
-        JSON.stringify({ error: "Sesión inválida" }), 
-        { status: 401 }
-      );
+      throw new Error("Sesión inválida");
     }
 
-    // 5. Obtener chat específico por ID
     const { data: chatSession, error: chatSessionError } = await supabase
       .from("chats")
       .select("*")
@@ -65,97 +48,127 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .eq("user_id", sessionData.user.id)
       .single();
 
-    if (chatSessionError) {
-      console.error("Error al obtener chat:", chatSessionError);
-      return new Response(
-        JSON.stringify({ error: "Error al obtener el chat" }), 
-        { status: 500 }
-      );
+    if (chatSessionError) throw new Error("Error al obtener el chat");
+
+    let imageAnalysis = "";
+    if (imageFile && imageFile.size > 0) {
+      const buffer = await imageFile.arrayBuffer();
+      const base64Image = Buffer.from(buffer).toString("base64");
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Describe el detalle de la planta que se visualiza en la imagen." },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${imageFile.type};base64,${base64Image}`,
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      imageAnalysis = response.choices[0]?.message?.content || "No se pudo obtener una respuesta para la imagen.";
     }
 
-    // 6. Preparar el historial de conversación
-    const previousUserPrompts = chatSession?.user_prompt || [];
-    const previousAiResponses = chatSession?.ai_response || [];
-    
-    const conversationHistory: ChatMessage[] = [];
+    const combinedPrompt = userPrompt + (imageAnalysis ? `\n\nAnálisis de la imagen:\n${imageAnalysis}` : "");
 
-    // Mensaje del sistema
-    const systemMessage = `Eres un experto en programacion sobre todo en framework astro, utilizando html y js nativo integrado con tailwind css`;
-    
-    conversationHistory.push({ role: "system", content: systemMessage });
+    const ragResponse = await searchRAG(combinedPrompt);
 
-    // Agregar mensajes previos
-    for (let i = 0; i < previousUserPrompts.length; i++) {
-      if (previousUserPrompts[i]) {
-        conversationHistory.push({ role: "user", content: previousUserPrompts[i] });
-      }
-      if (previousAiResponses[i]) {
-        conversationHistory.push({ role: "assistant", content: previousAiResponses[i] });
-      }
-    }
+    const conversationHistory: ChatMessage[] = [
+      { role: "system", content: "Eres un experto en cultivar todo tipo de plantas" },
+      ...(chatSession.user_prompt || []).flatMap((prompt, i) => [
+        { role: "user", content: prompt },
+        { role: "assistant", content: chatSession.ai_response[i] }
+      ]),
+      { role: "user", content: combinedPrompt },
+      { role: "system", content: `Información relevante: ${ragResponse}` }
+    ];
 
-    // Agregar el nuevo prompt
-    conversationHistory.push({ role: "user", content: userPrompt });
-
-    // 7. Llamada a OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const completionStream = await deepseek.chat.completions.create({
+      model: "deepseek-chat",
       messages: conversationHistory,
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: 1.0,
+      max_tokens: 100,
+      stream: true,
     });
 
-    const aiResponse = completion.choices[0]?.message?.content;
-
-    if (!aiResponse) {
-      throw new Error("No se pudo generar una respuesta");
-    }
-
-    // 8. Actualizar la base de datos
-    const updatedUserPrompts = [...previousUserPrompts, userPrompt];
-    const updatedAiResponses = [...previousAiResponses, aiResponse];
-
-    const { error: updateError } = await supabase
-      .from("chats")
-      .update({
-        user_prompt: updatedUserPrompts,
-        ai_response: updatedAiResponses,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", sessionId)
-      .eq("user_id", sessionData.user.id);
-
-    if (updateError) {
-      console.error("Error al actualizar chat:", updateError);
-      throw new Error("Error al guardar la conversación");
-    }
-
-    // 9. Enviar respuesta
-    return new Response(
-      JSON.stringify({
-        success: true,
-        response: {
-          userPrompt,
-          aiResponse,
-          history: {
-            userPrompts: updatedUserPrompts,
-            aiResponses: updatedAiResponses
+    let aiResponse = "";
+    let tokensUsed = 0;
+    
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of completionStream) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            aiResponse += content;
+            controller.enqueue(content);
+            
+            // Capturar uso de tokens si está disponible
+            if (chunk.usage?.total_tokens) {
+              tokensUsed = chunk.usage.total_tokens;
+            }
           }
+        } catch (error) {
+          console.error("Error en el stream:", error);
+          controller.enqueue("[ERROR]");
+        } finally {
+          // Actualizar base de datos después de completar el stream
+          try {
+            const updatedUserPrompts = [...(chatSession.user_prompt || []), combinedPrompt];
+            const updatedAiResponses = [...(chatSession.ai_response || []), aiResponse];
+
+            await supabase
+              .from("chats")
+              .update({
+                user_prompt: updatedUserPrompts,
+                ai_response: updatedAiResponses,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", sessionId)
+              .eq("user_id", sessionData.user.id);
+
+            // Actualizar tokens del usuario
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("tokens")
+              .eq("user_id", sessionData.user.id)
+              .single();
+
+            const newTokens = (profileData?.tokens || 0) + tokensUsed;
+            await supabase
+              .from("profiles")
+              .update({ tokens: newTokens })
+              .eq("user_id", sessionData.user.id);
+
+          } catch (dbError) {
+            console.error("Error en actualización de BD:", dbError);
+          }
+          
+          controller.close();
         }
-      }),
-      { 
-        status: 200,
-        headers: { "Content-Type": "application/json" }
+      },
+      cancel() {
+        console.log("Stream cancelado por el cliente");
       }
-    );
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Stream-Data": "true" // Cabecera personalizada para identificar streams
+      }
+    })
 
   } catch (error) {
     console.error("Error en el procesamiento:", error);
     return new Response(
-      JSON.stringify({
-        error: "Error del servidor",
-        details: error instanceof Error ? error.message : "Error desconocido"
-      }),
+      JSON.stringify({ error: "Error del servidor", details: error instanceof Error ? error.message : "Error desconocido" }),
       { status: 500 }
     );
   }
