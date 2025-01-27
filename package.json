@@ -17,6 +17,8 @@
     "@astrojs/vercel": "^8.0.4",
     "@supabase/supabase-js": "^2.47.10",
     "@tuya/tuya-connector-nodejs": "^2.1.2",
+    "@vercel/analytics": "^1.4.1",
+    "@vercel/speed-insights": "^1.1.0",
     "astro": "^5.1.1",
     "deepseek": "^0.0.2",
     "mercadopago": "^2.2.0",
