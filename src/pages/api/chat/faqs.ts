@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
                 { role: "user", content: userPrompt }
             ],
             temperature: 1.0,
-            max_tokens: 500,
+            max_tokens: 1000,
             stream: true,  // ← Habilitar streaming
         });
 
