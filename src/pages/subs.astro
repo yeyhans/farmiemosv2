@@ -2,8 +2,141 @@
 import Layout from "../layouts/Layout.astro";
 
 ---
-<Layout title="">
-    <form method="POST" action="/api/mercadopago/subscribe">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Suscribirme</button>
-      </form>      
+<Layout title="Perfil">
+  <div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Completa tu perfil</h1>
+    <p class="mb-6">Correo electrónico: <strong>{user.email}</strong></p>
+
+    <form id="profile-form" action="/api/profile" method="POST" class="space-y-8 bg-white p-6 rounded-md shadow-md">
+      <!-- Navegación entre secciones -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button type="button" data-section="personal" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+          Datos Personales
+        </button>
+        <button type="button" data-section="cultivo" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+          Objetivo
+        </button>
+        <button type="button" data-section="espacio" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+          Espacio
+        </button>
+        <button type="button" data-section="practicas" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+          Prácticas
+        </button>
+        <button type="button" data-section="intereses" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+          Intereses
+        </button>
+      </div>
+
+      <!-- Sección Datos Personales -->
+      <section id="personal-section" class="section-content">
+        <h2 class="text-xl font-semibold mb-4">Datos personales</h2>
+        <div class="space-y-4">
+          <!-- Campos existentes... -->
+        </div>
+        <div class="mt-6 flex justify-between">
+          <button type="button" data-section="cultivo" class="next-section-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            Siguiente →
+          </button>
+        </div>
+      </section>
+
+      <!-- Sección Objetivo del Cultivo -->
+      <section id="cultivo-section" class="section-content hidden">
+        <h2 class="text-xl font-semibold mb-4">Objetivo del cultivo</h2>
+        <div class="space-y-4">
+          <!-- Campos existentes... -->
+        </div>
+        <div class="mt-6 flex justify-between">
+          <button type="button" data-section="personal" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+            ← Anterior
+          </button>
+          <button type="button" data-section="espacio" class="next-section-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            Siguiente →
+          </button>
+        </div>
+      </section>
+
+      <!-- Sección Espacio y Medio -->
+      <section id="espacio-section" class="section-content hidden">
+        <h2 class="text-xl font-semibold mb-4">Condiciones del espacio</h2>
+        <div class="space-y-4">
+          <!-- Campos existentes... -->
+        </div>
+        <div class="mt-6 flex justify-between">
+          <button type="button" data-section="cultivo" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+            ← Anterior
+          </button>
+          <button type="button" data-section="practicas" class="next-section-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            Siguiente →
+          </button>
+        </div>
+      </section>
+
+      <!-- Sección Prácticas Agrícolas -->
+      <section id="practicas-section" class="section-content hidden">
+        <h2 class="text-xl font-semibold mb-4">Prácticas agrícolas</h2>
+        <div class="space-y-4">
+          <!-- Campos existentes... -->
+        </div>
+        <div class="mt-6 flex justify-between">
+          <button type="button" data-section="espacio" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+            ← Anterior
+          </button>
+          <button type="button" data-section="intereses" class="next-section-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            Siguiente →
+          </button>
+        </div>
+      </section>
+
+      <!-- Sección Intereses y Desafíos -->
+      <section id="intereses-section" class="section-content hidden">
+        <h2 class="text-xl font-semibold mb-4">Intereses y desafíos</h2>
+        <div class="space-y-4">
+          <!-- Campos existentes... -->
+        </div>
+        <div class="mt-6 flex justify-between">
+          <button type="button" data-section="practicas" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+            ← Anterior
+          </button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            Guardar Perfil
+          </button>
+        </div>
+      </section>
+    </form>
+  </div>
+
+  <script is:inline>
+    // Manejo de navegación entre secciones
+    document.querySelectorAll('.section-btn, .next-section-btn, .prev-section-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetSection = btn.dataset.section + '-section';
+        
+        // Ocultar todas las secciones
+        document.querySelectorAll('.section-content').forEach(section => {
+          section.classList.add('hidden');
+        });
+        
+        // Mostrar sección objetivo
+        document.getElementById(targetSection).classList.remove('hidden');
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.section-btn').forEach(navBtn => {
+          navBtn.classList.remove('bg-blue-200', 'text-blue-800');
+          navBtn.classList.add('bg-blue-100');
+        });
+        document.querySelector(`[data-section="${btn.dataset.section}"]`).classList.add('bg-blue-200');
+      });
+    });
+
+    // Mostrar primera sección al cargar
+    document.getElementById('personal-section').classList.remove('hidden');
+    document.querySelector('[data-section="personal"]').classList.add('bg-blue-200');
+
+    // Mantener el submit original
+    const form = document.getElementById("profile-form");
+    form.addEventListener("submit", async (e) => {
+      // ... código original del submit ...
+    });
+  </script>
 </Layout>

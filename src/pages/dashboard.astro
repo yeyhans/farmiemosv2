@@ -60,7 +60,7 @@ const { data: profile } = await supabase
 const { data: logs, error } = await supabase
   .from("calculator_logs")
   .select("*")
-
+  .eq("user_id", user.id)
   .order("created_at", { ascending: false });
 
 if (error) {
@@ -80,7 +80,7 @@ const isProfileComplete = profile?.user_name &&
                           profile?.problemas_enfrentados;
 
 if (!isProfileComplete) {
-  return Astro.redirect("/profile-requiered"); // Redirigir a la página de perfil
+  return Astro.redirect("/profile"); // Redirigir a la página de perfil
 }
 
 // Genera const para visualizar en perfil
@@ -107,14 +107,14 @@ const description= "Farmiemos Dashboard"
               Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
               de tu cultivo junto a farmiemos, si quieres saber más detalles de 
               su funcionamiento  
-              <a href="/grow-calculator" class="text-green-900 font-semibold">Haz click aquí!</a>
+              <a href="/que-hacemos#calculator_ai" class="text-green-900 font-semibold">Haz click aquí!</a>
             </p>
           </div>
           <button onclick="toggleAccordion('accordion-ai-calculator')" class="flex items-center space-x-2">
             <span id="icon-ai-calculator" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
           </button>
         </div>
-        <div id="accordion-ai-calculator" class="hidden px-4 pb-2">
+        <div id="accordion-ai-calculator" class="px-4 pb-2">
           <Calculator logs={logs} />
         </div>
       </div>
@@ -125,13 +125,13 @@ const description= "Farmiemos Dashboard"
           <div class="flex items-center justify-between py-4 px-6">
             <div>
               <h2 class="text-2xl font-bold text-left">🤖 Mastergrower AI</h2>
-              <p class="text-sm text-gray-600">Haz tus preguntas de cultivo!</p>
+              <p class=" text-center text-sm text-gray-600">Crea tu session y haz preguntas de cultivo! Para más detalles del funcionamiento de nuestra AI ver <a href="/que-hacemos#explicacion_ai" class="text-green-900 font-semibold">aquí</a></p>
             </div>
             <button onclick="toggleAccordion('accordion-mastergrower')" class="flex items-center space-x-2">
               <span id="icon-mastergrower" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
             </button>
           </div>
-          <div id="accordion-mastergrower" class="hidden px-4 pb-2">
+          <div id="accordion-mastergrower" class=" px-4 pb-2">
             <SessionComponent chats={chats} profile={profile}/>
           </div>
         </div>
@@ -150,7 +150,7 @@ const description= "Farmiemos Dashboard"
                 </span>
               </button>
             </div>
-            <div id="accordion-tarjet-profile" class="hidden transition-all duration-300">
+            <div id="accordion-tarjet-profile" class="transition-all duration-300">
               <div class="bg-green-100 rounded-lg p-4 shadow-inner">
                 <p class="text-sm text-gray-700">📝 notes: <span class="font-semibold">{count_logs}</span></p>
                 <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
@@ -166,23 +166,7 @@ const description= "Farmiemos Dashboard"
     </section>
 
     
-    <section id="blog" class="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-4">
-      <div class="border rounded-xl shadow-lg bg-white hover:shadow-lg transition-all duration-300 col-span-2">
-        <div class="flex items-center justify-between py-4 px-6">
-          <div>
-            <h2 class="text-2xl font-bold text-left">ℹ️ ¿Cómo funciona nuestra AI?</h2>
-            <p class="text-sm text-gray-600">Un asesor virtual para agricultores que, gracias a la inteligencia artificial, ofrece recomendaciones personalizadas para optimizar sus cultivos.</p>
-          </div>
-          <button onclick="toggleAccordion('accordion-blog')" class="flex items-center space-x-2">
-            <span id="icon-blog" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
-          </button>
-        </div>
-        <div id="accordion-blog" class="hidden px-4 pb-2">
-          <ExplicacionAI />
-          
-        </div>
-      </div>
-    </section>
+
     <FeedbackDiscord />
   </main>
   <Footer />
@@ -260,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeAccordion("accordion-ai-calculator");
   initializeAccordion("accordion-tarjet-profile");
   initializeAccordion("accordion-mastergrower");
-  initializeAccordion("accordion-blog");
+
 
   
   // Ajustar el grid inicial
