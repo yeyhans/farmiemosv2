@@ -1,0 +1,232 @@
+---
+---
+
+    <div class=" mx-auto bg-white rounded-2xl shadow-xl p-2">
+
+        <p class="text-sm text-gray-600 p-2">Este sistema de inteligencia artificial está diseñado
+             para brindar recomendaciones personalizadas a cultivadores, ayudándolos 
+             a tomar decisiones informadas sobre sus cultivos. Al combinar el procesamiento 
+             de lenguaje natural, la recuperación de información y el aprendizaje automático,
+              el sistema es capaz de comprender las necesidades específicas de cada usuario 
+              y ofrecer soluciones adaptadas a su contexto. La retroalimentación constante y
+               el análisis de datos permiten mejorar continuamente el sistema y garantizar 
+               su relevancia a largo plazo.
+        </p>
+        <h3 class="text-xl font-bold mb-4 mt-4 p-2">Explicación de funcionamiento del sistema</h3>
+        
+        <!-- Mapa Conceptual Container -->
+        <div class="relative" id="conceptMap">
+                <!-- Nodos Principales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+        <!-- Entrada -->
+        <div class="transform transition-all duration-300 hover:scale-105">
+            <div class="bg-blue-50 rounded-xl p-4 md:p-6 border-2 border-blue-200 shadow-md">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-500 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold ml-3 md:ml-4 text-blue-700">Entrada del Usuario</h2>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Prompt inicial</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Perfil del cultivador</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Datos ambientales</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Procesamiento -->
+        <div class="transform transition-all duration-300 hover:scale-105">
+            <div class="bg-purple-50 rounded-xl p-4 md:p-6 border-2 border-purple-200 shadow-md">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-purple-500 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold ml-3 md:ml-4 text-purple-700">Procesamiento IA</h2>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-purple-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Fine-tuning</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-purple-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Sistema RAG</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-purple-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Análisis de feedback</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Respuesta -->
+        <div class="transform transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1">
+            <div class="bg-green-50 rounded-xl p-4 md:p-6 border-2 border-green-200 shadow-md">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold ml-3 md:ml-4 text-green-700">Respuesta Final</h2>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Síntesis de información</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Contextualización</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2 shrink-0"></span>
+                        <span class="leading-tight">Validación</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+            <div class="mt-12 bg-gray-50 rounded-xl p-8 border-2 border-gray-200 shadow-md">
+                <div class="flex items-center justify-center mb-8">
+                    <div class="bg-blue-500 rounded-full p-3 mr-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800">Mejora Continua del Sistema</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Análisis de Interacciones -->
+                    <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="bg-indigo-100 rounded-full p-4 mb-4">
+                                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-xl font-semibold text-gray-800 mb-2">Análisis de Interacciones</h4>
+                            <p class="text-sm text-gray-600">Monitoreo y evaluación continua de las interacciones usuario-IA</p>
+                        </div>
+                    </div>
+            
+                    <!-- Documentación Técnica -->
+                    <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="bg-green-100 rounded-full p-4 mb-4">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Documentación Técnica</h4>
+                            <p class="text-sm text-gray-600">Actualización constante de recursos y guías técnicas</p>
+                        </div>
+                    </div>
+            
+                    <!-- Feedback Comunitario -->
+                    <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="bg-purple-100 rounded-full p-4 mb-4">
+                                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Feedback Comunitario</h4>
+                            <p class="text-sm text-gray-600">Contribuciones y experiencias de la comunidad de usuarios</p>
+                        </div>
+                    </div>
+            
+                    <!-- Datos de Rendimiento -->
+                    <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="bg-red-100 rounded-full p-4 mb-4">
+                                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Datos de Rendimiento</h4>
+                            <p class="text-sm text-gray-600">Métricas y análisis de performance del sistema</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // Añadir efectos de hover
+                const cards = document.querySelectorAll('.rounded-xl.shadow-md');
+                
+                cards.forEach(card => {
+                    card.addEventListener('mouseenter', () => {
+                        card.classList.add('transform', 'scale-105', 'transition-transform', 'duration-300');
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        card.classList.remove('transform', 'scale-105');
+                    });
+                });
+            </script>
+        </div>
+    </div>
+
+
+<script is:inline>
+    // Animación de los conectores
+    document.addEventListener('DOMContentLoaded', () => {
+        const connectors = document.querySelectorAll('.bg-gradient-to-r');
+        connectors.forEach(connector => {
+            connector.style.transition = 'transform 0.3s ease-in-out';
+        });
+    });
+
+    // Efecto hover en los nodos principales
+    const nodes = document.querySelectorAll('.transform');
+    nodes.forEach(node => {
+        node.addEventListener('mouseenter', () => {
+            nodes.forEach(otherNode => {
+                if (otherNode !== node) {
+                    otherNode.style.opacity = '0.7';
+                }
+            });
+        });
+
+        node.addEventListener('mouseleave', () => {
+            nodes.forEach(otherNode => {
+                otherNode.style.opacity = '1';
+            });
+        });
+    });
+
+    // Animación inicial
+    const conceptMap = document.getElementById('conceptMap');
+    setTimeout(() => {
+        conceptMap.style.opacity = '1';
+        conceptMap.style.transform = 'translateY(0)';
+    }, 300);
+</script>
+
+<style>
+    #conceptMap {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s ease-out;
+    }
+</style>

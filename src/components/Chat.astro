@@ -1,0 +1,71 @@
+---
+---
+
+
+    <h1>Chat con tu Perfil</h1>
+
+    <!-- Formulario para ingresar prompt -->
+    <form id="chatForm">
+      <label for="promptInput">Ingresa tu pregunta:</label>
+      <input
+        type="text"
+        id="promptInput"
+        name="prompt"
+        placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?"
+        required
+      />
+      <button type="submit">Enviar</button>
+    </form>
+
+    <!-- Resultados -->
+    <section style="margin-top: 1rem;">
+      <h2>System Message</h2>
+      <pre id="systemMessage"></pre>
+
+      <h2>OpenAI Response</h2>
+      <pre id="aiResponse"></pre>
+    </section>
+
+    <!-- Script para manejar la lógica de envío y respuesta -->
+    <script is:inline>
+      const chatForm = document.getElementById('chatForm');
+      const promptInput = document.getElementById('promptInput');
+      const systemMessageEl = document.getElementById('systemMessage');
+      const aiResponseEl = document.getElementById('aiResponse');
+
+      chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            // Mandamos el prompt
+            body: JSON.stringify({ prompt }),
+            credentials: 'include',
+            // Si necesitas enviar cookies de Supabase en "sameSite", 
+            // podrías usar "credentials: 'include'" y configurar 
+            // las cookies como "SameSite: Strict / Lax / None"
+          });
+
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error al llamar /api/chat:', res.status, errorText);
+            aiResponseEl.textContent = `Error: ${res.status} - ${errorText}`;
+            return;
+          }
+
+          const data = await res.json();
+          systemMessageEl.textContent = data.systemMessage || "(No hay systemMessage)";
+          aiResponseEl.textContent = data.aiResponse || "(No hay respuesta)";
+        } catch (err) {
+          console.error('Error en fetch:', err);
+          aiResponseEl.textContent = "Error inesperado al llamar la API.";
+        }
+      });
+    </script>

@@ -1,0 +1,53 @@
+---
+// Importaciones necesarias
+import DeviceStatus from "../components/tuya/DeviceStatus.astro";
+import TuyaRegister from "../components/tuya/TuyaRegister.astro";
+import Layout from "../layouts/Layout.astro";
+import { authenticate } from "../lib/auth";
+
+// Autenticación
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Configuración de usuario
+const email = user.email;
+
+// Variable de estado de acceso
+const userAccess = false; // Cambiar a true para desbloquear el contenido
+---
+<Layout title="dashboard">
+  <div class="container mx-auto px-4 py-8 space-y-8">
+
+    {userAccess ? (
+        // Contenido principal cuando el acceso está permitido
+        <>
+          <h1 class="text-3xl font-bold text-gray-800">Bienvenido, {email} 👋</h1>
+
+          <!-- Sección de estadísticas -->
+          <section>
+              <h2 class="text-xl font-semibold">Calculadora Mastergrow</h2>
+              <p class="text-gray-600">Ingresa tu duda de cultivo y una imagen para obtener una respuesta en tiempo real.</p>
+              <DeviceStatus />
+              <TuyaRegister />
+          </section>
+        </>
+    ) : (
+        // Pop-up cuando el acceso está bloqueado
+        <div class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75">
+          <div class="bg-white rounded-lg shadow-lg p-8 text-center space-y-4 max-w-md mx-auto">
+              <h2 class="text-2xl font-bold text-red-600">Acceso Restringido</h2>
+              <p class="text-gray-600">Tu acceso está bloqueado. Por favor, revisa tu configuración o contacta al administrador.</p>
+              
+              <a href="/dashboard"> 
+                <button 
+                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  Volver al Dashboard
+                </button>
+              </a>
+          </div>
+        </div>
+    )}
+  </div>
+</Layout>

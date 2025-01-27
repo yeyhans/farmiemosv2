@@ -1,0 +1,83 @@
+---
+---
+<script>
+    // Esta función se ejecutará cuando la página se haya cargado completamente
+    window.onload = async function() {
+      // Aquí, debes obtener el token efímero (ephemeral token) de tu servidor
+      const tokenResponse = await fetch("/api/openai/session");
+      const data = await tokenResponse.json();
+      const EPHEMERAL_KEY = data.client_secret;
+
+      // Crear una conexión WebRTC
+      const pc = new RTCPeerConnection();
+
+      // El elemento de audio que reproducirá la respuesta del modelo
+      const audioEl = document.createElement("audio");
+      audioEl.autoplay = true;
+      document.body.appendChild(audioEl); // Agregar el audio a la página
+      pc.ontrack = (e) => audioEl.srcObject = e.streams[0];
+
+      // Obtener y enviar la entrada del usuario a OpenAI (audio)
+      const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
+      pc.addTrack(ms.getTracks()[0]);
+
+      // Crear un canal de datos para enviar y recibir mensajes
+      const dc = pc.createDataChannel("oai-events");
+      dc.addEventListener("message", (e) => {
+        const serverEvent = JSON.parse(e.data);
+        if (serverEvent.type === "response.done") {
+          console.log("Respuesta final: ", serverEvent.response.output[0]);
+          document.getElementById("response").innerText = serverEvent.response.output[0]; // Mostrar respuesta
+        }
+      });
+
+      // Crear una oferta para iniciar la sesión
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const baseUrl = "https://api.openai.com/v1/realtime";
+      const model = "gpt-4o-realtime-preview-2024-12-17";
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${EPHEMERAL_KEY}`,
+          "Content-Type": "application/sdp"
+        },
+      });
+
+      const answer = {
+        type: "answer",
+        sdp: await sdpResponse.text(),
+      };
+      await pc.setRemoteDescription(answer);
+
+      // Evento de mensaje del usuario
+      const userTextInput = "What is the best temperature for growing cannabis?"; // Ejemplo de consulta
+      const event = {
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [{
+            type: "input_text",
+            text: userTextInput,
+          }],
+        },
+      };
+      dc.send(JSON.stringify(event));
+
+      // Evento de generar la respuesta del modelo en modalidad texto
+      const responseEvent = {
+        type: "response.create",
+        response: {
+          modalities: ["text"],  // Respuesta solo en texto
+        },
+      };
+      dc.send(JSON.stringify(responseEvent));
+    };
+  </script>
+
+  <h1>Realtime Chat with OpenAI</h1>
+  <p id="response">Esperando respuesta...</p>
+  <p>Interacción en tiempo real con OpenAI: este ejemplo muestra la mejor temperatura para cultivar cannabis.</p>

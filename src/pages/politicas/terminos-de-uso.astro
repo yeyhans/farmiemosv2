@@ -1,0 +1,96 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+
+const { title, description } = Astro.props;
+
+/* Archivo: src/components/TermsAndConditions.astro */
+
+const effectiveDate = "Fecha de entrada en vigor: 04-01-1994";
+---
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
+
+  <body>
+    <Header />
+<main class="container mx-auto px-4 mt-20">
+
+<section class="bg-gray-100 text-gray-800 p-6 sm:p-10">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Términos y Condiciones</h1>
+    <p class="text-lg font-medium mt-2 text-gray-700"><strong>{effectiveDate}</strong></p>
+  </header>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">1. Definiciones</h2>
+    <ul class="list-disc list-inside text-gray-700 space-y-2">
+      <li><strong>“Servicios”:</strong> Se refiere a nuestra aplicación y cualquier funcionalidad que proveemos.</li>
+      <li><strong>“Contenido”:</strong> Es toda la información, resultados o datos generados a través del uso de la aplicación.</li>
+      <li><strong>“Usuario”:</strong> Se refiere a la persona o entidad que accede y utiliza los Servicios.</li>
+    </ul>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">2. Requisitos para Usar Nuestros Servicios</h2>
+    <ul class="list-disc list-inside text-gray-700 space-y-2">
+      <li><strong>Edad mínima:</strong> Los Usuarios deben tener al menos 18 años o autorización explícita de sus tutores legales si son menores.</li>
+      <li><strong>Registro:</strong> Se requiere un registro exacto y completo con datos actuales y correctos. Eres responsable de proteger tus credenciales de acceso.</li>
+    </ul>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">3. Uso Aceptable de los Servicios</h2>
+    <p class="text-gray-700 mb-3">Puedes utilizar nuestros Servicios exclusivamente para fines relacionados con la jardinería, siempre que:</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-2">
+      <li>Cumplas con las leyes locales e internacionales.</li>
+      <li>No emplees los Servicios para actividades fraudulentas, dañinas o que infrinjan derechos de terceros.</li>
+      <li>Respetes la integridad de nuestra plataforma sin intentar descompilar, copiar o redistribuir su código o características.</li>
+    </ul>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">4. Derechos sobre el Contenido</h2>
+    <p class="text-gray-700 mb-2"><strong>Propiedad del Usuario:</strong> Eres el titular de la información que subas a la plataforma.</p>
+    <p class="text-gray-700 mb-2"><strong>Uso del Contenido Generado:</strong> Cedes a nuestra plataforma un derecho no exclusivo para usar tu contenido en el desarrollo, análisis y mejora de los Servicios.</p>
+    <p class="text-gray-700"><strong>Resultados:</strong> Los datos generados por los Servicios pueden no ser únicos y es tu responsabilidad verificar su exactitud antes de aplicarlos.</p>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">5. Servicios de Terceros</h2>
+    <p class="text-gray-700">
+      Es posible que incluyamos servicios o referencias de terceros en la plataforma. No nos hacemos responsables de estos servicios externos o sus políticas.
+    </p>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">6. Planes de Pago</h2>
+    <ul class="list-disc list-inside text-gray-700 space-y-2">
+      <li><strong>Facturación:</strong> Serás responsable de pagar puntualmente y de proporcionar información de pago válida.</li>
+      <li><strong>Cancelación:</strong> Las suscripciones se pueden cancelar, pero no son reembolsables salvo lo indicado por la ley.</li>
+    </ul>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">7. Limitaciones de Garantías y Responsabilidad</h2>
+    <p class="text-gray-700">
+      Nuestra aplicación se ofrece "tal cual" y no garantizamos que funcione sin interrupciones o errores. No somos responsables de los daños causados por el uso inadecuado de los Servicios o su contenido.
+    </p>
+  </article>
+
+  <article class="mb-8">
+    <h2 class="text-xl font-semibold text-teal-600 mb-3">8. Resolución de Disputas</h2>
+    <p class="text-gray-700">
+      Cualquier conflicto derivado de estos Términos se resolverá mediante un proceso de arbitraje. Para más detalles, consulta nuestras
+      <a href="/resolucion-disputas" target="_blank" class="text-teal-500 underline">Políticas de Resolución de Disputas</a>.
+    </p>
+  </article>
+
+
+</section>
+</main>
+<Footer />
+</body>
+</html>

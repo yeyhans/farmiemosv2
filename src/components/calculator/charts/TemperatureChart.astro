@@ -1,0 +1,11 @@
+---
+const { userTemp } = Astro.props;
+---
+
+<ul>
+  {userTemp.map((item) => (
+    <li>
+      Temperatura: {item.temp}°C - Fecha: {new Date(item.created_at).toLocaleString()}
+    </li>
+  ))}
+</ul>

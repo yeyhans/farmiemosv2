@@ -1,0 +1,478 @@
+---
+import { supabase } from '../../lib/supabase';
+
+const { id } = Astro.params;
+
+const { data: session } = await supabase
+  .from("chats")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", session.user_id)
+  .single();
+
+
+---
+
+  <style>
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+
+    }
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .input-container {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+  </style>
+
+
+<!-- Main container that takes full viewport height -->
+
+<div class="chat-container">
+  <!-- Encabezado -->
+
+
+  <!-- Mensajes del chat -->
+  <section class="messages-container">
+    <div id="conversationContainer" class="space-y-4">
+      {session.user_prompt.map((userPrompt, index) => ( 
+        <div key={index}> 
+          <div class="bg-gray-100 p-3 rounded-lg shadow-sm"> 
+            <strong class="text-green-800">{profile.user_name}:</strong> {userPrompt} 
+          </div> 
+          {session.ai_response[index] && ( 
+            <div class="bg-blue-100 p-4 mt-2 rounded-lg shadow-sm"> 
+              <div class="flex justify-between items-start">
+                <div class="flex-grow">
+                  <strong>Asistente:</strong> {session.ai_response[index]}
+                </div>
+                <div class="flex gap-2 ml-4">
+                  <button
+                    onclick={`copyToClipboard(${index})`}
+                    class="p-2 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    title="Copiar respuesta"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                    </svg>
+                  </button>
+                  <button
+                    onclick={`handleFeedback(${index}, true)`}
+                    class="p-2 rounded-full hover:bg-green-200 transition-colors duration-200"
+                    title="Me gusta"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                    </svg>
+                  </button>
+                  <button
+                    onclick={`handleFeedback(${index}, false)`}
+                    class="p-2 rounded-full hover:bg-red-200 transition-colors duration-200"
+                    title="No me gusta"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div> 
+      ))} 
+    </div>
+  </section>
+
+  <!-- Input de mensajes -->
+  <section class="input-container">
+
+    <form id="mastergrowForm" class="max-w-6xl mx-auto" onsubmit="return false;" enctype="multipart/form-data">
+      <input type="hidden" name="sessionId" value={id} />
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-grow">
+          <input 
+            type="text" 
+            name="prompt" 
+            id="prompt" 
+            placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?" 
+            required
+            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-300 focus:border-transparent"
+          />
+        </div>
+        <div class="flex gap-2 items-end">
+          <label class="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer">
+            <input type="file" name="file" id="file" accept="image/*" class="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </label>
+          <button type="submit" class="w-12 h-12 bg-green-900 text-white rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script is:inline>
+  async function copyToClipboard(index) {
+  try {
+    // Obtener todas las respuestas del asistente
+    const responses = document.querySelectorAll('.bg-blue-100');
+    // Obtener el texto de la respuesta específica
+    const textToCopy = responses[index].textContent.replace('Asistente:', '').trim();
+    
+    await navigator.clipboard.writeText(textToCopy);
+    
+    // Mostrar mensaje de confirmación
+    const copyButton = responses[index].querySelector('button[title="Copiar respuesta"]');
+    const originalSvg = copyButton.innerHTML;
+    
+    // Cambiar temporalmente el icono a un check
+    copyButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+    `;
+    
+    // Restaurar el icono original después de 2 segundos
+    setTimeout(() => {
+      copyButton.innerHTML = originalSvg;
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Error al copiar:', error);
+    alert('Error al copiar al portapapeles');
+  }
+}
+
+async function loadFeedbackStatus() {
+  try {
+    const sessionId = document.querySelector('input[name="sessionId"]').value;
+    const formData = new FormData();
+    formData.append('sessionId', sessionId);
+
+    const response = await fetch('/api/chat/feedback-status', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al cargar el estado de feedback');
+    }
+
+    const { feedbacks } = await response.json();
+    
+    // Aplicar estados guardados
+    feedbacks.forEach(feedback => {
+      const feedbackButtons = document.querySelectorAll(`button[onclick="handleFeedback(${feedback.message_index}, true)"], button[onclick="handleFeedback(${feedback.message_index}, false)"]`);
+      
+      if (feedback.is_liked === 1) {
+        // Resaltar el botón de "me gusta"
+        feedbackButtons[0].classList.add('bg-green-200');
+        // Deshabilitar ambos botones
+        feedbackButtons.forEach(button => {
+          button.disabled = true;
+          if (button !== feedbackButtons[0]) {
+            button.classList.add('opacity-50');
+          }
+        });
+      } else if (feedback.is_liked === 0) {
+        // Resaltar el botón de "no me gusta"
+        feedbackButtons[1].classList.add('bg-red-200');
+        // Deshabilitar ambos botones
+        feedbackButtons.forEach(button => {
+          button.disabled = true;
+          if (button !== feedbackButtons[1]) {
+            button.classList.add('opacity-50');
+          }
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error al cargar el estado de feedback:', error);
+  }
+}
+
+// Cargar el estado inicial cuando se carga la página
+document.addEventListener('DOMContentLoaded', loadFeedbackStatus);
+
+// Función handleFeedback actualizada
+async function handleFeedback(index, isLiked) {
+  try {
+    const formData = new FormData();
+    formData.append('index', index.toString());
+    formData.append('isLiked', isLiked.toString());
+    formData.append('sessionId', document.querySelector('input[name="sessionId"]').value);
+
+    const response = await fetch('/api/chat/feedback', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al enviar feedback');
+    }
+
+    // Obtener los botones
+    const likeButton = document.querySelector(`button[onclick="handleFeedback(${index}, true)"]`);
+    const dislikeButton = document.querySelector(`button[onclick="handleFeedback(${index}, false)"]`);
+
+    // Deshabilitar ambos botones
+    [likeButton, dislikeButton].forEach(button => {
+      button.disabled = true;
+      button.classList.add('opacity-50');
+    });
+
+    // Resaltar el botón seleccionado
+    if (isLiked) {
+      likeButton.classList.remove('opacity-50');
+      likeButton.classList.add('bg-green-200');
+    } else {
+      dislikeButton.classList.remove('opacity-50');
+      dislikeButton.classList.add('bg-red-200');
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al enviar el feedback');
+  }
+}
+
+// Función para agregar los botones de copiar, like y dislike
+function addActionButtons(index) {
+  return `
+    <div class="flex gap-2 ml-4">
+      <button
+        onclick="copyToClipboard(${index})"
+        class="p-2 rounded-full hover:bg-blue-200 transition-colors duration-200"
+        title="Copiar respuesta"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+        </svg>
+      </button>
+      <button
+        onclick="handleFeedback(${index}, true)"
+        class="p-2 rounded-full hover:bg-green-200 transition-colors duration-200"
+        title="Me gusta"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+        </svg>
+      </button>
+      <button
+        onclick="handleFeedback(${index}, false)"
+        class="p-2 rounded-full hover:bg-red-200 transition-colors duration-200"
+        title="No me gusta"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
+        </svg>
+      </button>
+    </div>
+  `;
+}
+</script>
+<script is:inline>
+  // Capturar el input de archivo
+  const fileInput = document.querySelector('input[name="file"]');
+  const imagePreviewContainer = document.createElement('div');
+  imagePreviewContainer.className = 'mt-4';
+
+  // Insertar el contenedor de la vista previa después del input de archivo
+  fileInput.parentElement.appendChild(imagePreviewContainer);
+
+  // Escuchar el evento de cambio en el input de archivo
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Crear una URL temporal para la imagen
+      const imageUrl = URL.createObjectURL(file);
+
+      // Mostrar la imagen en el contenedor de vista previa
+      imagePreviewContainer.innerHTML = `
+        <img src="${imageUrl}" alt="Vista previa de la imagen" class="max-w-full h-auto rounded-lg shadow-sm" />
+      `;
+    } else {
+      // Limpiar la vista previa si no hay archivo seleccionado
+      imagePreviewContainer.innerHTML = '';
+    }
+  });
+</script>
+
+
+
+<script is:inline>
+    function scrollToBottom() {
+    const messagesContainer = document.querySelector('.messages-container');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+  });
+
+  let session = {
+  ai_response: [], // Array para almacenar las respuestas del asistente
+};
+  const form = document.getElementById('mastergrowForm');
+  const conversationContainer = document.getElementById('conversationContainer');
+  const profile = { user_name: "Tú" };
+
+  let isStreaming = false;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (isStreaming) return;
+
+  try {
+    const formData = new FormData(form);
+    const userPrompt = formData.get("prompt").toString();
+    const imageFile = formData.get("file");
+
+    // Limpiar inputs
+    form.querySelector('#prompt').value = '';
+    imagePreviewContainer.innerHTML = '';
+
+    // Mensaje del usuario
+    let userMessageHtml = `
+      <div>
+        <div class="bg-gray-100 p-2 mt-2 rounded-lg">
+          <strong class="text-green-800">${profile.user_name}:</strong> ${userPrompt}
+        </div>
+    `;
+
+    if (imageFile && imageFile.size > 0) {
+      const imageUrl = URL.createObjectURL(imageFile);
+      userMessageHtml += `
+        <div class="mt-2">
+          <img src="${imageUrl}" alt="Imagen subida" class="rounded-lg shadow-sm max-w-[300px]">
+        </div>
+      `;
+    }
+
+    userMessageHtml += `</div>`;
+    conversationContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+
+    // Elemento para la respuesta en tiempo real
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
+    assistantDiv.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="flex-grow">
+          <strong>Asistente:</strong> <span id="streamingText"></span>
+        </div>
+        <div class="flex gap-2 ml-4">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    `;
+    conversationContainer.appendChild(assistantDiv);
+    scrollToBottom();
+
+    isStreaming = true;
+    const streamingText = assistantDiv.querySelector('#streamingText');
+    let fullResponse = '';
+
+    const res = await fetch('/api/chat/assistents', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        fullResponse += chunk;
+        
+        // Actualizar texto
+        streamingText.textContent = fullResponse;
+        
+        // Remover indicador de typing solo si existe
+        const typingIndicator = assistantDiv.querySelector('.typing-indicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+        
+        scrollToBottom();
+      }
+
+    // Finalizar stream
+    isStreaming = false;
+    
+    // Agregar botones de acciones
+    const actionsContainer = assistantDiv.querySelector('.flex.gap-2.ml-4');
+    if (actionsContainer) {
+      actionsContainer.innerHTML = addActionButtons(session.ai_response.length);
+    }
+
+    // Actualizar sesión local
+    session.ai_response.push(fullResponse);
+    
+  } catch (error) {
+    isStreaming = false;
+    console.error('Error:', error);
+    conversationContainer.insertAdjacentHTML('beforeend', `
+      <div class="bg-red-100 p-4 mt-2 rounded-lg text-red-600">
+        <strong>Error:</strong> ${error.message || 'Error en el servidor'}
+      </div>
+    `);
+    scrollToBottom();
+  }
+});
+</script>
+
+<style>
+/* Agregar animación de typing */
+.typing-indicator span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+  background: #4b5563;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+</style>

@@ -1,0 +1,102 @@
+---
+import CreateSession from "../../components/chat/CreateSession.astro";
+
+
+const {chats, profile} = Astro.props;
+---
+<p class="text-sm text-gray-600">Selecciona un cultivo para interactuar con Mastergrower</p>
+            
+
+<!-- Modal Background -->
+<div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center mt-16 sm:mt-8">
+  <!-- Modal Content -->
+  <div id="modal-content" class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative mt-16 sm:mt-8">
+      <button id="close-modal" class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    <CreateSession profile={profile} />
+  </div>
+</div>
+
+<!-- Session List -->
+<div class="space-y-4">
+    <ul id="session-list" class="space-y-2">
+      {chats?.slice(0, 5).map((session) => (
+        <li>
+          🗪 <a href = `/c/${session.id}` class="text-sm text-center">
+            {session.session_name} </a>
+        </li>
+      ))}
+    </ul>
+  
+    <!-- Buttons Container -->
+    <div class="flex gap-2">
+      <!-- Add Session Button -->
+      <button
+        id="add-session"
+        class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Agregar Sesión
+      </button>
+  
+      <a href="/c">
+        <button
+          id="view-more"
+          class="flex items-center justify-center gap-1 bg-custom-yellow hover:bg-yellow-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+            />
+          </svg>
+          Ver más
+        </button>
+      </a>
+      
+    </div>
+  </div>
+
+
+
+<script is:inline>
+  // Get DOM elements
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const addSessionBtn = document.getElementById('add-session');
+  const closeModalBtn = document.getElementById('close-modal');
+
+  // Open modal
+  addSessionBtn.addEventListener('click', () => {
+    modalBackdrop.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  });
+
+  // Close modal
+  const closeModal = () => {
+    modalBackdrop.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  };
+
+  closeModalBtn.addEventListener('click', closeModal);
+
+  // Close modal when clicking outside
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) {
+      closeModal();
+    }
+  });
+
+  // Close modal on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
+</script>

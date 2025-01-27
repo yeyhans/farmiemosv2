@@ -1,0 +1,25 @@
+---
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
+
+const { type, data, options } = Astro.props;
+
+---
+
+<canvas id="myChart"></canvas>
+
+<script is:inline>
+  const ctx = document.getElementById('myChart').getContext('2d');
+  new Chart(ctx, {
+    type: type,
+    data: data,
+    options: options,
+  });
+</script>
+
+<style>
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

@@ -1,0 +1,33 @@
+---
+import HeaderLink from './HeaderLink.astro';
+import { SITE_TITLE } from '../consts';
+import { authenticate } from '../lib/auth';
+
+
+const { user } = await authenticate(Astro);
+
+---
+
+<header class="">
+    <nav class="flex justify-between items-center px-4 py-2">
+        <!-- Logo (Izquierda) -->
+        <div class="logo">
+            <a href="/">
+                <img src="/logo.png" alt="Farmiemos logo" width="90" height="90" class="object-contain">
+            </a>
+        </div>
+
+
+
+        <!-- Botones (Derecha) -->
+        <div class="items-center space-x-4">
+            
+            
+        </div>
+
+       
+    </nav>
+</header>
+
+
+    

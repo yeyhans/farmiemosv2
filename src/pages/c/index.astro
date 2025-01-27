@@ -1,0 +1,213 @@
+---
+import CreateSession from "../../components/chat/CreateSession.astro";
+import { supabase } from "../../lib/supabase";
+import { authenticate } from "../../lib/auth";
+import Layout from "../../layouts/Layout.astro";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+  
+const { data: sessions, error } = await supabase
+  .from('chats')
+  .select('id, session_name, updated_at')
+  .eq('user_id', user.id)
+  .order('updated_at', { ascending: false });
+
+if (error) {
+  console.error(error);
+}
+
+function timeAgo(date) {
+  const now = new Date();
+  const diffInMs = now - new Date(date);
+  const diffInSec = Math.floor(diffInMs / 1000);
+  const diffInMin = Math.floor(diffInSec / 60);
+  const diffInHours = Math.floor(diffInMin / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSec < 60) {
+    return `${diffInSec} segundo(s) atrás`;
+  } else if (diffInMin < 60) {
+    return `${diffInMin} minuto(s) atrás`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hora(s) atrás`;
+  } else {
+    return `${diffInDays} día(s) atrás`;
+  }
+}
+
+const sessionCount = sessions ? sessions.length : 0;
+
+---
+<Layout title="Chats">
+
+<!-- Modal Background -->
+<div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-40">
+  <!-- Modal Content -->
+  <div id="modal-content" class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Nueva Sesión</h3>
+      <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <CreateSession profile={profile}/>
+  </div>
+</div>
+
+<!-- Search and Session List -->
+<div class="relative space-y-4">
+  <!-- Add Session Button -->
+  <button
+    id="add-session"
+    class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+    </svg>
+    Agregar Sesión
+  </button>
+ 
+
+  <!-- Search Bar -->
+  <div class="mb-2">
+    <input
+      id="search-input"
+      type="text"
+      placeholder="Buscar sesiones..."
+      class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+    />
+  </div>
+
+  <div class="session-count">
+    <p class="text-lg font-semibold">
+      Total de sesiones: <span class="text-green-500">{sessionCount}</span>
+    </p>
+  </div>
+  
+
+<!-- index.html -->
+<ul id="session-list" class="space-y-2">
+  {sessions?.map((session) => (
+    <li
+      data-session-name={session.session_name.toLowerCase()}
+      key={session.id}
+      class="flex items-center justify-between p-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
+    >
+      <div class="flex-grow flex-col items-center">
+        <a
+              href={`/c/${session.id}`}
+              class="text-lg font-bold text-gray-900 hover:text-gray-700"
+            >
+              <div>
+
+          <label for={`session-${session.id}`} class="ml-2">
+            🗪 
+              {session.session_name}
+            
+          </label>
+        </div>
+        <div class="flex min-h-5 gap-5">
+          <p>
+            <span class="text-sm text-gray-400">
+              {timeAgo(session.updated_at)}
+            </span>
+          </p>
+        </div>
+        </a>
+      </div>
+
+      <button
+        class="text-gray-500 hover:text-gray-700"
+        onclick={`eliminarRegistro('${session.id}')`}
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </li>
+  ))}
+</ul>
+
+</div>
+
+<script is:inline>
+
+  // Get DOM elements
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const addSessionBtn = document.getElementById('add-session');
+  const closeModalBtn = document.getElementById('close-modal');
+  const searchInput = document.getElementById('search-input');
+  const sessionList = document.getElementById('session-list');
+  const sessions = [...sessionList.querySelectorAll('li')];
+
+  // Open modal
+  addSessionBtn.addEventListener('click', () => {
+    modalBackdrop.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  });
+
+  // Close modal
+  const closeModal = () => {
+    modalBackdrop.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  };
+
+  closeModalBtn.addEventListener('click', closeModal);
+
+  // Close modal when clicking outside
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) {
+      closeModal();
+    }
+  });
+
+  // Close modal on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
+
+  // Filter sessions on search input
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+
+    sessions.forEach((session) => {
+      const sessionName = session.getAttribute('data-session-name');
+      session.style.display = sessionName.includes(query) ? 'block' : 'none';
+    });
+  });
+
+  async function eliminarRegistro(sessionId) {
+        if (!confirm('¿Estás seguro de que deseas eliminar este registro?')) return;
+
+        try {
+            const response = await fetch(`/api/chat/sessions?id=${sessionId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Registro eliminado exitosamente.');
+                location.reload();
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error de red: ' + error.message);
+        }
+    }
+</script>
+
+</Layout>

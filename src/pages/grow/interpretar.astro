@@ -1,0 +1,61 @@
+---
+import Interpretator from "../../components/calculator/Interpretator.astro";
+import Layout from "../../layouts/Layout.astro";
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { data: logs, error } = await supabase
+  .from("calculator_logs")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error al obtener registros:", error.message);
+}
+
+---
+
+<Layout title="Calculadora">
+
+      
+      <div class="cally">
+
+        <div class="flex gap-xs align-end">
+          <!-- Input para mostrar el rango de fechas -->
+          <sl-input label="Rango de fechas" id="date-range-input" class="flex-1"></sl-input>
+        </div>
+      
+        <!-- Popup con el calendario personalizado -->
+
+            <calendar-range months="2">
+                <calendar-month></calendar-month>
+            </calendar-range>
+    
+        <script is:inline>
+          const root = document.currentScript.closest(".cally");
+      
+          const dateRangeInput = root.querySelector("#date-range-input"); // Input para el rango de fechas
+          const calendar = root.querySelector("calendar-range");
+
+          // Actualizar el input con las fechas seleccionadas en el calendario
+          calendar.addEventListener("change", (e) => {
+            const [startDate, endDate] = e.target.value.split(" to "); // Obtener las fechas de inicio y término
+      
+            // Mostrar las fechas en el input separadas por "/"
+            dateRangeInput.value = `${startDate}/${endDate}`;
+      
+            // Mostrar los valores en la consola
+            console.log("Fecha de inicio:", startDate);
+
+          });
+        </script>
+        <script type="module" src="https://unpkg.com/cally"></script>
+      </div>
+
+</Layout>

@@ -1,0 +1,106 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import '../styles/global.css';
+import { authenticate } from '../lib/auth';
+
+
+const { user } = await authenticate(Astro);
+
+const { title, description } = Astro.props;
+const avatarUrl = user?.user_metadata.avatar_url;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
+  <body>
+    <div class="min-h-screen flex flex-col bg-gray-50">
+      <header class="flex items-center justify-between bg-white px-4 py-2 shadow sticky top-0 z-10 ">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <a href="/" class="flex items-center">
+            <img src="/logo.png" alt="Farmiemos" class="h-10 w-10">
+          </a>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="relative">
+          <!-- Avatar Button -->
+          <button id="userMenuButton" class="flex items-center justify-center w-10 h-10 rounded-full  focus:outline-none focus:ring-2 focus:ring-gray-400">
+            <img 
+              src={avatarUrl}
+              alt="User Avatar" 
+              class="h-8 w-8 rounded-full"
+            />
+          </button>
+          
+          <!-- Dropdown Menu -->
+          <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+            <div class="py-1">
+              <a href="/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">🏠 Dashboard</a>
+              <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">⚙️ Configuracion</a>
+              <form action="/api/auth/signout">
+                <button type="submit" class="block w-full px-4 py-2 bg-custom-red text-white rounded-md">Salir</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+
+        <slot />
+
+
+
+    </div>
+
+    <script is:inline>
+      // Esperar a que el DOM esté listo
+      document.addEventListener('DOMContentLoaded', () => {
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        let isMenuOpen = false;
+
+        // Función para abrir/cerrar el menú
+        const toggleMenu = (event) => {
+          event.stopPropagation();
+          isMenuOpen = !isMenuOpen;
+          
+          if (isMenuOpen) {
+            userMenu.classList.remove('hidden');
+            // Añadir una pequeña animación de fade
+            userMenu.style.opacity = '0';
+            setTimeout(() => {
+              userMenu.style.opacity = '1';
+              userMenu.style.transition = 'opacity 150ms ease-in-out';
+            }, 0);
+          } else {
+            userMenu.style.opacity = '0';
+            setTimeout(() => {
+              userMenu.classList.add('hidden');
+            }, 150);
+          }
+        };
+
+        // Event listener para el botón
+        userMenuButton.addEventListener('click', toggleMenu);
+
+        // Cerrar el menú cuando se hace clic fuera
+        document.addEventListener('click', (event) => {
+          if (isMenuOpen && !userMenu.contains(event.target) && event.target !== userMenuButton) {
+            toggleMenu(event);
+          }
+        });
+
+        // Cerrar el menú con la tecla Escape
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && isMenuOpen) {
+            toggleMenu(event);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

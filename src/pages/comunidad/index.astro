@@ -1,0 +1,22 @@
+---
+import { authenticate } from "../../lib/auth";
+import Layout from "../../layouts/Layout.astro";
+import InfoBlog from "../../components/InfoBlog.astro";
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+console.log(user);
+---
+
+<Layout title="Comunidad Farmiemos">
+    <section class="container mx-auto px-4 py-8 space-y-8">
+        <h1 class="text-3xl font-bold text-gray-800">Comunidad Farmiemos</h1>
+            
+    </section>
+    <section class="container mx-auto px-4 py-8 space-y-8">
+        <InfoBlog />
+    </section>
+</Layout>

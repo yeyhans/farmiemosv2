@@ -1,0 +1,31 @@
+---
+// Importa supabase y Layout
+import Layout from '../../layouts/DashboardLayout.astro';
+import ChatInterface from '../../components/chat/ChatInterface.astro';
+import SessionComponent from '../../components/chat/SessionComponent.astro';
+import { supabase } from '../../lib/supabase';
+
+const { id } = Astro.params;
+
+
+const { data: chats } = await supabase
+  .from("chats")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", chats.user_id)
+  .single();
+
+
+
+---
+
+<Layout title="Detalles de la sesión">
+
+    <ChatInterface sessionId={id} />
+
+</Layout>

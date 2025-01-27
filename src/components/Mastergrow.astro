@@ -1,0 +1,79 @@
+---
+---
+
+<h1 class="text-2xl font-bold mb-4">MasterGrow</h1>
+
+<form id="mastergrowForm" class="flex flex-col gap-4 max-w-md">
+  <label for="prompt" class="font-semibold">Ingresa tu pregunta:</label>
+  <textarea
+    name="prompt"
+    id="prompt"
+    placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?"
+    required
+    class="border border-gray-300 rounded p-2"
+    rows="4"
+  ></textarea>
+
+  <label for="file" class="font-semibold">Sube una imagen de la planta (opcional):</label>
+  <input
+    type="file"
+    name="file"
+    id="file"
+    accept="image/*"
+    class="border border-gray-300 rounded p-2"
+    capture="camera"  
+  />
+
+  <button type="submit" class="bg-blue-500 text-white rounded p-2 hover:bg-blue-600">Enviar</button>
+</form>
+
+<section class="mt-4">
+  <h2 class="text-xl font-semibold">System Message</h2>
+  <pre id="systemMessage" class="border border-gray-300 p-2"></pre>
+
+  <h2 class="text-xl font-semibold">Prompt del usuario</h2>
+  <pre id="userPrompt" class="border border-gray-300 p-2"></pre>
+
+  <h2 class="text-xl font-semibold">Análisis de la imagen</h2>
+  <pre id="imageAnalysis" class="border border-gray-300 p-2"></pre>
+
+  <h2 class="text-xl font-semibold">Respuesta de OpenAI</h2>
+  <pre id="aiResponse" class="border border-gray-300 p-2"></pre>
+</section>
+
+<script is:inline>
+  const form = document.getElementById('mastergrowForm');
+  const systemMessageEl = document.getElementById('systemMessage');
+  const userPromptEl = document.getElementById('userPrompt');
+  const imageAnalysisEl = document.getElementById('imageAnalysis');
+  const aiResponseEl = document.getElementById('aiResponse');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+      const formData = new FormData(form);
+      const res = await fetch('/api/mastergrow', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', 
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error al llamar /api/mastergrow:', res.status, errorText);
+        aiResponseEl.textContent = `Error: ${res.status} - ${errorText}`;
+        return;
+      }
+
+      const data = await res.json();
+      systemMessageEl.textContent = data.systemMessage || "(No hay systemMessage)";
+      userPromptEl.textContent = data.userPrompt || "(No hay userPrompt)";
+      imageAnalysisEl.textContent = data.imageAnalysis || "(No hay imageAnalysis)";
+      aiResponseEl.textContent = data.aiResponse || "(No hay aiResponse)";
+    } catch (error) {
+      console.error('Error en fetch:', error);
+      aiResponseEl.textContent = "Error inesperado al llamar la API.";
+    }
+  });
+</script>

@@ -1,0 +1,274 @@
+---
+
+import Calculator from "../components/calculator/Calculator.astro";
+import SessionComponent from "../components/chat/SessionComponent.astro";
+import ExplicacionAI from "../components/dashboard/ExplicacionAI.astro";
+import FeedbackDiscord from "../components/dashboard/FeedbackDiscord.astro";
+import Footer from "../components/Footer.astro";
+import InfoBlog from "../components/InfoBlog.astro";
+import Layout from "../layouts/DashboardLayout.astro";
+import { authenticate } from "../lib/auth";
+import { supabase } from "../lib/supabase";
+
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { data: chats, error: fetchError } = await supabase
+  .from("chats")
+  .select("*")
+  .eq('user_id', user.id)
+  .order("created_at", { ascending: false });
+
+if (fetchError) {
+  console.log('Error fetching chats:', fetchError);
+}
+
+// Obtener el conteo total de prompts
+let total_prompts = 0;
+
+if (chats) {
+  const promptCounts = await Promise.all(
+    chats.map(async (chat) => {
+      const { data: promptCount, error } = await supabase.rpc("get_prompt_count", {
+        chats_id: chat.id,
+      });
+
+      if (error) {
+        console.log(`Error fetching prompt count for chat ID ${chat.id}:`, error);
+        return 0; // Asume 0 si hay error
+      }
+
+      return promptCount;
+    })
+  );
+
+  total_prompts = promptCounts.reduce((total, count) => total + count, 0);
+}
+
+
+
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+
+const { data: logs, error } = await supabase
+  .from("calculator_logs")
+  .select("*")
+
+  .order("created_at", { ascending: false });
+
+if (error) {
+    console.error("Error al obtener registros:", error.message);
+}
+
+// Verificar si los campos obligatorios están completos
+const isProfileComplete = profile?.user_name && 
+                          profile?.experience_level && 
+                          profile?.comuna && 
+                          profile?.cultivo_principal && 
+                          profile?.tipo_suelo && 
+                          profile?.tipo_iluminacion &&
+                          profile?.fuente_riego && 
+                          profile?.fertilizacion && 
+                          profile?.frecuencia_riego && 
+                          profile?.problemas_enfrentados;
+
+if (!isProfileComplete) {
+  return Astro.redirect("/profile-requiered"); // Redirigir a la página de perfil
+}
+
+// Genera const para visualizar en perfil
+const count_logs = logs?.length || 0;
+const count_chats = chats?.length || 0;
+
+
+const title = "Dashboard Layout"
+const description= "Farmiemos Dashboard"
+
+
+---
+
+<Layout title={title} description={description}>
+  <main class="p-4">
+    <!-- Grid Principal: Calculadora Grande Izquierda + 3 Cards Derecha -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+      <!-- Lado Izquierdo: Calculadora de Temperatura -->
+      <div class="lg:col-span-2 border rounded-xl shadow-lg bg-white flex flex-col justify-between transition-all duration-300">
+        <div class="flex items-center justify-between py-4 px-6">
+          <div>
+            <h2 class="text-2xl font-bold text-left">🧮 Calculator AI</h2>
+            <p class="text-sm text-center text-gray-600">
+              Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
+              de tu cultivo junto a farmiemos, si quieres saber más detalles de 
+              su funcionamiento  
+              <a href="/grow-calculator" class="text-green-900 font-semibold">Haz click aquí!</a>
+            </p>
+          </div>
+          <button onclick="toggleAccordion('accordion-ai-calculator')" class="flex items-center space-x-2">
+            <span id="icon-ai-calculator" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
+          </button>
+        </div>
+        <div id="accordion-ai-calculator" class="hidden px-4 pb-2">
+          <Calculator logs={logs} />
+        </div>
+      </div>
+    
+      <!-- Lado Derecho: Tarjetas -->
+      <div class="lg:col-span-1 grid auto-rows-min transition-all duration-300 space-y-2 rounded-lg" id="right-cards">
+        <div class="border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between py-4 px-6">
+            <div>
+              <h2 class="text-2xl font-bold text-left">🤖 Mastergrower AI</h2>
+              <p class="text-sm text-gray-600">Haz tus preguntas de cultivo!</p>
+            </div>
+            <button onclick="toggleAccordion('accordion-mastergrower')" class="flex items-center space-x-2">
+              <span id="icon-mastergrower" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
+            </button>
+          </div>
+          <div id="accordion-mastergrower" class="hidden px-4 pb-2">
+            <SessionComponent chats={chats} profile={profile}/>
+          </div>
+        </div>
+        
+
+        <div>
+         <div class="border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between py-4 px-6">
+            <div>
+                <h2 class="text-2xl font-bold ">🧑‍🌾 {profile.user_name}</h2>
+                <p class="text-sm text-gray-600">Tarjeta de cultivo</p>
+              </div>
+              <button onclick="toggleAccordion('accordion-tarjet-profile')" class="flex items-center space-x-2">
+                <span id="icon-tarjet-profile" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">
+                  &#x25BC;
+                </span>
+              </button>
+            </div>
+            <div id="accordion-tarjet-profile" class="hidden transition-all duration-300">
+              <div class="bg-green-100 rounded-lg p-4 shadow-inner">
+                <p class="text-sm text-gray-700">📝 notes: <span class="font-semibold">{count_logs}</span></p>
+                <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
+                <p class="text-sm text-gray-700">💬 prompts: <span class="font-semibold">{total_prompts}</span></p>
+                <p class="text-sm text-gray-700">🌱: <span class="font-semibold">{profile.cultivo_principal}</span></p>
+              </div>
+
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    
+    <section id="blog" class="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-4">
+      <div class="border rounded-xl shadow-lg bg-white hover:shadow-lg transition-all duration-300 col-span-2">
+        <div class="flex items-center justify-between py-4 px-6">
+          <div>
+            <h2 class="text-2xl font-bold text-left">ℹ️ ¿Cómo funciona nuestra AI?</h2>
+            <p class="text-sm text-gray-600">Un asesor virtual para agricultores que, gracias a la inteligencia artificial, ofrece recomendaciones personalizadas para optimizar sus cultivos.</p>
+          </div>
+          <button onclick="toggleAccordion('accordion-blog')" class="flex items-center space-x-2">
+            <span id="icon-blog" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
+          </button>
+        </div>
+        <div id="accordion-blog" class="hidden px-4 pb-2">
+          <ExplicacionAI />
+          
+        </div>
+      </div>
+    </section>
+    <FeedbackDiscord />
+  </main>
+  <Footer />
+
+<script is:inline>
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+}
+
+function getCookie(name) {
+  const cookies = document.cookie.split('; ');
+  const cookie = cookies.find(c => c.startsWith(`${name}=`));
+  return cookie ? cookie.split('=')[1] : null;
+}
+
+function adjustGridLayout() {
+  const rightCards = document.getElementById('right-cards');
+  const cards = rightCards.children;
+  let totalHeight = 0;
+  
+  Array.from(cards).forEach(card => {
+    const content = card.querySelector('[id^="accordion-"]');
+    if (!content.classList.contains('hidden')) {
+      totalHeight += card.scrollHeight;
+    } else {
+      totalHeight += card.querySelector('.flex').scrollHeight;
+    }
+  });
+  
+  rightCards.style.height = `${totalHeight}px`;
+}
+
+function toggleAccordion(id) {
+  const content = document.getElementById(id);
+  const icon = document.getElementById(`icon-${id.split('-').slice(1).join('-')}`);
+  if (!content || !icon) {
+    console.error(`Elementos no encontrados: content (#${id}) o icon (#icon-${id.split('-').slice(1).join('-')})`);
+    return;
+  }
+
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden');
+    icon.style.transform = "rotate(180deg)";
+    setCookie(id, "show", 30);
+  } else {
+    content.classList.add('hidden');
+    icon.style.transform = "rotate(0deg)";
+    setCookie(id, "hidden", 30);
+  }
+  
+  // Ajustar el grid después de la animación
+  setTimeout(adjustGridLayout, 300);
+}
+
+function initializeAccordion(id) {
+  const state = getCookie(id);
+  const content = document.getElementById(id);
+  const icon = document.getElementById(`icon-${id.split('-').slice(1).join('-')}`);
+  if (!content || !icon) {
+    console.error(`Elementos no encontrados: content (#${id}) o icon (#icon-${id.split('-').slice(1).join('-')})`);
+    return;
+  }
+
+  if (state === "show") {
+    content.classList.remove('hidden');
+    icon.style.transform = "rotate(180deg)";
+  } else {
+    content.classList.add('hidden');
+    icon.style.transform = "rotate(0deg)";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initializeAccordion("accordion-ai-calculator");
+  initializeAccordion("accordion-tarjet-profile");
+  initializeAccordion("accordion-mastergrower");
+  initializeAccordion("accordion-blog");
+
+  
+  // Ajustar el grid inicial
+  adjustGridLayout();
+  
+  // Ajustar el grid cuando cambie el tamaño de la ventana
+  window.addEventListener('resize', adjustGridLayout);
+});
+</script>
+
+</Layout>
