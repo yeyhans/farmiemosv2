@@ -13,6 +13,6 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   site: 'https://farmiemosv2.vercel.app/',
   integrations: [mdx(), sitemap(), tailwind()],
-  output: 'server',
+  output: 'static',
   adapter: vercel()
 });
