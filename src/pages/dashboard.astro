@@ -69,6 +69,7 @@ if (error) {
 
 // Verificar si los campos obligatorios están completos
 const isProfileComplete = profile?.user_name && 
+                          profile?.instagram &&
                           profile?.experience_level && 
                           profile?.comuna && 
                           profile?.cultivo_principal && 
@@ -154,7 +155,7 @@ const description= "Farmiemos Dashboard"
               <div class="bg-green-100 rounded-lg p-4 shadow-inner">
                 <p class="text-sm text-gray-700">📝 notes: <span class="font-semibold">{count_logs}</span></p>
                 <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
-                <p class="text-sm text-gray-700">💬 prompts: <span class="font-semibold">{total_prompts}</span></p>
+                <p class="text-sm text-gray-700">💬 P&R: <span class="font-semibold">{total_prompts}</span></p>
                 <p class="text-sm text-gray-700">🌱: <span class="font-semibold">{profile.cultivo_principal}</span></p>
               </div>
 

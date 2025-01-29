@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -60,6 +60,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       problemas_enfrentados: validateField(formData.get("problemas_enfrentados")),
       objetivos_mejora: validateField(formData.get("objetivos_mejora")),
       interes_tecnologia: validateField(formData.get("interes_tecnologia")),
+      desc_obj: validateField(formData.get("desc_obj")),
+      desc_condiciones: validateField(formData.get("desc_condiciones")),
+      desc_practicas: validateField(formData.get("desc_practicas")),
+      desc_interes: validateField(formData.get("desc_interes")),
+      instagram: validateField(formData.get("instagram")),
       updated_at: new Date().toISOString(),
     };
 
@@ -103,6 +108,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+
 
     return new Response(
       JSON.stringify({ 

@@ -21,16 +21,21 @@ const comuna = profile?.comuna ?? "";
 const cultivo_principal = profile?.cultivo_principal ?? "";
 const escala_cultivo = profile?.escala_cultivo ?? "";
 const motivacion = profile?.motivacion ?? "";
+const desc_obj = profile?.desc_obj ?? "";
 const tamano_espacio = profile?.tamano_espacio ?? "";
+const desc_condiciones = profile?.desc_condiciones ?? "";
 const tipo_suelo = profile?.tipo_suelo ?? "";
 const tipo_iluminacion = profile?.tipo_iluminacion ?? "";
 const fuente_riego = profile?.fuente_riego ?? "";
 const fertilizacion = profile?.fertilizacion ?? "";
 const control_plagas = profile?.control_plagas ?? "";
 const frecuencia_riego = profile?.frecuencia_riego ?? "";
+const desc_practicas = profile?.desc_practicas ?? "";
 const problemas_enfrentados = profile?.problemas_enfrentados ?? "";
 const objetivos_mejora = profile?.objetivos_mejora ?? "";
 const interes_tecnologia = profile?.interes_tecnologia ?? "";
+const desc_interes = profile?.desc_interes ?? "";
+const instagram = profile?.instagram ?? "";
 ---
 
 <Layout title="Perfil">
@@ -39,7 +44,7 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
     <h1 class="text-2xl font-bold mb-6">Completa tu perfil</h1>
     <p class="mb-6">Correo electrónico: <strong>{user.email}</strong></p>
 
-    <form id="profile-form" action="/api/profile" method="POST" class="space-y-8 bg-white p-6 rounded-md shadow-md">
+    <form id="profile-form" action="/api/profile/edit" method="POST" class="space-y-8 bg-white p-6 rounded-md shadow-md">
       <!-- Navegación entre secciones -->
       <div class="flex flex-wrap gap-2 mb-6">
         <button type="button" data-section="personal" class="section-btn px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
@@ -74,6 +79,17 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
     </div>
+        <!-- Campo Instagram -->
+        <div>
+          <label for="instagram" class="block mb-1 font-medium text-gray-700">Instagram</label>
+          <input
+            type="text"
+            id="instagram"
+            name="instagram"
+            value={instagram}
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
     <!-- Campo Nivel de experiencia -->
     <div>
@@ -206,24 +222,6 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
       </select>
     </div>
 
-    <div class="mb-4">
-      <label 
-        for="frecuencia_riego" 
-        class="block mb-1 font-medium text-gray-700"
-      >
-        Frecuencia de riego y cuidados
-      </label>
-      <select
-        id="frecuencia_riego"
-        name="frecuencia_riego"
-        class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-      >
-        <option value="" selected={frecuencia_riego === ""}>Selecciona una opcion</option>
-        <option value="Diaria" selected={frecuencia_riego === "Diaria"}>Diaria</option>
-        <option value="Semanal" selected={frecuencia_riego === "Semanal"}>Semanal</option>
-        <option value="Según estación" selected={frecuencia_riego === "Según estación"}>Según estación</option>
-      </select>
-    </div>
 
     <!-- Campos existentes... -->
     <div class="mb-4">
@@ -310,6 +308,20 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
               <option value="Conservación" selected={motivacion === "Conservación"}>Conservación</option>
             </select>
           </div>
+
+          <div class="mb-4">
+            <label for="desc_obj" class="block mb-1 font-medium text-gray-700">
+              Descripción del objetivo
+            </label>
+            <input
+              type="text"
+              id="desc_obj"
+              name="desc_obj"
+              value={desc_obj}
+              class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white h-24 resize-none"
+              placeholder="Escribe aquí una breve descripción sobre tu cultivo..."
+            />
+          </div>
         </div>
         <div class="mt-6 flex justify-between">
           <button type="button" data-section="personal" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
@@ -339,6 +351,19 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
               name="tamano_espacio"
               value={tamano_espacio}
               class="w-full border border-gray-300 rounded-md px-3 py-2"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="desc_condiciones" class="block mb-1 font-medium text-gray-700">
+              Descripción de las condiciones de cultivo
+            </label>
+            <input
+              type="text"
+              id="desc_condiciones"
+              name="desc_condiciones"
+              value={desc_condiciones}
+              class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white h-24 resize-none"
+              placeholder="Escribe aquí una breve descripción sobre tu cultivo..."
             />
           </div>
     
@@ -380,6 +405,39 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
               <option value="Uso de pesticidas" selected={control_plagas === "Uso de pesticidas"}>Uso de pesticidas</option>
               <option value="Control biológico" selected={control_plagas === "Control biológico"}>Control biológico</option>
             </select>
+          </div>
+
+          <div class="mb-4">
+            <label 
+              for="frecuencia_riego" 
+              class="block mb-1 font-medium text-gray-700"
+            >
+              Frecuencia de riego y cuidados
+            </label>
+            <select
+              id="frecuencia_riego"
+              name="frecuencia_riego"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+            >
+              <option value="" selected={frecuencia_riego === ""}>Selecciona una opcion</option>
+              <option value="Diaria" selected={frecuencia_riego === "Diaria"}>Diaria</option>
+              <option value="Semanal" selected={frecuencia_riego === "Semanal"}>Semanal</option>
+              <option value="Según estación" selected={frecuencia_riego === "Según estación"}>Según estación</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label for="desc_practicas" class="block mb-1 font-medium text-gray-700">
+              Descripción de tus prácticas agricolas
+            </label>
+            <input
+              type="text"
+              id="desc_practicas"
+              name="desc_practicas"
+              value={desc_practicas}
+              class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white h-24 resize-none"
+              placeholder="Escribe aquí una breve descripción sobre tu cultivo..."
+            />
           </div>
     
           
@@ -438,6 +496,21 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
               <option value="Sensores de humedad" selected={interes_tecnologia === "Sensores de humedad"}>Sensores de humedad</option>
             </select>
           </div>
+
+          <div class="mb-4">
+            <label for="desc_interes" class="block mb-1 font-medium text-gray-700">
+              Descripción de tus objetivos y desafíos
+            </label>
+            <input
+              type="text"
+              id="desc_interes"
+              name="desc_interes"
+              value={desc_interes}
+              class="w-full border border-gray-300 rounded-md px-3 py-2 bg-white h-24 resize-none"
+              placeholder="Escribe aquí una breve descripción sobre tu cultivo..."
+            />
+          </div>
+
         </div>
         <div class="mt-6 flex justify-between">
           <button type="button" data-section="practicas" class="prev-section-btn px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
@@ -456,36 +529,82 @@ const interes_tecnologia = profile?.interes_tecnologia ?? "";
 </main>
 
   <script is:inline>
-    // Manejo de navegación entre secciones
-    document.querySelectorAll('.section-btn, .next-section-btn, .prev-section-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetSection = btn.dataset.section + '-section';
-        
-        // Ocultar todas las secciones
-        document.querySelectorAll('.section-content').forEach(section => {
-          section.classList.add('hidden');
-        });
-        
-        // Mostrar sección objetivo
-        document.getElementById(targetSection).classList.remove('hidden');
-        
-        // Actualizar botones activos
-        document.querySelectorAll('.section-btn').forEach(navBtn => {
-          navBtn.classList.remove('bg-blue-200', 'text-blue-800');
-          navBtn.classList.add('bg-blue-100');
-        });
-        document.querySelector(`[data-section="${btn.dataset.section}"]`).classList.add('bg-blue-200');
+      // Manejo de navegación entre secciones
+  document.querySelectorAll('.section-btn, .next-section-btn, .prev-section-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetSection = btn.dataset.section + '-section';
+      
+      // Ocultar todas las secciones
+      document.querySelectorAll('.section-content').forEach(section => {
+        section.classList.add('hidden');
       });
+      
+      // Mostrar sección objetivo
+      document.getElementById(targetSection).classList.remove('hidden');
+      
+      // Actualizar botones activos
+      document.querySelectorAll('.section-btn').forEach(navBtn => {
+        navBtn.classList.remove('bg-blue-200', 'text-blue-800');
+        navBtn.classList.add('bg-blue-100');
+      });
+      document.querySelector(`[data-section="${btn.dataset.section}"]`).classList.add('bg-blue-200');
     });
+  });
 
-    // Mostrar primera sección al cargar
-    document.getElementById('personal-section').classList.remove('hidden');
-    document.querySelector('[data-section="personal"]').classList.add('bg-blue-200');
+  // Mostrar primera sección al cargar
+  document.getElementById('personal-section').classList.remove('hidden');
+  document.querySelector('[data-section="personal"]').classList.add('bg-blue-200');
 
-    // Mantener el submit original
-    const form = document.getElementById("profile-form");
-    form.addEventListener("submit", async (e) => {
-      // ... código original del submit ...
-    });
+  // Mantener el submit original
+  const form = document.getElementById("profile-form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Evitar el submit normal
+
+    // Primero, procesa el formulario como lo haces normalmente:
+    const formData = new FormData(form);
+    
+    try {
+      // Realizar la solicitud al backend para actualizar o insertar el perfil
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        // Si la operación fue exitosa, hacer la llamada a la API de generación de perfil
+
+        // Ejemplo: Generar la descripción de usuario
+        const userProfileData = {
+          user_id: result.profile.user_id,  // Asumimos que esta es la estructura recibida
+          name: result.profile.name,
+          email: result.profile.email,
+          // Puedes agregar más información relevante del perfil
+        };
+
+        const generateResponse = await fetch('/api/generate-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userProfileData),
+        });
+
+        const generateResult = await generateResponse.json();
+        if (generateResponse.ok) {
+          console.log('Descripción generada exitosamente:', generateResult);
+        } else {
+          console.error('Error al generar la descripción:', generateResult);
+        }
+        
+        // Ahora, realiza la redirección a /dashboard
+        window.location.href = '/dashboard';
+      } else {
+        console.error('Error al enviar el perfil:', result.error);
+      }
+    } catch (error) {
+      console.error('Error al enviar el formulario:', error);
+    }
+  });
   </script>
 </Layout>

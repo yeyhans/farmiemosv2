@@ -2,9 +2,13 @@ import type { APIRoute } from "astro";
 import OpenAI from "openai";
 import systemContent from "../../../content/patterns/faqs/faqs-prompts.mdx?raw";
 
-const openai = new OpenAI({
+const deepseek = new OpenAI({
     baseURL: 'https://api.deepseek.com',
     apiKey: import.meta.env.DEEPSEEK_API_KEY_FAQS,
+});
+
+const openai = new OpenAI({
+    apiKey: import.meta.env.OPENAI_API_KEY,
 });
 
 export const POST: APIRoute = async ({ request }) => {
@@ -23,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Crear stream de OpenAI
         const stream = await openai.chat.completions.create({
-            model: "deepseek-chat",
+            model: "gpt-4o",
             messages: [
                 { role: "system", content: systemContent },
                 { role: "user", content: userPrompt }

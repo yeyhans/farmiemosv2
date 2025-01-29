@@ -1,5 +1,17 @@
 ---
-import { supabase } from '../../lib/supabase';
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+const { redirect, user } = await authenticate(Astro);
+
+if (redirect) {
+  return Astro.redirect(redirect);
+}
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
 
 const { id } = Astro.params;
 
@@ -9,13 +21,7 @@ const { data: session } = await supabase
   .eq("id", id)
   .single();
 
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("user_id", session.user_id)
-  .single();
-
-
+console.log(user)
 ---
 
   <style>
@@ -49,7 +55,7 @@ const { data: profile } = await supabase
   <!-- Mensajes del chat -->
   <section class="messages-container">
     <div id="conversationContainer" class="space-y-4">
-      {session.user_prompt.map((userPrompt, index) => ( 
+      {session?.user_prompt.map((userPrompt, index) => ( 
         <div key={index}> 
           <div class="bg-gray-100 p-3 rounded-lg shadow-sm"> 
             <strong class="text-green-800">{profile.user_name}:</strong> {userPrompt} 
