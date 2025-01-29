@@ -90,11 +90,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       { role: "system", content: `Información relevante: ${ragResponse}` }
     ];
 
-    const completionStream = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
+    const completionStream = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: conversationHistory,
       temperature: 1.0,
-      max_tokens: 100,
+      max_tokens: 1000,
       stream: true,
     });
 

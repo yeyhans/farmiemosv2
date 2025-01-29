@@ -60,22 +60,15 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
       });
     } else if (method === "POST") {
       // Lógica para insertar registros
-      const formData = await request.formData();
 
-      const session_name = formData.get("session_name")?.toString() || "";
-      const session_description = formData.get("session_description")?.toString() || "";
-      const system_message = formData.get("system_message")?.toString() || "";
 
-      // Validar campos requeridos
-      if (!session_name || !system_message) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Faltan campos requeridos." }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
+ 
+      const session_name = " test ";
+      const session_description = " test ";
+      const system_message = " test ";
+
+    
+    
 
       const { data: inserted, error } = await supabase
         .from("chats")

@@ -582,7 +582,7 @@ const instagram = profile?.instagram ?? "";
           // Puedes agregar más información relevante del perfil
         };
 
-        const generateResponse = await fetch('/api/generate-profile', {
+        const generateResponse = await fetch('/api/profile/generate-profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
