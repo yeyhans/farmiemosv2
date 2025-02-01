@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
 import OpenAI from "openai";
+import sharp from 'sharp';
 
 const deepseek = new OpenAI({
     baseURL: 'https://api.deepseek.com',
@@ -73,7 +74,13 @@ const profilePrompt = profileData?.prompt_profile || "";
     let imageAnalysis = "";
     if (imageFile && imageFile.size > 0) {
       const buffer = await imageFile.arrayBuffer();
-      const base64Image = Buffer.from(buffer).toString("base64");
+
+      // Redimensionar la imagen a un máximo de 800x800 píxeles
+const resizedImageBuffer = await sharp(Buffer.from(await imageFile.arrayBuffer()))
+.resize(800, 800, { fit: 'inside' })
+.toBuffer();
+
+const base64Image = resizedImageBuffer.toString('base64');
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -94,7 +101,10 @@ const profilePrompt = profileData?.prompt_profile || "";
       });
 
       imageAnalysis = response.choices[0]?.message?.content || "No se pudo obtener una respuesta para la imagen.";
+    } else {
+      throw new Error ("No se proporciono un archivo valido");
     }
+    
 
     const isFirstPrompt = !chatSession?.user_prompt || chatSession.user_prompt.length === 0;
     let sessionName = chatSession?.session_name;
