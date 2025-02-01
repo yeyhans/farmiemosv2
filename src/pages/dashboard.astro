@@ -70,15 +70,8 @@ if (error) {
 // Verificar si los campos obligatorios están completos
 const isProfileComplete = profile?.user_name && 
                           profile?.instagram &&
-                          profile?.experience_level && 
-                          profile?.comuna && 
-                          profile?.cultivo_principal && 
-                          profile?.tipo_suelo && 
-                          profile?.tipo_iluminacion &&
-                          profile?.fuente_riego && 
-                          profile?.fertilizacion && 
-                          profile?.frecuencia_riego && 
-                          profile?.problemas_enfrentados;
+                          profile?.experience_level 
+ 
 
 if (!isProfileComplete) {
   return Astro.redirect("/profile"); // Redirigir a la página de perfil
