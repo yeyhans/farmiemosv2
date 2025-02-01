@@ -11,7 +11,7 @@ if (accessToken && refreshToken) {
 }
 ---
 
-<Layout title="Sign in">
+<Layout title="Farmiemos - Ingreso" description="Ingresa a Farmiemos para comenzar a cuidar tus plantas.">
 
     <div class="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
       <div class="max-w-md w-full space-y-8">
@@ -54,6 +54,14 @@ if (accessToken && refreshToken) {
             </button>
           </div>
           
+          <div class="text-center text-sm text-gray-600">
+            <p>
+              Al continuar, aceptas nuestras 
+              <a href="/politicas/politicas-de-privacidad" class="font-medium text-indigo-600 hover:text-custom-blue">Políticas de privacidad</a> 
+              y 
+              <a href="/politicas/terminos-de-uso" class="font-medium text-indigo-600 hover:text-custom-blue">Términos de uso</a>.
+            </p>
+          </div>
 
         </form>
         <img

@@ -8,13 +8,15 @@ const {chats, profile} = Astro.props;
 <!-- Session List -->
 <div class="space-y-4">
     <ul id="session-list" class="space-y-2">
-      {chats?.slice(0, 5).map((session) => (
-        <li>
-          🗪 <a href = `/c/${session.id}` class="text-sm text-center">
-            {session.session_name} </a>
-        </li>
-      ))}
-    </ul>
+  {chats?.slice(0, 5).map((session) => (
+    <li>
+      🗪 <a href={`/c/${session.id}`} class="text-sm text-center">
+        {session.session_name.length > 30 ? `${session.session_name.slice(0, 30)}...` : session.session_name}
+      </a>
+    </li>
+  ))}
+</ul>
+
   
     <!-- Buttons Container -->
     <div class="flex gap-2">

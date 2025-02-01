@@ -5,7 +5,7 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Que hacemos en Farmiemos?" description="Farmiemos con ganas es una plataforma que te ayuda a mejorar tus plantas preferidas.">
-    <h1 class="text-3xl font-bold text-gray-800">Que hacemos</h1>
+    <h1 class="text-3xl font-bold text-green-700 mb-4"> Que hacemos en FARMIEMOS AI?</h1>
     <section id="explicacion_ai" class="">
 
 
@@ -13,13 +13,90 @@ import Layout from "../layouts/Layout.astro";
 
     </section>
     <section id="calculator_ai" class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-800">Calculadora AI</h2>
-        <p class="text-sm text-gray-600">
-            Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
-            de tu cultivo junto a farmiemos, si quieres saber más detalles de 
-            su funcionamiento  
-            <a href="/que-hacemos#calculator_ai" class="text-green-900 font-semibold">Haz click aquí!</a>
+        <h2 class="text-2xl font-bold p-4 text-green-700">Calculadora AI</h2>
+        <p class="text-base text-gray-700 p-2 leading-relaxed">
+            Nuestra <strong>Calculator AI</strong> permite a los usuarios calcular <strong>VPD (Déficit de Presión de Vapor)</strong> y <strong>Dew Point (Punto de Rocío)</strong>, dos métricas clave para optimizar el entorno del cultivo. Además, los usuarios pueden agregar <strong>notas personalizadas</strong> para registrar su <strong>bitácora de cultivo</strong>, facilitando el seguimiento de sus plantas. Esta calculadora se integra con <strong>dispositivos IoT</strong> para recopilar datos en tiempo real, los cuales son <strong>vectorizados por nuestra IA</strong>. Gracias a este análisis avanzado, <strong>Farmiemos AI</strong> puede generar <strong>recomendaciones aún más precisas</strong> y adaptadas a las condiciones específicas de cada cultivador.
         </p>
+        
+    </section>
+    <section id="mejora_continua" class="mt-8">
+        <h3 class="text-2xl font-bold p-4 text-green-700 mt-4">Mejora continua del sistema</h3>
+        <p class="text-base text-gray-700 p-2 leading-relaxed">
+            Nuestro sistema evoluciona constantemente mediante un proceso de <strong>fine-tuning</strong> y <strong>aprendizaje automático</strong>. Cada interacción del usuario alimenta un <strong>análisis de feedback</strong> que optimiza los modelos de IA, ajustando recomendaciones y respuestas. Además, la <strong>integración de datos en tiempo real</strong> y el uso de <strong>técnicas avanzadas de machine learning</strong> permiten refinar la precisión del sistema, asegurando que las soluciones brindadas sean cada vez más <strong>relevantes y adaptadas</strong> a las necesidades de los cultivadores.
+        </p>
+        
+                <div class="mt-2 bg-gray-50 rounded-xl p-8 border-2 border-gray-200 shadow-md">
+    
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Análisis de Interacciones -->
+                        <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="bg-indigo-100 rounded-full p-4 mb-4">
+                                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-semibold text-gray-800 mb-2">Análisis de Interacciones</h4>
+                                <p class="text-sm text-gray-600">Monitoreo y evaluación continua de las interacciones usuario-IA</p>
+                            </div>
+                        </div>
+                
+                        <!-- Documentación Técnica -->
+                        <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="bg-green-100 rounded-full p-4 mb-4">
+                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Documentación Técnica</h4>
+                                <p class="text-sm text-gray-600">Actualización constante de recursos y guías técnicas</p>
+                            </div>
+                        </div>
+                
+                        <!-- Feedback Comunitario -->
+                        <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="bg-purple-100 rounded-full p-4 mb-4">
+                                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Feedback Comunitario</h4>
+                                <p class="text-sm text-gray-600">Contribuciones y experiencias de la comunidad de usuarios</p>
+                            </div>
+                        </div>
+                
+                        <!-- Datos de Rendimiento -->
+                        <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="bg-red-100 rounded-full p-4 mb-4">
+                                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800 mb-2">Datos de Rendimiento</h4>
+                                <p class="text-sm text-gray-600">Métricas y análisis de performance del sistema</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                    // Añadir efectos de hover
+                    const cards = document.querySelectorAll('.rounded-xl.shadow-md');
+                    
+                    cards.forEach(card => {
+                        card.addEventListener('mouseenter', () => {
+                            card.classList.add('transform', 'scale-105', 'transition-transform', 'duration-300');
+                        });
+                        
+                        card.addEventListener('mouseleave', () => {
+                            card.classList.remove('transform', 'scale-105');
+                        });
+                    });
+                </script>
     </section>
 
 

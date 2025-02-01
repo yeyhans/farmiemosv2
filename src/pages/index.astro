@@ -16,68 +16,38 @@ import Layout from '../layouts/Layout.astro';
 			</span>
 		  </div>
 		  
-		  <h1 class="text-2xl font-bold mt-8">
-			¡Cuenta regresiva para el lanzamiento de nuestro ChatGPT!
-		  <div id="countdown" class="mt-4 text-2xl font-bold text-gray-800">
-			CUENTA REGRESIVA
-		</div>
-
 	</section>
 	
-	<script is:inline>
-		// Fecha objetivo: 1 de febrero de 2025
-		const targetDate = new Date('2025-02-01T00:00:00');
-	
-		function updateCountdown() {
-			const now = new Date();
-			const timeDifference = targetDate - now;
-	
-			const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-			const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-			const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
-			const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
-	
-			document.getElementById('countdown').innerHTML = `
-<div class="flex justify-center space-x-2 sm:space-x-4">
-    <div class="bg-custom-green text-white p-2 sm:p-4 rounded-lg shadow-lg w-16 h-16 sm:w-24 sm:h-24 flex flex-col items-center justify-center">
-        <span class="block text-xl sm:text-3xl font-bold">${days}</span>
-        <span class="text-xs sm:text-sm">Días</span>
-    </div>
-    <div class="bg-custom-green text-white p-2 sm:p-4 rounded-lg shadow-lg w-16 h-16 sm:w-24 sm:h-24 flex flex-col items-center justify-center">
-        <span class="block text-xl sm:text-3xl font-bold">${hours}</span>
-        <span class="text-xs sm:text-sm">Horas</span>
-    </div>
-    <div class="bg-custom-green text-white p-2 sm:p-4 rounded-lg shadow-lg w-16 h-16 sm:w-24 sm:h-24 flex flex-col items-center justify-center">
-        <span class="block text-xl sm:text-3xl font-bold">${minutes}</span>
-        <span class="text-xs sm:text-sm">Minutos</span>
-    </div>
-    <div class="bg-custom-green text-white p-2 sm:p-4 rounded-lg shadow-lg w-16 h-16 sm:w-24 sm:h-24 flex flex-col items-center justify-center">
-        <span class="block text-xl sm:text-3xl font-bold">${seconds}</span>
-        <span class="text-xs sm:text-sm">Segundos</span>
-    </div>
-</div>
-			`;
-	
-			if (timeDifference < 0) {
-				clearInterval(interval);
-				document.getElementById('countdown').innerHTML = `
-					<div class="text-green-600 text-3xl font-bold">
-						¡Tiempo cumplido!
-					</div>
-				`;
-			}
-		}
-	
-		// Actualizar la cuenta regresiva cada segundo
-		const interval = setInterval(updateCountdown, 1000);
-	
-		// Ejecutar la función una vez al cargar la página para evitar el retraso inicial
-		updateCountdown();
-	</script>
-		  
+	<section class="text-center">
+		<p class="text-base text-gray-700 p-2 leading-relaxed">
+			Democratizamos la agricultura con IA, IoT y análisis de datos, brindando herramientas inteligentes para optimizar cultivos y conectando a las comunidades.
+		</p>
 
-	<div class="flex flex-col items-center justify-center">
-		<img src="/logo.png" alt="Farmiemos" class="mx-auto items-center" width="400" height="400">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl justify-center mx-auto mt-8">
+			<!-- Primera tarjeta con enlace -->
+			<a href="/dashboard" target="_blank" 
+			   class="relative rounded-2xl pt-6 pb-7 px-8 flex-1 bg-white/50 backdrop-blur-sm cursor-pointer shadow-md hover:shadow-lg transition">
+				<div class="text-xl font-bold mb-2 text-green-600">Empieza ahora</div>
+				<div class="text-slate-500 text-sm">
+					Acceso gratis a FARMIEMOS AI.<br>Estamos en periodo de pruebas.
+				</div>
+			</a>
+		
+			<!-- Segunda tarjeta sin enlace -->
+			<a href="/que-hacemos" target="_blank" 
+			class="relative rounded-2xl pt-6 pb-7 px-8 flex-1 bg-white/50 backdrop-blur-sm cursor-pointer shadow-md hover:shadow-lg transition">
+			<div class="text-xl font-bold mb-2 text-green-600">Que hacemos?</div>
+				<div class="text-slate-500 text-sm">
+					Averigua todo los detalles de nuestro proyecto<br>Tú feedback es importante para nosotros.
+				</div>
+			</a>
+		</div>
+		
+	</section>
+	
+	  
+
+	<div class="flex flex-col items-center justify-center mt-8">
 		<div class="flex flex-col items-center justify-center">
 			<div class="flex flex-col sm:flex-row sm:space-x-4 items-center w-full">
 				<a href="https://wa.me/56981570958?text=Estamos%20aquí%20para%20ayudarte,%20cualquier%20duda%20que%20tengas%20con%20respecto%20a%20Farmiemos%20y%20nuestros%20productos%20o%20servicios%20solo%20contáctese" target="_blank" rel="noopener noreferrer">

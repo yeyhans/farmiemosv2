@@ -1,0 +1,172 @@
+---
+interface Log {
+  notes: string;
+  temp: number;
+  humidity: number;
+  vpd: number;
+  dewpoint: number;
+  created_at: string;
+}
+
+interface Props {
+  logs: Log[];
+}
+
+const { logs } = Astro.props;
+
+// Función para agrupar logs por fecha
+const groupLogsByDate = (logs: Log[]) => {
+  const grouped = {};
+  logs.forEach(log => {
+    const date = new Date(log.created_at).toISOString().split('T')[0];
+    if (!grouped[date]) {
+      grouped[date] = [];
+    }
+    grouped[date].push(log);
+  });
+  return grouped;
+};
+
+// Obtener el primer y último día del mes actual
+const today = new Date();
+const getMonthRange = (monthOffset: number) => {
+  const currentMonth = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+  return { firstDay, lastDay, currentMonth };
+};
+
+// Obtener el rango del mes actual o el mes anterior/siguiente
+const { firstDay, lastDay, currentMonth } = getMonthRange(0);
+
+// Crear array de días del mes
+const daysInMonth = [];
+for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+  daysInMonth.push(new Date(d));
+}
+
+const groupedLogs = groupLogsByDate(logs);
+
+// Nombres de los días de la semana en español
+const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+// Nombres de los meses en español
+const months = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+---
+
+<div class="container mx-auto p-2">
+  <div class="bg-white rounded-lg shadow-lg">
+    <!-- Encabezado del calendario -->
+    <div class="p-4 border-b flex justify-between items-center">
+      <button onClick={() => Astro.fetchContent(`/logs?monthOffset=-1`)} class="text-lg font-semibold text-gray-600">‹</button>
+      <h2 class="text-xl font-bold text-center">
+        {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+      </h2>
+      <button onClick={() => Astro.fetchContent(`/logs?monthOffset=1`)} class="text-lg font-semibold text-gray-600">›</button>
+    </div>
+
+    <!-- Días de la semana -->
+    <div class="grid grid-cols-7 gap-1 p-2">
+      {weekDays.map(day => (
+        <div class="text-center text-sm font-semibold text-gray-600 py-2">
+          {day}
+        </div>
+      ))}
+    </div>
+
+    <!-- Días del mes -->
+    <div class="grid grid-cols-7 gap-1 p-2">
+      {daysInMonth.map(date => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayLogs = groupedLogs[dateStr] || [];
+        const hasLogs = dayLogs.length > 0;
+
+        return (
+          <div class={`
+            min-h-24 p-2 border rounded-lg
+            ${hasLogs ? 'bg-blue-50' : 'bg-gray-50'}
+            ${date.toDateString() === new Date().toDateString() ? 'ring-2 ring-blue-500' : ''}
+          `}>
+            <div class="text-right text-sm font-semibold">{date.getDate()}</div>
+
+            {hasLogs && (
+              <div class="mt-1 space-y-1">
+                {dayLogs.map(log => (
+                  <div class="text-xs">
+
+
+
+
+        <button 
+        class="px-2 py-1 rounded-full text-xs flex justify-center items-center text-left"
+        onclick={`mostrarPopUpNotas('${log.id}', '${log.notes || "Sin notas"}')`}
+        >
+        📝
+        </button>
+
+        <div 
+        id="popupNotasContainer" 
+        class="fixed inset-0 top-8 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    
+        <div class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative">
+        <button 
+            class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
+            onclick="cerrarPopUpNotas()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <div class="p-4">
+            <h2 class="text-lg font-semibold mb-2">Notas del Registro</h2>
+            <div id="notasContenido" class="mt-2 p-3 bg-yellow-100 rounded-lg">
+            </div>
+        </div>
+        </div>
+    
+        </div>
+
+
+        <script is:inline>
+        function mostrarPopUpNotas(id, notas) {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        const notasContenido = document.getElementById('notasContenido');
+        
+        // Decodificar las notas (por si contienen caracteres especiales)
+        const notasDecodificadas = decodeURIComponent(notas);
+        
+        // Insertar las notas en el contenido
+        notasContenido.textContent = notasDecodificadas;
+        
+        // Mostrar el popup
+        popupContainer.classList.remove('hidden');
+        }
+
+        function cerrarPopUpNotas() {
+        const popupContainer = document.getElementById('popupNotasContainer');
+        popupContainer.classList.add('hidden');
+        }
+
+
+        document.getElementById('popupNotasContainer').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarPopUpNotas();
+        }
+        });
+        </script>
+
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+ 
+</div>

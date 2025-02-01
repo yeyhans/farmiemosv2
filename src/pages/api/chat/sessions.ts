@@ -63,7 +63,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
 
  
-      const session_name = " test ";
+      const session_name = "Session Nueva";
       const session_description = " test ";
       const system_message = " test ";
 
@@ -76,7 +76,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
           {
             user_id: user.id,
             session_name,
-            session_description,
+            session_description,            
             system_message,
             user_prompt: [],
             ai_response: [],
