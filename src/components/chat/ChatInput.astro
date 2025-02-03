@@ -1,0 +1,226 @@
+---
+import { authenticate } from "../../lib/auth";
+
+const { redirect, user } = await authenticate(Astro);
+
+if (redirect) {
+  return Astro.redirect(redirect);
+}
+
+
+const { id } = Astro.params;
+
+
+---
+
+ <style>
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+
+    }
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .input-container {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+  </style>
+
+ <section class="input-container">
+
+    <form id="mastergrowForm" class="max-w-6xl mx-auto"  enctype="multipart/form-data">
+      <input type="hidden" name="sessionId" value={id} />
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-grow">
+          <input 
+            type="text" 
+            name="prompt" 
+            id="prompt" 
+            placeholder="Ej. ¿Cómo puedo mejorar mis cultivos?" 
+            required
+            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-300 focus:border-transparent"
+          />
+        </div>
+        <div class="flex gap-2 items-end">
+          <label class="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer">
+            <input type="file" name="file" id="file" accept="image/*" class="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </label>
+          <button type="submit" class="w-12 h-12 bg-green-900 text-white rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+
+
+<script is:inline>
+  // Capturar el input de archivo
+  const fileInput = document.querySelector('input[name="file"]');
+  const imagePreviewContainer = document.createElement('div');
+  imagePreviewContainer.className = 'mt-4';
+  // Insertar el contenedor de la vista previa después del input de archivo
+  fileInput.parentElement.appendChild(imagePreviewContainer);
+
+  // Escuchar el evento de cambio en el input de archivo
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Crear una URL temporal para la imagen
+      const imageUrl = URL.createObjectURL(file);
+      // Mostrar la imagen en el contenedor de vista previa
+      imagePreviewContainer.innerHTML = `
+        <img src="${imageUrl}" alt="Vista previa de la imagen" class="max-w-full h-auto rounded-lg shadow-sm" />
+      `;
+    } else {
+      // Limpiar la vista previa si no hay archivo seleccionado
+      imagePreviewContainer.innerHTML = '';
+    }
+  });
+</script>
+
+<script is:inline>
+  function scrollToBottom() {
+    const messagesContainer = document.querySelector('.messages-container');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    scrollToBottom();
+  });
+
+  let session = {
+    ai_response: [], // Array para almacenar las respuestas del asistente
+  };
+
+  const form = document.getElementById('mastergrowForm');
+  const conversationContainer = document.getElementById('conversationContainer');
+  const profile = { user_name: "Tú" };
+  let isStreaming = false;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (isStreaming) return;
+
+    try {
+      const formData = new FormData(form);
+      const userPrompt = formData.get("prompt").toString();
+      const imageFile = formData.get("file");
+
+      // Limpiar inputs
+      form.querySelector('#prompt').value = '';
+      fileInput.value = ''; // Limpiar el input de archivo
+      imagePreviewContainer.innerHTML = ''; // Limpiar la vista previa de la imagen
+
+      // Mensaje del usuario
+      let userMessageHtml = `
+        <div>
+          <div class="bg-gray-100 p-2 mt-2 rounded-lg">
+            <strong class="text-green-800">${profile.user_name}:</strong> ${userPrompt}
+          </div>
+      `;
+
+      // Solo mostrar la imagen si se ha subido un archivo
+      if (imageFile && imageFile.size > 0) {
+        const imageUrl = URL.createObjectURL(imageFile);
+        userMessageHtml += `
+          <div class="mt-2">
+            <img src="${imageUrl}" alt="Imagen subida" class="rounded-lg shadow-sm max-w-[300px]">
+          </div>
+        `;
+      }
+
+      userMessageHtml += `</div>`;
+      conversationContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+
+      // Elemento para la respuesta en tiempo real
+      const assistantDiv = document.createElement('div');
+      assistantDiv.className = 'bg-blue-100 p-4 mt-2 rounded-lg';
+      assistantDiv.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div class="flex-grow">
+            <strong>Asistente:</strong> <span id="streamingText"></span>
+          </div>
+          <div class="flex gap-2 ml-4">
+            <div class="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      `;
+      conversationContainer.appendChild(assistantDiv);
+      scrollToBottom();
+
+      isStreaming = true;
+      const streamingText = assistantDiv.querySelector('#streamingText');
+      let fullResponse = '';
+
+      const res = await fetch('/api/chat/assistents', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        fullResponse += chunk;
+
+        // Actualizar texto
+        streamingText.textContent = fullResponse;
+
+        // Remover indicador de typing solo si existe
+        const typingIndicator = assistantDiv.querySelector('.typing-indicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+
+        scrollToBottom();
+      }
+
+      // Finalizar stream
+      isStreaming = false;
+
+      // Agregar botones de acciones
+      const actionsContainer = assistantDiv.querySelector('.flex.gap-2.ml-4');
+      if (actionsContainer) {
+        actionsContainer.innerHTML = addActionButtons(session.ai_response.length);
+      }
+
+      // Actualizar sesión local
+      session.ai_response.push(fullResponse);
+
+    } catch (error) {
+      isStreaming = false;
+      console.error('Error:', error);
+      conversationContainer.insertAdjacentHTML('beforeend', `
+        <div class="bg-red-100 p-4 mt-2 rounded-lg text-red-600">
+          <strong>Error:</strong> ${error.message || 'Error en el servidor'}
+        </div>
+      `);
+      scrollToBottom();
+    }
+  });
+</script>

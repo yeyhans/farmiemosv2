@@ -72,16 +72,25 @@ const profilePrompt = profileData?.prompt_profile || "";
     if (chatSessionError) throw new Error("Error al obtener el chat");
 
     let imageAnalysis = "";
-    if (imageFile && imageFile.size > 0) {
+
+    try {
+      // Verificar si se proporcionó un archivo y si tiene tamaño mayor a 0
+      if (!imageFile || imageFile.size <= 0) {
+        throw new Error("No se proporcionó un archivo válido o el archivo está vacío.");
+      }
+    
+      // Convertir el archivo a un buffer
       const buffer = await imageFile.arrayBuffer();
-
-      // Redimensionar la imagen a un máximo de 800x800 píxeles
-const resizedImageBuffer = await sharp(Buffer.from(await imageFile.arrayBuffer()))
-.resize(800, 800, { fit: 'inside' })
-.toBuffer();
-
-const base64Image = resizedImageBuffer.toString('base64');
-
+    
+      // Redimensionar la imagen a un máximo de 800x800 píxeles usando sharp
+      const resizedImageBuffer = await sharp(Buffer.from(buffer))
+        .resize(800, 800, { fit: 'inside' })
+        .toBuffer();
+    
+      // Convertir la imagen redimensionada a base64
+      const base64Image = resizedImageBuffer.toString('base64');
+    
+      // Llamar a la API de OpenAI para analizar la imagen
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -99,11 +108,17 @@ const base64Image = resizedImageBuffer.toString('base64');
           },
         ],
       });
-
+    
+      // Extraer el análisis de la respuesta
       imageAnalysis = response.choices[0]?.message?.content || "No se pudo obtener una respuesta para la imagen.";
-    } else {
-      throw new Error ("No se proporciono un archivo valido");
+    } catch (error) {
+      // Manejar errores específicos y genéricos
+      console.error("Error al procesar la imagen:", error.message);
+      imageAnalysis = "Ocurrió un error al procesar la imagen. Por favor, intenta nuevamente.";
     }
+    
+    // Devolver el resultado del análisis
+    console.log(imageAnalysis);
     
 
     const isFirstPrompt = !chatSession?.user_prompt || chatSession.user_prompt.length === 0;
@@ -112,7 +127,14 @@ const base64Image = resizedImageBuffer.toString('base64');
       sessionName = userPrompt.substring(0, 50);
     }
 
-    const combinedPrompt = userPrompt + (imageAnalysis ? `\n\nAnálisis de la imagen:\n${imageAnalysis}` : "");
+        // Variable para indicar si se ha subido un archivo en esta iteración
+    const hasImageFile = imageFile && imageFile.size > 0;
+
+    // Crear el combinedPrompt según si hay un archivo adjunto o no
+    let combinedPrompt = userPrompt;
+    if (hasImageFile) {
+      combinedPrompt += `\n\nAnálisis de la imagen:\n${imageAnalysis}`;
+    }
     const ragResponse = await searchRAG(combinedPrompt);
 
     const conversationHistory: ChatMessage[] = [

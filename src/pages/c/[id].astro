@@ -2,6 +2,8 @@
 // Importa supabase y Layout
 import Layout from '../../layouts/DashboardLayout.astro';
 import ChatInterface from '../../components/chat/ChatInterface.astro';
+import ChatMessage from '../../components/chat/ChatMessage.astro';
+import ChatInput from '../../components/chat/ChatInput.astro';
 
 const { id } = Astro.params;
 
@@ -11,6 +13,8 @@ const { id } = Astro.params;
 
 <Layout title="Detalles de la sesión">
 
-    <ChatInterface sessionId={id} />
+
+    <ChatMessage sessionId={id} />
+    <ChatInput />
 
 </Layout>
