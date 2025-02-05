@@ -1,5 +1,14 @@
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
+import { Pinecone } from '@pinecone-database/pinecone';
+
+
+const pc = new Pinecone({
+  apiKey: import.meta.env.PINECONE_API_KEY,
+});
+
+const index = pc.index('farmiemos', import.meta.env.PINECONE_HOST);
+
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -51,7 +60,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         user_id: sessionData.user.id,
         chat_id: sessionId,
         message_index: index,
-        system_message: "Eres un experto en programacion sobre todo en framework astro, utilizando html y js nativo integrado con tailwind css",
+        system_message: "test ",
         user_prompt: chatSession.user_prompt[index],
         ai_response: chatSession.ai_response[index],
         is_liked: isLiked ? 1 : 0,
@@ -64,6 +73,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw upsertError;
     }
 
+    
     return new Response(
       JSON.stringify({ success: true }), 
       { 

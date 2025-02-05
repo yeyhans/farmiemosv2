@@ -91,15 +91,14 @@ export const POST: APIRoute = async ({ cookies }) => {
                 .join("\n");
         };
 
-        const systemContent = `Eres un asistente agrícola experto. Proporciona recomendaciones personalizadas basadas en el perfil del usuario. 
-        Responde siempre en un único párrafo bien estructurado, sin saltos de línea ni puntos aparte.`;
+        const systemContent = `Eres un experto en describir el perfil de usuarios agricolas.`;
         
         const userContent = `Genera una descripción detallada y concisa del perfil usando esta información:\n${buildProfileString()}`;
         
         // 5. Llamada a OpenAI
         try {
             const response = await openai.chat.completions.create({
-                model: "gpt-4o",
+                model: "gpt-3.5-turbo",
                 messages: [
                     { role: "system", content: systemContent },
                     { role: "user", content: userContent },
