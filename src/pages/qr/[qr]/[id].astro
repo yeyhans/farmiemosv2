@@ -1,7 +1,7 @@
 ---
 import { supabase } from "../../../lib/supabase";
 import { authenticate } from "../../../lib/auth";
-import Layout from "../../../layouts/QRLayout.astro";
+import Layout from "../../../layouts/Layout.astro";
 
 // Autenticación del usuario
 const { user, redirect } = await authenticate(Astro);

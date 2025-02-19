@@ -57,15 +57,17 @@ const { data: profile } = await supabase
   .eq("user_id", user.id)
   .single();
 
-const { data: logs, error } = await supabase
-  .from("calculator_logs")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false });
-
-if (error) {
-    console.error("Error al obtener registros:", error.message);
+  // Obtener los datos del código QR asociados al usuario (solo si está autenticado)
+let qr_data = [];
+if (user) {
+  const { data } = await supabase
+    .from("qr")
+    .select("*")
+    .eq("uuid", user.id);
+  qr_data = data || [];
 }
+
+
 
 // Verificar si los campos obligatorios están completos
 const isProfileComplete = profile?.user_name && 
@@ -77,8 +79,7 @@ if (!isProfileComplete) {
   return Astro.redirect("/profile"); // Redirigir a la página de perfil
 }
 
-// Genera const para visualizar en perfil
-const count_logs = logs?.length || 0;
+
 const count_chats = chats?.length || 0;
 
 
@@ -109,9 +110,33 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
           </button>
         </div>
         <div id="accordion-ai-calculator" class="px-4 pb-2">
-          <Calculator logs={logs} />
+          <div class="user-content">
+
+
+            {/* Mostrar códigos QR solo si el usuario está autenticado */}
+            {user && qr_data.length > 0 ? (
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Tus QRS Registrados</h2>
+<ul class="space-y-4">
+    {qr_data.map((qr) => (
+        <li key={qr.id} class="bg-white shadow-md rounded-lg p-4 transition duration-300 ease-in-out hover:shadow-lg">
+            <a href={`/qr/${qr.id}`} class="flex items-center justify-between text-blue-600 hover:text-blue-800 font-medium">
+                <span>Código QR: {qr.id}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </li>
+    ))}
+</ul>
+            ) : user ? (
+                <p>No tienes códigos QR registrados.</p>
+            ) : (
+                <p>Inicia sesión para ver tus códigos QR.</p>
+            )}
         </div>
-      </div>
+        </div>
+      </div>      
+
     
       <!-- Lado Derecho: Tarjetas -->
       <div class="lg:col-span-1 grid auto-rows-min transition-all duration-300 space-y-2 rounded-lg" id="right-cards">
@@ -146,7 +171,6 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
             </div>
             <div id="accordion-tarjet-profile" class="transition-all duration-300">
               <div class="bg-green-100 rounded-lg p-4 shadow-inner">
-                <p class="text-sm text-gray-700">📝 notes: <span class="font-semibold">{count_logs}</span></p>
                 <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
                 <p class="text-sm text-gray-700">💬 P&R: <span class="font-semibold">{total_prompts}</span></p>
                 <p class="text-sm text-gray-700">🌱: <span class="font-semibold">{profile.cultivo_principal}</span></p>
