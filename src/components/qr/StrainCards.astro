@@ -1,0 +1,139 @@
+---
+import { supabase } from "../../lib/supabase";
+import { authenticate } from "../../lib/auth";
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const { id } = Astro.params;
+console.log("ID:", id);
+const { data: strain } = await supabase
+    .from("strains")
+    .select("*")
+    .eq("qr_id", id);
+
+
+---
+
+<style>
+    /* Estilo de las tarjetas */
+    .card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .card h2 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    .card p {
+        margin: 4px 0;
+        color: #555;
+    }
+    .card .actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+    }
+    .card .actions button {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    .card .actions .edit {
+        background-color: #4caf50;
+        color: white;
+    }
+    .card .actions .delete {
+        background-color: #f44336;
+        color: white;
+    }
+</style>
+
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center text-custom-black mb-6">Cepas Registradas</h1>
+    <!-- Mostrar tarjetas -->
+    {strain && strain.length > 0 ? (
+        <div>
+            {strain.map((item) => (
+                <div class="card" key={item.id}>
+                    <h2>{item.strain_name}</h2>
+                    <p><strong>Criador:</strong> {item.strain_breeder}</p>
+                    <p><strong>Fertilizante:</strong> {item.strain_fertilizer}</p>
+                    <p><strong>Iluminación:</strong> {item.strain_lighting}</p>
+                    <p><strong>Tamaño del Espacio:</strong> {item.strain_space}</p>
+                    <p><strong>Tipo de Suelo:</strong> {item.strain_suelo}</p>
+                    <p><strong>Fecha de Creación:</strong> {new Date(item.fecha_creacion).toLocaleDateString()}</p>
+                    <div class="actions">
+                        <!-- Botón Bitacora -->
+                        <a href={`/qr/${id}/${item.id}/bitacora`} class="edit">Bitácora</a>
+                        <!-- Botón Editar -->
+                        <a href={`/qr/${id}/${item.id}`} class="edit">Editar</a>
+                        <!-- Botón Eliminar -->
+                        <button 
+                            class="delete" 
+                            data-id={item.id} 
+                            data-qr-id={item.qr_id}>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    ) : (
+        <p>No se encontraron cepas registradas.</p>
+    )}
+</div>
+
+<script is:inline>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Agregar event listeners a los botones "Eliminar"
+        document.querySelectorAll(".delete").forEach(button => {
+            button.addEventListener("click", async (event) => {
+                const id = event.target.dataset.id; // Leer el id del atributo data-id
+                const qr_id = event.target.dataset.qrId; // Leer el qr_id del atributo data-qr-id
+    
+                console.log("ID:", id); // Depuración: Verificar el valor de id
+                console.log("QR ID:", qr_id); // Depuración: Verificar el valor de qr_id
+    
+                // Validar que ambos valores existan
+                if (!id || !qr_id) {
+                    alert("Error: No se encontró el ID o QR ID de la cepa.");
+                    return;
+                }
+    
+                if (!confirm("¿Estás seguro de que deseas eliminar esta cepa?")) {
+                    return; // Cancelar si el usuario no confirma
+                }
+    
+                try {
+                    const response = await fetch("/api/qr/register-strain", {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ id, qr_id }), // Enviar ambos valores en el cuerpo
+                    });
+    
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message); // Mostrar mensaje de éxito
+                        window.location.reload(); // Recargar la página para reflejar los cambios
+                    } else {
+                        alert(`Error: ${result.error}`); // Mostrar mensaje de error
+                    }
+                } catch (error) {
+                    console.error("Error al eliminar la cepa:", error);
+                    alert("Ocurrió un error al intentar eliminar la cepa.");
+                }
+            });
+        });
+    });
+    </script>

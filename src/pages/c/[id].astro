@@ -14,7 +14,11 @@ const { id } = Astro.params;
 <Layout title="Detalles de la sesión">
 
 
-    <ChatMessage sessionId={id} />
-    <ChatInput />
+    <div class="flex-1 overflow-y-auto">
+        <ChatMessage sessionId={id} />
+    </div>
+    <div class="sticky bottom-0 bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700">
+        <ChatInput />
+    </div>
 
 </Layout>

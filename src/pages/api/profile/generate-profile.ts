@@ -91,9 +91,9 @@ export const POST: APIRoute = async ({ cookies }) => {
                 .join("\n");
         };
 
-        const systemContent = `Eres un experto en describir el perfil de usuarios agricolas.`;
+        const systemContent = `Eres un experto en describir el perfil de usuarios agricolas. Describelo en detalle con 500 caracteres o menos.`;
         
-        const userContent = `Genera una descripción detallada y concisa del perfil usando esta información:\n${buildProfileString()}`;
+        const userContent = `Utiliza 500 caracteres o menos. Genera una descripción detallada y concisa del perfil usando esta información:\n${buildProfileString()}`;
         
         // 5. Llamada a OpenAI
         try {

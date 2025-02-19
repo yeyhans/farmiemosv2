@@ -1,0 +1,58 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { authenticate } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
+
+// Autenticar al usuario sin redireccionar
+const { user } = await authenticate(Astro);
+
+// Obtener los datos del código QR asociados al usuario (solo si está autenticado)
+let qr_data = [];
+if (user) {
+  const { data } = await supabase
+    .from("qr")
+    .select("*")
+    .eq("uuid", user.id);
+  qr_data = data || [];
+}
+
+console.log("QR data:", qr_data);
+---
+
+<Layout title="QR">
+    <div class="content-container">
+        <h1>QR</h1>
+
+        {/* Mostrar un mensaje de bienvenida basado en si el usuario está autenticado */}
+        {user ? (
+            <p>¡Bienvenido {user.id || user.email}!</p>
+        ) : (
+            <p>¡Bienvenido! Inicia sesión para ver tus códigos QR.</p>
+        )}
+
+        <!-- Contenido para usuarios autenticados -->
+        <div class="user-content">
+
+
+            {/* Mostrar códigos QR solo si el usuario está autenticado */}
+            {user && qr_data.length > 0 ? (
+                <h2>Tus QRS Registrados</h2>
+                <ul>
+                    {qr_data.map((qr) => (
+                        <li key={qr.id}>
+                            <a href={`/qr/${qr.id}`}>
+                                Código QR: {qr.id}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ) : user ? (
+                <p>No tienes códigos QR registrados.</p>
+            ) : (
+                <p>Inicia sesión para ver tus códigos QR.</p>
+            )}
+        </div>
+
+
+    </div>
+</Layout>

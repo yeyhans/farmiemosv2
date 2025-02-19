@@ -1,0 +1,188 @@
+---
+import { supabase } from "../../lib/supabase";
+import { authenticate } from "../../lib/auth";
+
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+
+const { qr } = Astro.params;
+console.log("QR:", qr);
+
+const { data: strain } = await supabase
+    .from("strains")
+    .select("*")
+    .eq("qr_id", qr)
+
+
+console.log("Strain:", strain);
+
+
+---
+<style>
+    /* Tooltip Estilo (se mantiene igual) */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: rgba(50, 52, 51, 0.9);
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+
+
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center text-custom-black mb-6">Registrar nueva Strain</h1>
+    <form id="strainsForm" class="space-y-4">
+        <!-- Campos del formulario ajustados -->
+        <!-- Nombre de la Planta -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_name" class="block text-sm font-medium text-custom-black">Nombre de la Planta</label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="tooltiptext">Ingresa el nombre de la planta.</span>
+            </div>
+            <input type="text" id="strain_name" name="strain_name" required
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+            <!-- QR ID (oculto o visible) -->
+        <input type="hidden" id="qr_id" name="qr_id" value={qr}>
+
+
+        <!-- Criador -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_breeder" class="block text-sm font-medium text-custom-black">Criador</label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="tooltiptext">Especifica el criador de la planta.</span>
+            </div>
+            <input type="text" id="strain_breeder" name="strain_breeder"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+        <!-- Fertilizante -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_fertilizer" class="block text-sm font-medium text-custom-black">Fertilizante</label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="tooltiptext">Especifica el fertilizante de la planta.</span>
+            </div>
+            <input type="text" id="strain_fertilizer" name="strain_fertilizer"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+        <!-- Iluminacion -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_lighting" class="block text-sm font-medium text-custom-black">Iluminación</label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>                
+                <span class="tooltiptext">Especifica la iluminación de la planta.</span>
+            </div>
+            <input type="text" id="strain_lighting" name="strain_lighting"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+        <!-- Tamaño del Espacio -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_space" class="block text-sm font-medium text-custom-black">Tamaño del Espacio</label>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="tooltiptext">Especifica el tamaño del espacio de la planta.</span>
+            </div>
+            <input type="text" id="strain_space" name="strain_space"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+        <!-- Tipo de Suelo -->
+        <div class="flex items-center gap-4">
+            <div class="tooltip flex items-center w-[45%]">
+                <label for="strain_suelo" class="block text-sm font-medium text-custom-black">Tipo de Suelo</label> 
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="tooltiptext">Especifica el tipo de suelo de la planta.</span>
+            </div>
+            <input type="text" id="strain_suelo" name="strain_suelo"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+        </div>
+
+        <!-- Botón Guardar Cambios -->
+        <div class="pt-4">
+            <button type="submit"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-green hover:bg-custom-yellow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-green">
+                Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<script is:inline>
+  document.getElementById("strainsForm").addEventListener("submit", async (event) => {
+    event.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+
+    const formData = new FormData(event.target); // Obtiene los datos del formulario
+    try {
+      const response = await fetch("/api/qr/register-strain", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        // Si la respuesta no es exitosa, muestra el error
+        const result = await response.json();
+        alert(`Error: ${result.error || "Ocurrió un error desconocido"}`);
+        return;
+      }
+
+      // Lee la respuesta como JSON
+      const result = await response.json();
+
+      // Verifica si se proporcionó una URL de redirección
+      if (result.redirectUrl) {
+        // Redirige al usuario a la URL proporcionada
+        window.location.href = result.redirectUrl;
+      } else {
+        alert("Planta registrada exitosamente, pero no se proporcionó una URL de redirección.");
+      }
+    } catch (error) {
+      // Maneja errores generales
+      console.error("Error al registrar la planta:", error.message);
+      alert("Ocurrió un error inesperado. Por favor, intenta nuevamente.");
+    }
+  });
+</script>

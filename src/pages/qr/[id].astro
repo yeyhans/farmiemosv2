@@ -1,0 +1,181 @@
+---
+import Layout from '../../layouts/QRLayout.astro'
+import { supabase } from '../../lib/supabase'
+import { authenticate } from '../../lib/auth'
+import SigninForm from '../../components/SigninForm.astro'
+import StrainCards from '../../components/qr/StrainCards.astro'
+
+const { id } = Astro.params
+const { user } = await authenticate(Astro) // No redirigimos si no está autenticado
+
+// Obtener el QR de la base de datos
+const { data: qr, error } = await supabase
+  .from('qr')
+  .select('*')
+  .eq('id', id)
+  .single()
+
+if (error) {
+  console.error("Error al obtener el QR:", error);
+}
+
+// Verificar si el usuario está autenticado y si es el propietario del QR
+let isOwner = user && user.id && qr?.uuid === user.id;
+
+// Si el usuario no está autenticado, isOwner será false
+if (!user || !user.id) {
+    isOwner = false;
+}
+
+// Obtener la información de la cepa asociada al QR
+const { data: strain } = await supabase
+    .from("strains")
+    .select("*")
+    .eq("qr_id", id)
+    .eq("id", qr?.qr_visible);
+
+    
+
+
+const data_qr_visible = qr?.qr_visible;
+
+---
+
+<Layout title="QR">
+    <h1>QR {id}</h1>
+    <script is:inline>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("visibleForm");
+            if (!form) {
+                console.error("No se encontró el formulario 'visibleForm'.");
+                return;
+            }
+    
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+    
+                try {
+                    const response = await fetch("/api/qr/strain-visible", {
+                        method: "POST",
+                        body: formData,
+                    });
+    
+                    if (!response.ok) {
+                        const result = await response.json();
+                        alert(`Error: ${result.error || "Ocurrió un error desconocido"}`);
+                        return;
+                    }
+    
+                    const result = await response.json();
+                    if (result.redirectUrl) {
+                        window.location.reload();
+                    } else {
+                        alert("Planta registrada exitosamente.");
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error("Error al registrar la planta:", error.message);
+                    alert("Ocurrió un error inesperado. Por favor, intenta nuevamente.");
+                }
+            });
+
+        });
+    </script>
+    
+
+    {!qr?.qr_reg ? (
+        // Si el QR no está registrado, mostrar el formulario de registro
+        user ? (
+            <form id="termsForm" action="/api/qr/register-qr" method="POST">
+                <input type="hidden" name="qr_id" value={id} />
+                <label>
+                    <input type="checkbox" name="accept_terms" required />
+                    Acepto los términos y condiciones
+                </label>
+                <button type="submit">Registrar QR</button>
+            </form>
+        ) : (
+            <>
+                <p>Por favor, inicia sesión para registrar este QR.</p>
+                <SigninForm />
+                <p>Luego de Ingresar, debes volver a scanear el QR.</p>
+            </>
+        )
+    ) : (
+        // Si el QR ya está registrado, mostrar el contenido
+        <>
+            <p>UUID: {qr.uuid}</p>
+            {strain && strain.length > 0 ? (
+                            <div>
+                                {strain.map((item) => (
+                                    <div class="card" key={item.id}>
+                                        <h2>{item.strain_name}</h2>
+                                        <p><strong>Criador:</strong> {item.strain_breeder}</p>
+                                        <p><strong>Fertilizante:</strong> {item.strain_fertilizer}</p>
+                                        <p><strong>Iluminación:</strong> {item.strain_lighting}</p>
+                                       <p><strong>Tamaño del Espacio:</strong> {item.strain_space}</p>
+                                        <p><strong>Tipo de Suelo:</strong> {item.strain_suelo}</p>
+                                        <p><strong>Fecha de Creación:</strong> {new Date(item.fecha_creacion).toLocaleDateString()}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p>No se encontraron cepas registradas.</p>
+                        )}
+
+            {isOwner ? (
+                <>
+                    <a href={`/qr/${id}/register`}>
+                        <button class="bg-custom-green text-white px-4 py-2 rounded-md hover:bg-custom-yellow">Registrar Planta</button>     
+                    </a>
+                    <form id="visibleForm">
+                        <input type="hidden" name="qr_id" value={id} />
+
+                        <div class="flex items-center gap-4">
+                            <div class=" flex items-center w-[45%]">
+                                <label for="qr_visible" class="block text-sm font-medium text-custom-black">Planta Visible</label>
+                            </div>
+                            <input type="text" id="qr_visible" name="qr_visible" required value={data_qr_visible}
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                        </div> 
+   
+                        <button type="submit">Registrar QR</button>
+                    </form>
+                    <StrainCards id={id}  />
+                    <p>Este QR fue registrado por ti.</p>
+                    
+                </>
+            ) : (
+                <>
+                    <p>Solo el usuario que registró este QR puede editarlo.</p>
+                    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+                        {strain && strain.length > 0 ? (
+                            <div>
+                                {strain.map((item) => (
+                                    <div class="card" key={item.id}>
+                                        <h2>{item.strain_name}</h2>
+                                        <p><strong>Criador:</strong> {item.strain_breeder}</p>
+                                        <p><strong>Fertilizante:</strong> {item.strain_fertilizer}</p>
+                                        <p><strong>Iluminación:</strong> {item.strain_lighting}</p>
+                                       <p><strong>Tamaño del Espacio:</strong> {item.strain_space}</p>
+                                        <p><strong>Tipo de Suelo:</strong> {item.strain_suelo}</p>
+                                        <p><strong>Fecha de Creación:</strong> {new Date(item.fecha_creacion).toLocaleDateString()}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p>No se encontraron cepas registradas.</p>
+                        )}
+                    </div>
+                    
+
+                    {!user && (
+                        <SigninForm />
+                        <p>Luego de Ingresar, debes volver a scanear el QR.</p>
+                    )}
+                </>
+            )}
+        </>
+    )}
+</Layout>

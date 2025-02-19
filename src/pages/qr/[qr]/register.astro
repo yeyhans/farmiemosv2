@@ -1,0 +1,37 @@
+---
+import { supabase } from "../../../lib/supabase";
+import { authenticate } from "../../../lib/auth";
+import Layout from "../../../layouts/QRLayout.astro";
+import AddStrainForm from "../../../components/qr/AddStrainForm.astro";
+
+// Autenticación del usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtener parámetros de la URL
+const { qr, id } = Astro.params;
+console.log("ID:", id);
+console.log("QR:", qr);
+
+// Consulta a Supabase
+const { data: strain } = await supabase
+    .from("strains")
+    .select("*")
+    .eq("qr_id", qr)
+    .eq("id", id);
+
+console.log("Strain:", strain);
+
+
+---
+
+<Layout title="QR">
+    <h1>QR {id}</h1>
+    <p>QR: {qr}</p>
+
+    <AddStrainForm  qr={qr} id={id} strain={strain} />
+
+
+</Layout>

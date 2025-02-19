@@ -1,0 +1,191 @@
+---
+import { supabase } from "../../../lib/supabase";
+import { authenticate } from "../../../lib/auth";
+import Layout from "../../../layouts/QRLayout.astro";
+
+// Autenticación del usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtener parámetros de la URL
+const { qr, id } = Astro.params;
+
+// Consulta a Supabase
+const { data: strain } = await supabase
+    .from("strains")
+    .select("*")
+    .eq("qr_id", qr)
+    .eq("id", id);
+
+const strainData = strain && strain.length > 0 ? strain[0] : null;
+---
+
+<Layout title="Editar Cepa">
+    <style>
+        /* Tooltip Estilo (se mantiene igual) */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: rgba(50, 52, 51, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center text-custom-black mb-6">Editar Información de Strains</h1>
+        {strainData ? (
+            <form id="editForm" class="space-y-4">
+                <!-- Campos ocultos para ID y QR -->
+                <input type="hidden" id="id" name="id" value={id}>
+                <input type="hidden" id="qr_id" name="qr_id" value={qr}>
+
+                <!-- Nombre de la Planta -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_name" class="block text-sm font-medium text-custom-black">Nombre de la Planta</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Nombre actual: {strainData.strain_name}</span>
+                    </div>
+                    <input type="text" id="strain_name" name="strain_name" required
+                        value={strainData.strain_name}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Criador -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_breeder" class="block text-sm font-medium text-custom-black">Criador</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Criador actual: {strainData.strain_breeder}</span>
+                    </div>
+                    <input type="text" id="strain_breeder" name="strain_breeder"
+                        value={strainData.strain_breeder}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Fertilizante -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_fertilizer" class="block text-sm font-medium text-custom-black">Fertilizante</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Fertilizante actual: {strainData.strain_fertilizer}</span>
+                    </div>
+                    <input type="text" id="strain_fertilizer" name="strain_fertilizer"
+                        value={strainData.strain_fertilizer}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Iluminación -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_lighting" class="block text-sm font-medium text-custom-black">Iluminación</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Iluminación actual: {strainData.strain_lighting}</span>
+                    </div>
+                    <input type="text" id="strain_lighting" name="strain_lighting"
+                        value={strainData.strain_lighting}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Espacio -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_space" class="block text-sm font-medium text-custom-black">Espacio</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Espacio actual: {strainData.strain_space}</span>
+                    </div>
+                    <input type="text" id="strain_space" name="strain_space"
+                        value={strainData.strain_space}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Suelo -->
+                <div class="flex items-center gap-4">
+                    <div class="tooltip flex items-center w-[45%]">
+                        <label for="strain_suelo" class="block text-sm font-medium text-custom-black">Suelo</label>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="tooltiptext">Suelo actual: {strainData.strain_suelo}</span>
+                    </div>
+                    <input type="text" id="strain_suelo" name="strain_suelo"
+                        value={strainData.strain_suelo}
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green sm:text-sm">
+                </div>
+
+                <!-- Botón Guardar Cambios -->
+                <div class="pt-4">
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-green hover:bg-custom-yellow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-green">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        ) : (
+            <p class="text-center">No se encontró la cepa para editar</p>
+        )}
+    </div>
+
+    <script is:inline>
+        document.getElementById("editForm")?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            try {
+                const response = await fetch("/api/qr/update-strain", {
+                    method: "PUT",
+                    body: formData,
+                });
+
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    alert(`Error: ${result.error || "Error al actualizar"}`);
+                    return;
+                }
+
+                if (result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    alert("Actualización exitosa");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error en la actualización");
+            }
+        });
+    </script>
+</Layout>
