@@ -3,7 +3,7 @@ import { supabase } from "../../../../lib/supabase";
 import { authenticate } from "../../../../lib/auth";
 import Layout from "../../../../layouts/QRLayout.astro";
 import AddStrainForm from "../../../../components/qr/AddStrainForm.astro";
-import AddStrainLogsForm from "../../../../components/qr/AddStrainLogsForm.astro";
+import AddStrainLogsForm from "../../../../components/qr/AddStrainForm.astro";
 
 // Autenticación del usuario
 const { user, redirect } = await authenticate(Astro);
