@@ -2,7 +2,6 @@ import type { APIRoute } from "astro";
 import OpenAI from "openai";
 import systemContent from "../../../content/patterns/faqs/faqs-prompts.mdx?raw";
 import { MongoClient, ServerApiVersion } from 'mongodb';
-import { geolocation, ipAddress } from '@vercel/functions';
 
 const uri = import.meta.env.MONGODB_URI_FAQS;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -31,9 +30,6 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        // Obtener la ubicación del usuario
-        const location = geolocation(request);
-        const ip = ipAddress(request);
 
         // Conectar a la base de datos
         await client.connect();
@@ -43,8 +39,6 @@ export const POST: APIRoute = async ({ request }) => {
         // Crear un nuevo documento para la conversacion
         const chatDoc = {
             timestamp: new Date(),
-            location: location,
-            ip: ip,
             userInput: userPrompt,
             aiResponse: "",
             status: "active"
