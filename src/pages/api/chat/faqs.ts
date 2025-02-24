@@ -1,10 +1,16 @@
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
 import systemContent from "../../../content/patterns/faqs/faqs-prompts.mdx?raw";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
-const deepseek = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: import.meta.env.DEEPSEEK_API_KEY_FAQS,
+const uri = import.meta.env.MONGODB_URI_FAQS;
+
+const client = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 const openai = new OpenAI({
@@ -23,7 +29,22 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
+        // Conectar a la base de datos
+        await client.connect();
+        const db = client.db("faqs-farmiemos");
+        const chats = db.collection("faqs");
 
+        // Crear un nuevo documento para la conversacion
+        const chatDoc = {
+            timestamp: new Date(),
+            userInput: userPrompt,
+            aiResponse: "",
+            status: "active"
+        };
+
+        // Insertar documento inicial   
+        const result = await chats.insertOne(chatDoc);
+        const chatId = result.insertedId;
 
         // Crear stream de OpenAI
         const stream = await openai.chat.completions.create({
@@ -39,6 +60,14 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Crear ReadableStream
         const encoder = new TextEncoder();
+
+        // Actualizar el documento con la respuesta de OpenAI
+        await chats.updateOne(
+            { _id: chatId },
+            { $set: { aiResponse: stream.toString(), status: "completed" } }
+        );
+
+        await client.close();
         
         return new Response(
             new ReadableStream({
@@ -63,6 +92,8 @@ export const POST: APIRoute = async ({ request }) => {
                 }
             }
         );
+
+
 
     } catch (error: any) {
         console.error("Error:", error);
