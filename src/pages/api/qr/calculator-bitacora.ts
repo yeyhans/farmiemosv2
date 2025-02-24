@@ -188,12 +188,12 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
     // 3. Leer el cuerpo de la solicitud
     const body = await request.json();
-    const { qr_id, strain_id, timestamp, notes } = body;
-    console.log("Datos recibidos:", { qr_id, strain_id, timestamp, notes });
+    const { qr, id, timestamp, nuevasNotas } = body;
+    console.log("Datos recibidos:", { id, qr, timestamp, nuevasNotas });
 
 
     // Validar que todos los campos necesarios estén presentes
-    if (!qr_id || !strain_id || !timestamp || !notes) {
+    if (!qr || !id || !timestamp || !nuevasNotas) {
       return new Response(
         JSON.stringify({ success: false, error: "Faltan campos obligatorios en la solicitud." }),
         {
@@ -203,30 +203,45 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    // 4. Fetch the strain record to find the bitacora
-    const { data: strain, error: fetchError } = await supabase
+    // 4. Primero obtener el registro actual
+    const { data: currentStrain, error: fetchError } = await supabase
       .from("strains")
-      .select("id, qr_id, bitacora")
-      .eq("qr_id", qr_id)
-      .eq("id", strain_id);
-      
+      .select("bitacora")
+      .eq("id", qr)
+      .eq("qr_id", id)
+      .single();
 
-      if (fetchError) {
-        console.error("Error al obtener la cepa:", fetchError);
-      } else if (strain && strain.length > 0) {
-        const singleStrain = strain[0];
-        console.log("Cepa obtenida:", singleStrain);
-      } else {
-        console.log("No se encontró ninguna cepa con el qr_id proporcionado.");
+    if (fetchError) {
+      console.error("Error al obtener la cepa:", fetchError);
+      return new Response(JSON.stringify({ success: false, error: fetchError.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Actualizar solo las notas del registro específico
+    const updatedBitacora = currentStrain.bitacora.map(entry => {
+      if (entry.timestamp === timestamp) {
+        return { ...entry, notes: nuevasNotas };
       }
+      return entry;
+    });
 
+    // Actualizar el registro con la bitácora modificada
+    const { data: strain, error: updateError } = await supabase
+      .from("strains")
+      .update({ bitacora: updatedBitacora })
+      .eq("id", qr)
+      .eq("qr_id", id)
+      .select("bitacora");
 
-
-
-
-
-
-
+    if (updateError) {
+      console.error("Error al actualizar el registro:", updateError);
+      return new Response(JSON.stringify({ success: false, error: "Error al actualizar el registro." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, message: "Notas actualizadas exitosamente." }), {
       status: 200,
@@ -269,6 +284,7 @@ export const DELETE: APIRoute = async ({ request, cookies }) => {
     const body = await request.json();
     const { qr, id, timestamp } = body;
 
+ 
     // 4. Fetch the strain record to find the bitacora
     const { data: strain, error: fetchError } = await supabase
       .from("strains")

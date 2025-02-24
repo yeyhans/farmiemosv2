@@ -1,0 +1,72 @@
+---
+// src/components/CreateSession.astro
+const { initialPrompt = "" } = Astro.props;
+---
+
+
+  <div id="feedbackMessage" class="hidden p-4 mb-4 rounded-lg"></div>
+
+
+
+  <form id="qrCreateForm" class="space-y-6">
+        <!-- Add Session Button -->
+        <button
+        type="submit"
+        id="submitQrButton"
+        class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Agregar Sesión
+      </button>
+
+
+  </form>
+
+
+<script is:inline>
+const showFeedback = (message, isError = false) => {
+  const feedback = document.getElementById('feedbackMessage');
+  feedback.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-red-800', 'text-green-800');
+  feedback.classList.add(isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800');
+  feedback.textContent = message;
+};
+
+const setLoading = (loading) => {
+  const button = document.getElementById('submitQrButton');
+  button.disabled = loading;
+  button.textContent = loading ? 'Procesando...' : 'Crear y Ejecutar';
+};
+
+document.getElementById('qrCreateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  
+  try {
+    const formData = new FormData(e.target);
+    
+    // 1. Create session
+    const sessionResponse = await fetch('/api/qr/create-qr', {
+      method: 'POST',
+      body: JSON.stringify({
+        nombre: "QR sin nombre",
+        descripcion: "Sin descripción"
+      })
+    });
+    
+    const sessionData = await sessionResponse.json();
+    if (!sessionData.success) {
+      throw new Error(sessionData.error || 'Error al crear la sesión');
+    }
+
+
+    // 3. Redirect to session
+    window.location.href = `/qr/${sessionData.id}`;
+
+  } catch (error) {
+    showFeedback(error.message, true);
+    setLoading(false);
+  }
+});
+</script>

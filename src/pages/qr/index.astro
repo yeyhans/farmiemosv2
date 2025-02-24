@@ -1,10 +1,14 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import CreateQr from "../../components/qr/CreateQr.astro";
 import { authenticate } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 
 // Autenticar al usuario sin redireccionar
-const { user } = await authenticate(Astro);
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
 
 // Obtener los datos del código QR asociados al usuario (solo si está autenticado)
 let qr_data = [];
@@ -16,42 +20,88 @@ if (user) {
   qr_data = data || [];
 }
 
-console.log("QR data:", qr_data);
+const qrCount = qr_data.length;
+
 ---
 
 <Layout title="QR">
-    <div class="content-container">
-        <h1>QR</h1>
-
-        {/* Mostrar un mensaje de bienvenida basado en si el usuario está autenticado */}
-        {user ? (
-            <p>¡Bienvenido {user.id || user.email}!</p>
-        ) : (
-            <p>¡Bienvenido! Inicia sesión para ver tus códigos QR.</p>
-        )}
-
-        <!-- Contenido para usuarios autenticados -->
-        <div class="user-content">
-
-
-            {/* Mostrar códigos QR solo si el usuario está autenticado */}
-            {user && qr_data.length > 0 ? (
-                <h2>Tus QRS Registrados</h2>
-                <ul>
-                    {qr_data.map((qr) => (
-                        <li key={qr.id}>
-                            <a href={`/qr/${qr.id}`}>
-                                Código QR: {qr.id}
-                            </a>
-                        </li>
-                    ))}
-                </ul>
-            ) : user ? (
-                <p>No tienes códigos QR registrados.</p>
-            ) : (
-                <p>Inicia sesión para ver tus códigos QR.</p>
-            )}
-        </div>
+    <!-- Search and Session List -->
+<div class="relative space-y-4">
+    <!-- Add Session Button -->
+     <div class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm rounded transition-colors">
+     <CreateQr />
+    </div>
+    
+   
+  
+    <!-- Search Bar -->
+    <div class="mb-2">
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Buscar sesiones..."
+        class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+    </div>
+  
+    <div class="session-count">
+      <p class="text-lg font-semibold">
+        Total de sesiones: <span class="text-green-500">{qrCount}</span>
+      </p>
+    </div>
+    
+  
+    <ul>
+        {qr_data.map((qr) => (
+            <li key={qr.id}>
+                <a href={`/qr/${qr.id}`}>
+                    Código QR: {qr.id}
+                </a>
+            </li>
+        ))}
+    </ul>
+  
+  </div>
+  
+  <script is:inline>
+  
+    // Get DOM elements
+  
+    const searchInput = document.getElementById('search-input');
+    const sessionList = document.getElementById('session-list');
+    const sessions = [...sessionList.querySelectorAll('li')];
+  
+    // Filter sessions on search input
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+  
+      sessions.forEach((session) => {
+        const sessionName = session.getAttribute('data-session-name');
+        session.style.display = sessionName.includes(query) ? 'block' : 'none';
+      });
+    });
+  
+    async function eliminarRegistro(sessionId) {
+          if (!confirm('¿Estás seguro de que deseas eliminar este registro?')) return;
+  
+          try {
+              const response = await fetch(`/api/chat/sessions?id=${sessionId}`, {
+                  method: 'DELETE'
+              });
+  
+              const result = await response.json();
+              if (result.success) {
+                  alert('Registro eliminado exitosamente.');
+                  location.reload();
+              } else {
+                  alert('Error: ' + result.error);
+              }
+          } catch (error) {
+              alert('Error de red: ' + error.message);
+          }
+      }
+  </script>
+    
 
 
     </div>

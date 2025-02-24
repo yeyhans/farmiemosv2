@@ -49,34 +49,15 @@ const sessionCount = sessions ? sessions.length : 0;
 ---
 <Layout title="Chats">
 
-<!-- Modal Background -->
-<div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-40">
-  <!-- Modal Content -->
-  <div id="modal-content" class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold">Nueva Sesión</h3>
-      <button id="close-modal" class="text-gray-500 hover:text-gray-700">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <CreateSession profile={profile}/>
-  </div>
-</div>
+
 
 <!-- Search and Session List -->
 <div class="relative space-y-4">
   <!-- Add Session Button -->
-  <button
-    id="add-session"
-    class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
-  >
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-    </svg>
-    Agregar Sesión
-  </button>
+   <div class="absolute top-0 right-0 flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm rounded transition-colors">
+   <CreateSession profile={profile} />
+  </div>
+  
  
 
   <!-- Search Bar -->
@@ -144,40 +125,10 @@ const sessionCount = sessions ? sessions.length : 0;
 <script is:inline>
 
   // Get DOM elements
-  const modalBackdrop = document.getElementById('modal-backdrop');
-  const addSessionBtn = document.getElementById('add-session');
-  const closeModalBtn = document.getElementById('close-modal');
+
   const searchInput = document.getElementById('search-input');
   const sessionList = document.getElementById('session-list');
   const sessions = [...sessionList.querySelectorAll('li')];
-
-  // Open modal
-  addSessionBtn.addEventListener('click', () => {
-    modalBackdrop.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-  });
-
-  // Close modal
-  const closeModal = () => {
-    modalBackdrop.classList.add('hidden');
-    document.body.style.overflow = 'auto'; // Restore scrolling
-  };
-
-  closeModalBtn.addEventListener('click', closeModal);
-
-  // Close modal when clicking outside
-  modalBackdrop.addEventListener('click', (e) => {
-    if (e.target === modalBackdrop) {
-      closeModal();
-    }
-  });
-
-  // Close modal on escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-    }
-  });
 
   // Filter sessions on search input
   searchInput.addEventListener('input', (e) => {

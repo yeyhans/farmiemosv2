@@ -3,6 +3,8 @@ import { supabase } from "../../../../lib/supabase";
 import { authenticate } from "../../../../lib/auth";
 import Layout from "../../../../layouts/Layout.astro";
 import BitacoraCalculator from "../../../../components/qr/BitacoraCalculator.astro";
+import CalculatorLogs from "../../../../components/qr/CalculatorLogs.astro";
+import ActionCalculator from "../../../../components/qr/ActionCalculator.astro";
 
 // Autenticación del usuario
 const { user, redirect } = await authenticate(Astro);
@@ -30,5 +32,7 @@ const { data: strain } = await supabase
         <p class="mb-4 text-gray-600 text-sm">QR: {qr}</p>
 
         <BitacoraCalculator qr={qr} id={id} strain={strain} />
+        <ActionCalculator qr={qr} id={id} strain={strain} />
+        <CalculatorLogs qr={qr} id={id} strain={strain} />
     </main>
 </Layout>

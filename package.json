@@ -20,11 +20,13 @@
     "@supabase/supabase-js": "^2.47.10",
     "@tuya/tuya-connector-nodejs": "^2.1.2",
     "@vercel/analytics": "^1.4.1",
+    "@vercel/functions": "^2.0.0",
     "@vercel/speed-insights": "^1.1.0",
     "astro": "^5.1.1",
     "deepseek": "^0.0.2",
     "marked": "^15.0.6",
     "mercadopago": "^2.2.0",
+    "mongodb": "^6.13.1",
     "openai": "^4.77.0",
     "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17"
