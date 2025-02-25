@@ -58,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Crear stream de OpenAI
         const stream = await openai.chat.completions.create({
-            model: "ft:gpt-4o-mini-2024-07-18:personal::B4HbwOaI",
+            model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemContent },
                 { role: "user", content: userPrompt }

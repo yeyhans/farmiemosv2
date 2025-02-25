@@ -1,0 +1,286 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MercadoPagoButton from '../components/MercadoPagoButton.tsx';
+
+// Obtener la cantidad y calcular el total
+const quantity = parseInt(Astro.url.searchParams.get('quantity') || '1');
+const PRICE = 15000;
+let total = PRICE * quantity;
+---
+
+<Layout title="Checkout - Farmienda" description="Finaliza tu compra de Farmienda">
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+        <h1 class="text-3xl font-bold mb-8">Finalizar Compra</h1>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Resumen de tu pedido</h2>
+            <div class="flex justify-between items-center mb-4">
+                <span>Farmienda</span>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center">
+                        <button id="decreaseQuantity" class="px-2 py-1 border rounded-l">-</button>
+                        <input type="number" id="quantity" value={quantity} min="1" class="w-16 text-center border-y" readonly>
+                        <button id="increaseQuantity" class="px-2 py-1 border rounded-r">+</button>
+                    </div>
+                    <span>${PRICE.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <!-- Nueva sección de descuento -->
+            <div class="border-t pt-4 mb-4">
+                <div class="flex gap-2">
+                    <input type="text" id="discountCode" placeholder="Código de descuento" 
+                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <button id="applyDiscount" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                        Aplicar
+                    </button>
+                </div>
+                <p id="discountMessage" class="text-sm mt-2 hidden"></p>
+            </div>
+
+            <div class="border-t pt-4">
+                <div class="flex justify-between font-bold">
+                    <span>Total</span>
+                    <span id="totalAmount">${total.toLocaleString()}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Información de Envío</h2>
+            <form id="shippingForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="nombre" name="nombre" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+                        <input type="text" id="apellido" name="apellido" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="ciudad" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                        <input type="text" id="ciudad" name="ciudad" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="region" class="block text-sm font-medium text-gray-700">Región</label>
+                        <input type="text" id="region" name="region" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="codigoPostal" class="block text-sm font-medium text-gray-700">Código Postal</label>
+                        <input type="text" id="codigoPostal" name="codigoPostal" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Método de pago</h2>
+            <MercadoPagoButton client:load amount={total} />
+        </div>
+    </main>
+</Layout>
+
+<script>
+    // Capturar los datos del formulario antes del pago
+    const form = document.getElementById('shippingForm') as HTMLFormElement;
+    const mpButton = document.querySelector('#cardPayment_container');
+
+    // Almacenar los datos del formulario en el localStorage
+    form.addEventListener('change', () => {
+        const formData = new FormData(form);
+        const shippingData = Object.fromEntries(formData.entries());
+        localStorage.setItem('shippingData', JSON.stringify(shippingData));
+    });
+
+    // Manejo de cantidad
+    const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+    const decreaseBtn = document.getElementById('decreaseQuantity');
+    const increaseBtn = document.getElementById('increaseQuantity');
+    const totalAmount = document.getElementById('totalAmount');
+    const PRICE = 15000;
+    let currentTotal = PRICE * parseInt(quantityInput.value);
+    let discountApplied = false; // Variable para controlar si ya se aplicó un descuento
+
+    async function updateTotal(quantity: number) {
+        const baseTotal = PRICE * quantity;
+        
+        // Si hay un descuento aplicado, recalcular con el descuento
+        if (discountApplied) {
+            const discountData = JSON.parse(localStorage.getItem('discountData') || '{}');
+            try {
+                const response = await fetch('/api/mercadopago/discount', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        code: discountData.code, 
+                        amount: baseTotal 
+                    }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentTotal = data.finalAmount;
+                    totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+                    
+                    // Actualizar datos del descuento en localStorage
+                    localStorage.setItem('discountData', JSON.stringify({
+                        ...discountData,
+                        originalAmount: baseTotal,
+                        finalAmount: data.finalAmount,
+                        discountAmount: data.discountAmount
+                    }));
+                    return;
+                }
+            } catch (error) {
+                console.error('Error al recalcular descuento:', error);
+            }
+        }
+
+        // Si no hay descuento o hubo error, mostrar total base
+        currentTotal = baseTotal;
+        totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+    }
+
+    decreaseBtn?.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+            quantityInput.value = (currentValue - 1).toString();
+            updateTotal(currentValue - 1);
+        }
+    });
+
+    increaseBtn?.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        quantityInput.value = (currentValue + 1).toString();
+        updateTotal(currentValue + 1);
+    });
+
+    // Manejo de descuentos
+    const discountInput = document.getElementById('discountCode') as HTMLInputElement;
+    const applyDiscountBtn = document.getElementById('applyDiscount') as HTMLButtonElement;
+    const discountMessage = document.getElementById('discountMessage');
+
+    applyDiscountBtn?.addEventListener('click', async () => {
+        // Si ya hay un descuento aplicado, mostrar mensaje y salir
+        if (discountApplied) {
+            discountMessage!.textContent = 'Ya se aplicó un cupón a esta compra';
+            discountMessage!.classList.remove('hidden', 'text-green-500');
+            discountMessage!.classList.add('text-red-500');
+            return;
+        }
+
+        const code = discountInput.value.trim();
+        if (!code) return;
+
+        try {
+            const response = await fetch('/api/mercadopago/discount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code, amount: currentTotal }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                discountMessage!.textContent = `Descuento aplicado: ${data.discount}%`;
+                discountMessage!.classList.remove('hidden', 'text-red-500');
+                discountMessage!.classList.add('text-green-500');
+                
+                // Marcar que ya se aplicó un descuento
+                discountApplied = true;
+                
+                // Deshabilitar el input y el botón
+                discountInput.disabled = true;
+                applyDiscountBtn.disabled = true;
+                applyDiscountBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                // Guardar información del descuento
+                localStorage.setItem('discountData', JSON.stringify({
+                    code: code,
+                    discountPercentage: data.discount,
+                    discountAmount: data.discountAmount,
+                    originalAmount: data.originalAmount,
+                    finalAmount: data.finalAmount
+                }));
+                
+                // Actualizar el total con el descuento
+                currentTotal = data.finalAmount;
+                totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+            } else {
+                discountMessage!.textContent = 'Código de descuento inválido';
+                discountMessage!.classList.remove('hidden', 'text-green-500');
+                discountMessage!.classList.add('text-red-500');
+            }
+        } catch (error) {
+            discountMessage!.textContent = 'Error al aplicar el descuento';
+            discountMessage!.classList.remove('hidden', 'text-green-500');
+            discountMessage!.classList.add('text-red-500');
+        }
+    });
+
+    // Agregar botón para remover el descuento (opcional)
+    const removeDiscountBtn = document.createElement('button');
+    removeDiscountBtn.textContent = 'Eliminar descuento';
+    removeDiscountBtn.className = 'text-sm text-red-500 mt-2 hidden';
+    discountMessage!.parentNode!.insertBefore(removeDiscountBtn, discountMessage!.nextSibling);
+
+    removeDiscountBtn.addEventListener('click', () => {
+        if (discountApplied) {
+            // Resetear el descuento
+            discountApplied = false;
+            discountInput.value = '';
+            discountInput.disabled = false;
+            applyDiscountBtn.disabled = false;
+            applyDiscountBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Ocultar mensaje y botón de eliminar
+            discountMessage!.classList.add('hidden');
+            removeDiscountBtn.classList.add('hidden');
+            
+            // Restaurar el precio original
+            currentTotal = PRICE * parseInt(quantityInput.value);
+            totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+            
+            // Eliminar datos del descuento del localStorage
+            localStorage.removeItem('discountData');
+        }
+    });
+
+    // Mostrar botón de eliminar cuando se aplica un descuento
+    const showRemoveButton = () => {
+        if (discountApplied) {
+            removeDiscountBtn.classList.remove('hidden');
+        }
+    };
+</script>
+

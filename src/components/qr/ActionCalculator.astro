@@ -1,46 +1,465 @@
 ---
 ---
 
-
 <div class="mt-2 p-2 border rounded-lg shadow-md bg-gray-50">
-    <h3 class="text-lg font-medium text-gray-800">📈 Añade una acción.</h3>
-    <form id="action-form" class="space-y-4">
-      <div class="flex flex-col space-y-2">
-        <label for="actionSelect" class="block text-sm font-medium text-gray-700">
-          Selecciona una acción
-        </label>
-        <select 
-          id="actionSelect" 
-          name="action"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-        >
-          <option value="">Selecciona una opción</option>
-          <option value="riego">💧 Riego</option>
-          <option value="poda">✂️ Poda</option>
-          <option value="fertilizacion">🌱 Fertilización</option>
-          <option value="tratamiento">🧪 Tratamiento</option>
-          <option value="otro">📝 Otro</option>
-        </select>
-
-        <label for="actionNotes" class="block text-sm font-medium text-gray-700 mt-2">
-          Notas adicionales
-        </label>
-        <textarea
-          id="actionNotes"
-          name="notes"
-          rows="3"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-          placeholder="Añade detalles sobre la acción realizada..."
-        ></textarea>
-
-        <button
-          type="submit"
-          class="mt-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Guardar Acción
-        </button>
+  <h3 class="text-lg font-medium text-gray-800 mb-4">📈 Acciones Disponibles</h3>
+  
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="actions-grid">
+    <div class="relative">
+      <button 
+        class="w-full flex flex-col items-center p-4 border rounded-lg hover:bg-green-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        data-action="riego"
+      >
+        <span class="text-2xl mb-2">💧</span>
+        <span class="text-sm font-medium">Riego</span>
+      </button>
+      <div class="hidden absolute -bottom-2 left-0 right-0 flex justify-center gap-2 p-1">
+        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs" data-deselect>❌</button>
+        <button class="bg-blue-500 text-white px-2 py-1 rounded text-xs" data-edit>✏️</button>
       </div>
-    </form>
-    
+    </div>
 
+    <div class="relative">
+      <button 
+        class="w-full flex flex-col items-center p-4 border rounded-lg hover:bg-green-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        data-action="poda"
+      >
+        <span class="text-2xl mb-2">✂️</span>
+        <span class="text-sm font-medium">Poda</span>
+      </button>
+      <div class="hidden absolute -bottom-2 left-0 right-0 flex justify-center gap-2 p-1">
+        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs" data-deselect>❌</button>
+        <button class="bg-blue-500 text-white px-2 py-1 rounded text-xs" data-edit>✏️</button>
+      </div>
+    </div>
+
+    <div class="relative">
+      <button 
+        class="w-full flex flex-col items-center p-4 border rounded-lg hover:bg-green-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        data-action="fertilizacion"
+      >
+        <span class="text-2xl mb-2">🌱</span>
+        <span class="text-sm font-medium">Fertilización</span>
+      </button>
+      <div class="hidden absolute -bottom-2 left-0 right-0 flex justify-center gap-2 p-1">
+        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs" data-deselect>❌</button>
+        <button class="bg-blue-500 text-white px-2 py-1 rounded text-xs" data-edit>✏️</button>
+      </div>
+    </div>
+
+    <div class="relative">
+      <button 
+        class="w-full flex flex-col items-center p-4 border rounded-lg hover:bg-green-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        data-action="tratamiento"
+      >
+        <span class="text-2xl mb-2">🧪</span>
+        <span class="text-sm font-medium">Tratamiento</span>
+      </button>
+      <div class="hidden absolute -bottom-2 left-0 right-0 flex justify-center gap-2 p-1">
+        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs" data-deselect>❌</button>
+        <button class="bg-blue-500 text-white px-2 py-1 rounded text-xs" data-edit>✏️</button>
+      </div>
+    </div>
+
+    <div class="relative">
+      <button 
+        class="w-full flex flex-col items-center p-4 border rounded-lg hover:bg-green-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        data-action="otro"
+      >
+        <span class="text-2xl mb-2">📝</span>
+        <span class="text-sm font-medium">Otro</span>
+      </button>
+      <div class="hidden absolute -bottom-2 left-0 right-0 flex justify-center gap-2 p-1">
+        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs" data-deselect>❌</button>
+        <button class="bg-blue-500 text-white px-2 py-1 rounded text-xs" data-edit>✏️</button>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- Popup para Riego -->
+<div id="popup-riego" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+    <h3 class="text-lg font-bold mb-4">Configurar Riego 💧</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad (Litros)</label>
+        <input 
+          type="number" 
+          id="riego-cantidad"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Riego</label>
+        <select 
+          id="riego-tipo"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+          <option value="manual">Manual</option>
+          <option value="goteo">Goteo</option>
+          <option value="aspersion">Aspersión</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Notas adicionales</label>
+        <textarea 
+          id="riego-notas" 
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <button 
+        onclick="cerrarPopUp('riego')"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+      >
+        Cancelar
+      </button>
+      <button 
+        onclick="guardarAccion('riego')"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup para Poda -->
+<div id="popup-poda" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+    <h3 class="text-lg font-bold mb-4">Configurar Poda ✂️</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Poda</label>
+        <select 
+          id="poda-tipo"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+          <option value="formacion">Formación</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="sanitaria">Sanitaria</option>
+          <option value="rejuvenecimiento">Rejuvenecimiento</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Herramientas Utilizadas</label>
+        <input 
+          type="text" 
+          id="poda-herramientas"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          placeholder="Ej: Tijeras, sierra..."
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Notas adicionales</label>
+        <textarea 
+          id="poda-notas" 
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <button 
+        onclick="cerrarPopUp('poda')"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+      >
+        Cancelar
+      </button>
+      <button 
+        onclick="guardarAccion('poda')"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup para Fertilización -->
+<div id="popup-fertilizacion" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+    <h3 class="text-lg font-bold mb-4">Configurar Fertilización 🌱</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Fertilizante</label>
+        <select 
+          id="fertilizacion-tipo"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+          <option value="organico">Orgánico</option>
+          <option value="mineral">Mineral</option>
+          <option value="foliar">Foliar</option>
+          <option value="compuesto">Compuesto NPK</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad (kg/L)</label>
+        <input 
+          type="number" 
+          id="fertilizacion-cantidad"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Notas adicionales</label>
+        <textarea 
+          id="fertilizacion-notas" 
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <button 
+        onclick="cerrarPopUp('fertilizacion')"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+      >
+        Cancelar
+      </button>
+      <button 
+        onclick="guardarAccion('fertilizacion')"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup para Tratamiento -->
+<div id="popup-tratamiento" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+    <h3 class="text-lg font-bold mb-4">Configurar Tratamiento 🧪</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Tratamiento</label>
+        <select 
+          id="tratamiento-tipo"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+          <option value="fungicida">Fungicida</option>
+          <option value="insecticida">Insecticida</option>
+          <option value="herbicida">Herbicida</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Producto Utilizado</label>
+        <input 
+          type="text" 
+          id="tratamiento-producto"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Dosis</label>
+        <input 
+          type="text" 
+          id="tratamiento-dosis"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          placeholder="Ej: 100ml/100L"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Notas adicionales</label>
+        <textarea 
+          id="tratamiento-notas" 
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <button 
+        onclick="cerrarPopUp('tratamiento')"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+      >
+        Cancelar
+      </button>
+      <button 
+        onclick="guardarAccion('tratamiento')"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup para Otro -->
+<div id="popup-otro" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-xl w-96 relative">
+    <h3 class="text-lg font-bold mb-4">Otra Acción 📝</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Acción</label>
+        <input 
+          type="text" 
+          id="otro-nombre"
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          placeholder="Ej: Limpieza, Inspección..."
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción detallada</label>
+        <textarea 
+          id="otro-descripcion" 
+          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          rows="4"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <button 
+        onclick="cerrarPopUp('otro')"
+        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+      >
+        Cancelar
+      </button>
+      <button 
+        onclick="guardarAccion('otro')"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const actionsGrid = document.getElementById('actions-grid');
+  const selectedActions = new Set();
+
+  actionsGrid.addEventListener('click', (e) => {
+    const actionButton = e.target.closest('[data-action]');
+    const deselectButton = e.target.closest('[data-deselect]');
+    const editButton = e.target.closest('[data-edit]');
+
+    if (actionButton) {
+      const action = actionButton.dataset.action;
+      const container = actionButton.closest('.relative');
+      const optionsDiv = container.querySelector('div[class*="absolute"]');
+
+      if (!selectedActions.has(action)) {
+        selectedActions.add(action);
+        actionButton.classList.add('bg-green-100', 'border-green-500');
+        optionsDiv.classList.remove('hidden');
+      }
+    }
+
+    if (deselectButton) {
+      const container = deselectButton.closest('.relative');
+      const actionButton = container.querySelector('[data-action]');
+      const action = actionButton.dataset.action;
+      const optionsDiv = container.querySelector('div[class*="absolute"]');
+
+      selectedActions.delete(action);
+      actionButton.classList.remove('bg-green-100', 'border-green-500');
+      optionsDiv.classList.add('hidden');
+    }
+
+    if (editButton) {
+      const container = editButton.closest('.relative');
+      const actionButton = container.querySelector('[data-action]');
+      const action = actionButton.dataset.action;
+      mostrarPopUp(action);
+    }
+  });
+
+  function mostrarPopUp(action) {
+    const popup = document.getElementById(`popup-${action}`);
+    if (popup) {
+      popup.classList.remove('hidden');
+    }
+  }
+
+  function cerrarPopUp(action) {
+    const popup = document.getElementById(`popup-${action}`);
+    if (popup) {
+      popup.classList.add('hidden');
+    }
+  }
+
+  function guardarAccion(action) {
+    let datos = {};
+    
+    switch(action) {
+      case 'riego':
+        datos = {
+          cantidad: document.getElementById('riego-cantidad').value,
+          tipo: document.getElementById('riego-tipo').value,
+          notas: document.getElementById('riego-notas').value
+        };
+        break;
+      
+      case 'poda':
+        datos = {
+          tipo: document.getElementById('poda-tipo').value,
+          herramientas: document.getElementById('poda-herramientas').value,
+          notas: document.getElementById('poda-notas').value
+        };
+        break;
+      
+      case 'fertilizacion':
+        datos = {
+          tipo: document.getElementById('fertilizacion-tipo').value,
+          cantidad: document.getElementById('fertilizacion-cantidad').value,
+          notas: document.getElementById('fertilizacion-notas').value
+        };
+        break;
+      
+      case 'tratamiento':
+        datos = {
+          tipo: document.getElementById('tratamiento-tipo').value,
+          producto: document.getElementById('tratamiento-producto').value,
+          dosis: document.getElementById('tratamiento-dosis').value,
+          notas: document.getElementById('tratamiento-notas').value
+        };
+        break;
+      
+      case 'otro':
+        datos = {
+          nombre: document.getElementById('otro-nombre').value,
+          descripcion: document.getElementById('otro-descripcion').value
+        };
+        break;
+    }
+    
+    console.log(`Guardando ${action}:`, datos);
+    cerrarPopUp(action);
+  }
+
+  // Cerrar popups al hacer clic fuera
+  document.querySelectorAll('[id^="popup-"]').forEach(popup => {
+    popup.addEventListener('click', function(e) {
+      if (e.target === this) {
+        const action = this.id.replace('popup-', '');
+        cerrarPopUp(action);
+      }
+    });
+  });
+</script>

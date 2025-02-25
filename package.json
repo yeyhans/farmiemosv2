@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.3",
-    "@astrojs/react": "^4.1.6",
+    "@astrojs/react": "^4.2.0",
     "@astrojs/rss": "^4.0.10",
     "@astrojs/sitemap": "^3.2.1",
     "@astrojs/tailwind": "^5.1.4",
@@ -19,6 +19,8 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
     "@tuya/tuya-connector-nodejs": "^2.1.2",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
     "@vercel/analytics": "^1.4.1",
     "@vercel/functions": "^2.0.0",
     "@vercel/speed-insights": "^1.1.0",
@@ -27,11 +29,16 @@
     "marked": "^15.0.6",
     "mercadopago": "^2.2.0",
     "mongodb": "^6.13.1",
+    "nodemailer": "^6.10.0",
     "openai": "^4.77.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.1.2",
     "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
     "npm-force-resolutions": "^0.0.10"
   }
 }

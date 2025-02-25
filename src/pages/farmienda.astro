@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Farmienda | Enmienda Agrícola Premium" description="Pack de nutrientes premium a base de minerales y materias orgánicas para mejorar cualquier tipo de sustrato y beneficiar el crecimiento de tus plantas.">
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 class="text-4xl font-bold text-center mb-8">Farmienda</h1>
+        
+        <div class="grid md:grid-cols-2 gap-12">
+            <div class="product-images space-y-4">
+                <img src="/logo.png" alt="Farmienda - Enmienda Agrícola Premium" class="rounded-lg shadow-lg w-full">
+
+            </div>
+            
+            <div class="product-info space-y-6">
+                <div>
+                    <h2 class="text-2xl font-semibold mb-2">Pack de Nutrientes Premium</h2>
+                    <p class="text-2xl font-bold text-blue-600">$15.000</p>
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 leading-relaxed">
+                        Farmienda es una mezcla avanzada de minerales y materia orgánica de alta calidad, 
+                        diseñada para mejorar cualquier tipo de sustrato y beneficiar el crecimiento de tus plantas. 
+                        Ideal para ajustar el pH en sustratos con turba y mejorar la salud del suelo a largo plazo.
+                    </p>
+                </div>
+
+                <div class="flex items-end gap-4 pt-4">
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium mb-2">Cantidad:</label>
+                        <input 
+                            type="number" 
+                            id="quantity" 
+                            name="quantity" 
+                            min="1" 
+                            value="1" 
+                            class="w-24 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <button 
+                        id="checkout-button"
+                        class="flex-grow bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Comprar Ahora
+                    </button>
+                </div>
+
+                
+
+ 
+            </div>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Ingredientes</h3>
+            <p class="text-gray-700 text-sm">
+                Ácidos Húmicos, Ácidos Fúlvicos, Harina de Rocas Basálticas, Harina de Huesos, 
+                Cenizas de Cereales, Cebada Malteada Orgánica, Salvado Orgánico alto en Fósforo, 
+                Fosfitos, Gypsum, Sales de Epsom, Harina de Conchas, Hidrolato de algas, 
+                Aminoácidos libres extraídos de Soja, Maíz y otros Vegetales
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Dosificación</h3>
+                <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
+                    <li>Light Mix: Ideal para subir pH</li>
+                    <li>Riegos: 1-5g por litro de agua</li>
+                    <li>Aplicación superficial: Esparcir uniformemente</li>
+                    <li>Reutilización: 1-5g por litro de sustrato</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Frecuencia de Uso</h3>
+                <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
+                    <li>Cultivos de verano: Cada 7 días</li>
+                    <li>Cultivos de invierno: Cada 14 días</li>
+                    <li>Plantas madres: Cada 30 días</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Importante</h3>
+            <ul class="text-sm text-gray-700 space-y-1">
+                <li>• Producto micronizado</li>
+                <li>• Mantener fuera del alcance de los niños</li>
+                <li>• No es un fertilizante</li>
+                <li>• Compatible con otros nutrientes base</li>
+                <li>• Almacenar entre 5-25°C</li>
+            </ul>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+    const checkoutButton = document.getElementById('checkout-button');
+
+    checkoutButton?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const quantity = parseInt(quantityInput.value);
+        window.location.href = `/checkout?quantity=${quantity}`;
+    });
+</script>
+

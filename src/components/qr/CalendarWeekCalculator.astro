@@ -1,0 +1,256 @@
+---
+const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+// Obtener la semana
+const getWeekDates = (baseDate = new Date()) => {
+  const day = baseDate.getDay();
+  const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1); // Ajuste para que la semana comience en lunes
+  const monday = new Date(baseDate.setDate(diff));
+  const week = [];
+  
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    week.push({
+      date: day.getDate(),
+      month: day.getMonth(),
+      year: day.getFullYear(),
+      fullDate: day
+    });
+  }
+  return week;
+};
+
+const weekDates = getWeekDates();
+---
+
+<div class="calendar">
+  <div class="calendar-header">
+    <button class="nav-button" id="prevWeek">&lt;</button>
+    <h2>Semana del {weekDates[0].fullDate.toLocaleDateString()} al {weekDates[6].fullDate.toLocaleDateString()}</h2>
+    <button class="nav-button" id="nextWeek">&gt;</button>
+  </div>
+  
+
+
+  <div class="weekdays">
+    {weekDays.map(day => (
+      <div class="weekday">{day}</div>
+    ))}
+  </div>
+
+  <div class="week-days">
+    {weekDates.map((date) => (
+      <div class="day">
+        <button 
+          class="day-button" 
+          data-date={`${date.year}-${date.month + 1}-${date.date}`}
+        >
+          {date.date}
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .calendar {
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .nav-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .nav-button:hover {
+    background-color: #e0e0e0;
+  }
+
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    padding: 0.5rem 0;
+  }
+
+  .week-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    padding: 0.5rem;
+  }
+
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .day-button {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    font-size: 1.1em;
+    padding: 1rem;
+  }
+
+  .day-button:hover {
+    background-color: #e0e0e0;
+  }
+
+  .day-button.selected {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .day-button.today {
+    background-color: #90EE90;
+  }
+</style>
+
+<script type="module">
+  let currentDate = new Date();
+
+  function updateCalendar(date) {
+    const getWeekDates = (baseDate) => {
+      const day = baseDate.getDay();
+      const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(baseDate.setDate(diff));
+      const week = [];
+      
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(monday);
+        day.setDate(monday.getDate() + i);
+        week.push({
+          date: day.getDate(),
+          month: day.getMonth(),
+          year: day.getFullYear(),
+          fullDate: day
+        });
+      }
+      return week;
+    };
+
+    const weekDates = getWeekDates(date);
+    const dayButtons = document.querySelectorAll('.day-button');
+    const headerTitle = document.querySelector('.calendar-header h2');
+
+    // Actualizar los botones de días
+    dayButtons.forEach((button, index) => {
+      const date = weekDates[index];
+      button.textContent = date.date;
+      button.dataset.date = `${date.year}-${date.month + 1}-${date.date}`;
+      
+      // Verificar si es el día actual
+      const today = new Date();
+      if (date.date === today.getDate() && 
+          date.month === today.getMonth() && 
+          date.year === today.getFullYear()) {
+        button.classList.add('today');
+      } else {
+        button.classList.remove('today');
+      }
+    });
+
+    // Actualizar el título del encabezado
+    headerTitle.textContent = `Semana del ${weekDates[0].fullDate.toLocaleDateString()} al ${weekDates[6].fullDate.toLocaleDateString()}`;
+  }
+
+  // Navegación entre semanas
+  document.getElementById('prevWeek').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() - 7);
+    updateCalendar(currentDate);
+  });
+
+  document.getElementById('nextWeek').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() + 7);
+    updateCalendar(currentDate);
+  });
+
+  // Selección de días
+  const dayButtons = document.querySelectorAll('.day-button');
+  dayButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remover solo la clase 'selected' de todos los botones
+      dayButtons.forEach(btn => btn.classList.remove('selected'));
+      
+      // Añadir la clase 'selected' al botón clickeado
+      button.classList.add('selected');
+      
+      const selectedDate = button.dataset.date;
+      // Emitir evento personalizado con la fecha seleccionada
+      const event = new CustomEvent('dateSelected', { 
+        detail: { date: selectedDate },
+        bubbles: true 
+      });
+      button.dispatchEvent(event);
+    });
+  });
+
+  // Marcar el día actual inicialmente
+  const today = new Date();
+  dayButtons.forEach(button => {
+    const [year, month, date] = button.dataset.date.split('-').map(Number);
+    if (date === today.getDate() && 
+        month - 1 === today.getMonth() && 
+        year === today.getFullYear()) {
+      button.classList.add('today');
+    }
+  });
+
+
+
+  // Función para seleccionar automáticamente el día actual
+  function selectToday() {
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    
+    // Encontrar y seleccionar el botón del día actual
+    const todayButton = Array.from(dayButtons).find(button => 
+      button.dataset.date === formattedDate
+    );
+
+    if (todayButton) {
+      // Remover selección previa
+      dayButtons.forEach(btn => btn.classList.remove('selected'));
+      
+      // Seleccionar visualmente el día actual
+      todayButton.classList.add('selected');
+      
+      // Disparar el evento de selección
+      const event = new CustomEvent('dateSelected', { 
+        detail: { date: formattedDate },
+        bubbles: true 
+      });
+      todayButton.dispatchEvent(event);
+    }
+  }
+
+  // Llamar a selectToday cuando se carga la página
+  document.addEventListener('DOMContentLoaded', () => {
+    selectToday();
+  });
+</script>
+

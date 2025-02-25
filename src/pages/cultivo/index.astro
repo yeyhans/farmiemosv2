@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { CultivoPlanner } from '../../components/CultivoPlanner';
+
+// Podemos agregar la lógica del cálculo aquí si es necesario
+---
+
+<Layout title="Cultivo" description="Cultivo">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-6">Planificador de Cultivo</h1>
+        
+        <form id="cultivoForm" class="space-y-4">
+            <div class="space-y-2">
+                <label class="block">
+                    Número de plantas:
+                    <input
+                        type="number"
+                        name="numPlantas"
+                        min="1"
+                        required
+                        class="border p-2 rounded w-full"
+                    />
+                </label>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="font-bold">Dimensiones del macetero:</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <label>
+                        Ancho (cm):
+                        <input
+                            type="number"
+                            name="maceteroAncho"
+                            min="1"
+                            required
+                            class="border p-2 rounded w-full"
+                        />
+                    </label>
+                    <label>
+                        Largo (cm):
+                        <input
+                            type="number"
+                            name="maceteroLargo"
+                            min="1"
+                            required
+                            class="border p-2 rounded w-full"
+                        />
+                    </label>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="font-bold">Dimensiones del espacio de cultivo:</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <label>
+                        Ancho (cm):
+                        <input
+                            type="number"
+                            name="espacioAncho"
+                            min="1"
+                            required
+                            class="border p-2 rounded w-full"
+                        />
+                    </label>
+                    <label>
+                        Largo (cm):
+                        <input
+                            type="number"
+                            name="espacioLargo"
+                            min="1"
+                            required
+                            class="border p-2 rounded w-full"
+                        />
+                    </label>
+                </div>
+            </div>
+        </form>
+
+        <CultivoPlanner 
+            client:visible 
+            formData={{
+                numPlantas: 0,
+                maceteroAncho: 0,
+                maceteroLargo: 0,
+                espacioAncho: 0,
+                espacioLargo: 0
+            }} 
+        />
+    </div>
+</Layout>
+
+<script>
+    const form = document.querySelector('#cultivoForm') as HTMLFormElement;
+    const inputs = form?.querySelectorAll('input');
+
+    const updatePlanner = () => {
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const data = {
+            numPlantas: Number(formData.get('numPlantas')) || 0,
+            maceteroAncho: Number(formData.get('maceteroAncho')) || 0,
+            maceteroLargo: Number(formData.get('maceteroLargo')) || 0,
+            espacioAncho: Number(formData.get('espacioAncho')) || 0,
+            espacioLargo: Number(formData.get('espacioLargo')) || 0
+        };
+
+        // Simplificamos la lógica de actualización
+        const event = new CustomEvent('updatePlanner', { detail: data });
+        window.dispatchEvent(event);
+    };
+
+    // Actualizar en cada cambio de input
+    inputs?.forEach(input => {
+        input.addEventListener('input', updatePlanner);
+    });
+
+    // Actualizar al cargar la página
+    document.addEventListener('DOMContentLoaded', updatePlanner);
+</script>

@@ -1,0 +1,190 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const paymentId = Astro.url.searchParams.get('payment_id');
+---
+
+<Layout title="Pago Exitoso - Farmienda" description="Tu pago ha sido procesado exitosamente">
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white p-8 rounded-lg shadow-md">
+            <div class="text-center mb-8">
+                <div class="mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                
+                <h1 class="text-3xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h1>
+                <p class="text-gray-600">
+                    Tu pedido ha sido procesado correctamente y está en camino.
+                </p>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h2 class="text-xl font-semibold mb-4">Detalles de la compra</h2>
+                <div class="space-y-4" id="orderDetails">
+                    <div class="flex justify-between">
+                        <span class="font-medium">ID de Pago:</span>
+                        <span>{paymentId}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Monto Original:</span>
+                        <span id="originalAmount"></span>
+                    </div>
+                    <div id="discountDetails" class="hidden">
+                        <div class="flex justify-between text-green-600">
+                            <span class="font-medium">Descuento Aplicado:</span>
+                            <span id="discountInfo"></span>
+                        </div>
+                        <div class="flex justify-between text-green-600">
+                            <span class="font-medium">Monto Descontado:</span>
+                            <span id="discountAmount"></span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between font-bold">
+                        <span class="font-medium">Monto Final:</span>
+                        <span id="finalAmount"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Fecha:</span>
+                        <span id="orderDate"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 mt-6 pt-6">
+                <h2 class="text-xl font-semibold mb-4">Información de envío</h2>
+                <div class="space-y-2" id="shippingInfo">
+                    <!-- Se llenará con JavaScript -->
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 mt-6 pt-6">
+                <h2 class="text-xl font-semibold mb-4">Seguimiento del pedido</h2>
+                <div class="relative">
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm mt-2">Pago confirmado</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 4-8-4m16 0l-8 4m8 4l-8 4m8-4l-8 4-8-4"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm mt-2">En preparación</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm mt-2">Enviado</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-0 w-full">
+                        <div class="h-1 bg-gray-200">
+                            <div class="h-1 bg-green-500 w-1/3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <a href="/" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 inline-block">
+                    Volver al inicio
+                </a>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    // Mostrar la fecha actual
+    const orderDate = document.getElementById('orderDate');
+    if (orderDate) {
+        orderDate.textContent = new Date().toLocaleDateString('es-CL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Mostrar detalles del descuento si existe
+    const discountData = localStorage.getItem('discountData');
+    if (discountData) {
+        const {
+            code,
+            discountPercentage,
+            discountAmount,
+            originalAmount,
+            finalAmount
+        } = JSON.parse(discountData);
+
+        // Mostrar montos
+        document.getElementById('originalAmount').textContent = 
+            `$${parseInt(originalAmount).toLocaleString('es-CL')}`;
+        document.getElementById('discountInfo').textContent = 
+            `${code} (${discountPercentage}%)`;
+        document.getElementById('discountAmount').textContent = 
+            `$${parseInt(discountAmount).toLocaleString('es-CL')}`;
+        document.getElementById('finalAmount').textContent = 
+            `$${parseInt(finalAmount).toLocaleString('es-CL')}`;
+
+        // Mostrar sección de descuento
+        document.getElementById('discountDetails').classList.remove('hidden');
+
+        // Limpiar localStorage
+        localStorage.removeItem('discountData');
+    } else {
+        // Si no hay descuento, mostrar solo el monto total
+        const amount = localStorage.getItem('transactionAmount');
+        if (amount) {
+            document.getElementById('originalAmount').textContent = 
+                `$${parseInt(amount).toLocaleString('es-CL')}`;
+            document.getElementById('finalAmount').textContent = 
+                `$${parseInt(amount).toLocaleString('es-CL')}`;
+        }
+    }
+
+    // Recuperar y mostrar la información de envío
+    const shippingInfo = document.getElementById('shippingInfo');
+    const storedShippingData = localStorage.getItem('shippingData');
+    
+    if (shippingInfo && storedShippingData) {
+        const shippingData = JSON.parse(storedShippingData);
+        const fields = {
+            nombre: 'Nombre',
+            apellido: 'Apellido',
+            email: 'Email',
+            telefono: 'Teléfono',
+            direccion: 'Dirección',
+            ciudad: 'Ciudad',
+            region: 'Región',
+            codigoPostal: 'Código Postal'
+        };
+
+        Object.entries(fields).forEach(([key, label]) => {
+            if (shippingData[key]) {
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-2';
+                div.innerHTML = `
+                    <span class="font-medium">${label}:</span>
+                    <span>${shippingData[key]}</span>
+                `;
+                shippingInfo.appendChild(div);
+            }
+        });
+
+        // Limpiar localStorage después de mostrar los datos
+        localStorage.removeItem('shippingData');
+    }
+</script> 

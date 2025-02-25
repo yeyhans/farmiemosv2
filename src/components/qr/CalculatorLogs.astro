@@ -98,6 +98,7 @@ const userLogs = logs.filter((log: LogEntry) => log.user_id === currentUserId);
     >
     Eliminar
     </button>
+    
     <button 
     class="px-2 py-1 rounded-full text-xs flex justify-center items-center text-left"
     onclick={`mostrarPopUpNotas('${qr}', '${id}', '${log.timestamp}', '${encodeURIComponent(log.notes || "Sin notas")}')`}
@@ -105,38 +106,37 @@ const userLogs = logs.filter((log: LogEntry) => log.user_id === currentUserId);
     📝
     </button>
 
-    <div 
-    id="popupNotasContainer" 
-    class="fixed inset-0 top-8 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-
-    <div class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative">
-    <button 
-        class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
-        onclick="cerrarPopUpNotas()">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-    </button>
-    
-    <div class="p-4">
-        <h2 class="text-lg font-semibold mb-2">Notas del Registro</h2>
-        <div id="notasContenido" class="mt-2 p-3 bg-yellow-100 rounded-lg">
-        </div>
-        <textarea id="editarNotasTextarea" value={log.notes} class="w-full h-32 p-2 border border-gray-300 rounded resize-none"></textarea>
-        <div class="flex justify-end mt-4">
-  <button id="guardarEdicionBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-    Guardar
-  </button>
-</div>
-    </div>
-    </div>
-
-    </div>
     </div>
 
 
         </div>
     ))}
+</div>
+
+
+<div 
+    id="popupNotasContainer" 
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-4 shadow-lg max-w-lg w-full relative">
+        <button 
+            class="absolute top-2 right-2 text-red-600 hover:text-red-800 focus:outline-none"
+            onclick="cerrarPopUpNotas()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <div class="p-4">
+            <h2 class="text-lg font-semibold mb-2">Notas del Registro</h2>
+            <div id="notasContenido" class="mt-2 p-3 bg-yellow-100 rounded-lg"></div>
+            <textarea id="editarNotasTextarea" class="w-full h-32 p-2 border border-gray-300 rounded resize-none mt-4"></textarea>
+            <div class="flex justify-end mt-4">
+                <button id="guardarEdicionBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -209,7 +209,57 @@ const userLogs = logs.filter((log: LogEntry) => log.user_id === currentUserId);
             alert('Ocurrió un error al actualizar las notas');
         });
 });
-    </script>
+
+    function filterLogsByDate(selectedDate) {
+        const logs = [...document.querySelectorAll('.log-card')];
+        
+        if (!selectedDate) {
+            // Si no hay fecha seleccionada, mostrar todos los logs según la paginación actual
+            renderCurrentPageLogs();
+            return;
+        }
+
+        // Convertir la fecha seleccionada a inicio y fin del día
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        logs.forEach(log => {
+            const timestampText = log.querySelector('.text-gray-400').textContent;
+            // Convertir el formato "DD/MM/YY, HH:mm" a Date
+            const [datePart, timePart] = timestampText.split(', ');
+            const [day, month, year] = datePart.split('/');
+            const [hours, minutes] = timePart.split(':');
+            
+            // Crear fecha con el formato español
+            const logDate = new Date(
+                2000 + parseInt(year), // Año completo (asumiendo 20XX)
+                parseInt(month) - 1,   // Mes (0-11)
+                parseInt(day),         // Día
+                parseInt(hours),       // Hora
+                parseInt(minutes)      // Minutos
+            );
+            
+            // Ocultar todos los logs que no sean de la fecha seleccionada
+            if (logDate >= startDate && logDate <= endDate) {
+                log.style.display = 'block';
+            } else {
+                log.style.display = 'none';
+            }
+        });
+
+        // Recalcular la paginación
+        calcularTotalPages();
+        renderPaginationButtons();
+    }
+
+    // Escuchar el evento dateSelected
+    document.addEventListener('dateSelected', (event) => {
+        const selectedDate = event.detail.date;
+        filterLogsByDate(selectedDate);
+    });
+</script>
 
 
         <!-- Botones de paginación -->
