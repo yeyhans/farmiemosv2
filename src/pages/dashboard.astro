@@ -91,47 +91,7 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
     <!-- Grid Principal: Calculadora Grande Izquierda + 3 Cards Derecha -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-2">
       <!-- Lado Izquierdo: Calculadora de Temperatura -->
-      <div class="lg:col-span-2 border rounded-xl shadow-lg bg-white flex flex-col justify-between transition-all duration-300">
-        <div class="flex items-center justify-between py-4 px-6">
-          <div>
-            <h2 class="text-2xl font-bold text-left">🧮 Calculator AI</h2>
-            <p class="text-sm text-center text-gray-600">
-              Calcula el Déficit de Presión de Vapor (VPD) y el Punto de Rocío (Dewpoint) 
-              de tu cultivo junto a farmiemos, si quieres saber más detalles de 
-              su funcionamiento  
-              <a href="/que-hacemos#calculator_ai" class="text-green-900 font-semibold">Haz click aquí!</a>
-            </p>
-          </div>
-          <button onclick="toggleAccordion('accordion-ai-calculator')" class="flex items-center space-x-2">
-            <span id="icon-ai-calculator" class="w-6 h-6 flex items-center justify-center rounded transition-transform duration-300">&#x25BC;</span>
-          </button>
-        </div>
-        <div id="accordion-ai-calculator" class="px-4 pb-2">
-          <div class="user-content">
-
-
-
-            {user && qr_data.length > 0 ? (
-              <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Tus QRS Registrados</h2>
-              <ul class="space-y-4">
-                  {qr_data.map((qr) => (
-                      <li key={qr.id} class="bg-white shadow-md rounded-lg p-4 transition duration-300 ease-in-out hover:shadow-lg">
-                          <a href={`/qr/${qr.id}`} class="flex items-center justify-between text-blue-600 hover:text-blue-800 font-medium">
-                              <span>Código QR: {qr.id}</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                              </svg>
-                          </a>
-                      </li>
-                  ))}
-              </ul>
-              <CreateQr />
-          ) : user ? (
-              <p>No tienes códigos QR registrados.</p>
-          ) : null}
-        </div>
-        </div>
-      </div>      
+         
 
     
       <!-- Lado Derecho: Tarjetas -->
