@@ -6,8 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "vercel-build": "npm install && npm run build"
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.3",
@@ -27,6 +26,7 @@
     "@vercel/speed-insights": "^1.1.0",
     "astro": "^5.1.1",
     "deepseek": "^0.0.2",
+    "hast-util-raw": "^9.1.0",
     "marked": "^15.0.6",
     "mercadopago": "^2.2.0",
     "mongodb": "^6.13.1",
@@ -36,7 +36,8 @@
     "react-dom": "^19.0.0",
     "resend": "^4.1.2",
     "sharp": "^0.33.5",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "zwitch": "^2.0.4"
   },
   "devDependencies": {
     "@types/nodemailer": "^6.4.17",
