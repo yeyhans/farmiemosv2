@@ -29,7 +29,7 @@ export default function MercadoPagoButton({ amount }: Props) {
           throw new Error('MercadoPago SDK no está disponible');
         }
 
-        const mp = new window.MercadoPago(import.meta.env.PUBLIC_MERCADOPAGO_PUBLIC_KEY, {
+        const mp = new window.MercadoPago(import.meta.env.MERCADOPAGO_PUBLIC_KEY, {
           locale: 'es-CL'
         });
 
