@@ -7,6 +7,8 @@ import Layout from "../layouts/DashboardLayout.astro";
 import { authenticate } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import CreateQr from "../components/qr/CreateQr.astro";
+import ProfileCard from "../components/profiles/ProfileCard.astro";
+
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {
@@ -66,15 +68,19 @@ if (user) {
 
 
 
-// Verificar si los campos obligatorios están completos
-//const isProfileComplete = profile?.user_name && 
-//                          profile?.instagram &&
- //                         profile?.experience_level 
+ //Verificar si los campos obligatorios están completos
+const isProfileComplete = profile?.user_name && 
+                          profile?.instagram &&
+                         profile?.term_condition
+                       
  
 
-//if (!isProfileComplete) {
-//  return Astro.redirect("/profile"); // Redirigir a la página de perfil
-//}
+if (!isProfileComplete) {
+  return Astro.redirect("/nuevo-usuario"); // Redirigir a la página de perfil
+}
+
+const user_name = profile?.user_name || "Usuario";
+const cultivo_principal = profile?.cultivo_principal || "Cultivo Principal";
 
 
 const count_chats = chats?.length || 0;
@@ -82,7 +88,7 @@ const count_chats = chats?.length || 0;
 
 const title = "Farmiemos - Dashboard"
 const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus plantas preferidas."
-
+const prompt_profile = profile?.prompt_profile || "Prompt de perfil";
 
 ---
 
@@ -111,7 +117,7 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
          <div class="border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-lg transition-all duration-300">
           <div class="flex items-center justify-between py-4 px-6">
             <div>
-                <h2 class="text-2xl font-bold ">🧑‍🌾 {profile.user_name}</h2>
+                <h2 class="text-2xl font-bold ">🧑‍🌾 {user_name}</h2>
                 <p class="text-sm text-gray-600">Tarjeta de cultivo</p>
               </div>
               <button onclick="toggleAccordion('accordion-tarjet-profile')" class="flex items-center space-x-2">
@@ -121,15 +127,7 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
               </button>
             </div>
             <div id="accordion-tarjet-profile" class="transition-all duration-300">
-              <div class="bg-green-100 rounded-lg p-4 shadow-inner">
-                <p class="text-sm text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
-                <p class="text-sm text-gray-700">💬 P&R: <span class="font-semibold">{total_prompts}</span></p>
-                <p class="text-sm text-gray-700">🌱: <span class="font-semibold">{profile.cultivo_principal}</span></p>
-                <div class="overflow-y-auto h-20 px-4 py-2 border border-gray-300 rounded-md">
-                  <p class="text-xs text-gray-700 whitespace-pre-line">{profile.prompt_profile}</p>
-                </div>
-                
-              </div>
+              <ProfileCard profile={profile} chats={chats} total_prompts={total_prompts}/> 
 
             </div>
           </div>
@@ -154,10 +152,10 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
                   <span class="font-semibold">Farmienda - Pack de Nutrientes Premium</span>
                   <span class="text-lg font-bold text-blue-600">$15.000</span>
                 </div>
-                <p class="text-sm text-gray-700">Mezcla avanzada de minerales y materia orgánica para mejorar cualquier tipo de sustrato.</p>
+                <p class="text-xs text-gray-700">Mezcla avanzada de minerales y materia orgánica para mejorar cualquier tipo de sustrato.</p>
                 <div class="flex items-end gap-4">
                   <div>
-                    <label for="dashboard-quantity" class="block text-sm font-medium mb-2">Cantidad:</label>
+                    <label for="dashboard-quantity" class="block text-xs font-medium mb-2">Cantidad:</label>
                     <input 
                       type="number" 
                       id="dashboard-quantity" 
@@ -170,13 +168,13 @@ const description= "Farmiemos AI es una plataforma que te ayuda a mejorar tus pl
                   <div class="flex gap-2 flex-grow">
                     <button 
                       onclick="goToCheckout()"
-                      class="flex-grow bg-green-600 text-white px-4 py-1.5 rounded-md hover:bg-green-700 transition-colors text-sm"
+                      class="flex-grow bg-green-600 text-white px-4 py-1.5 rounded-md hover:bg-green-700 transition-colors text-xs"
                     >
                       Comprar Ahora
                     </button>
                     <a 
                       href="/farmienda" 
-                      class="px-4 py-1.5 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors text-sm"
+                      class="flex items-center justify-center gap-1 border border-green-600 text-custom-green rounded-md hover:bg-green-50 text-custom-green font-medium text-xs py-2 px-3 transition-colors"
                     >
                       Ver Detalles
                     </a>

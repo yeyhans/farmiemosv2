@@ -1,0 +1,42 @@
+---
+
+
+const { profile, chats, total_prompts } = Astro.props;
+
+const count_chats = chats.length;
+const cultivo_principal = profile?.cultivo_principal;
+const prompt_profile = profile?.prompt_profile;
+
+ //Verificar si los campos obligatorios están completos
+ const isProfileCardComplete = profile?.cultivo_principal && profile?.experience_level && profile?.comuna
+
+                       
+---
+
+
+<div class="relative bg-green-100 rounded-lg p-4 shadow-inner">
+    {/* Contenido actual con opacidad condicional */}
+    <div class={`${!isProfileCardComplete ? 'opacity-50 blur-xs' : ''}`}>
+        <p class="text-xs text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
+        <p class="text-xs text-gray-700">💬 P&R: <span class="font-semibold">{total_prompts}</span></p>
+        <p class="text-xs text-gray-700">🌱: <span class="font-semibold">{cultivo_principal}</span></p>
+        <div class="overflow-y-auto h-20 px-4 py-2 border border-gray-300 rounded-md">
+            <p class="text-xs text-gray-700 whitespace-pre-line">{prompt_profile}</p>
+        </div>
+    </div>
+
+    {/* Overlay de llamado a la acción */}
+    {!isProfileCardComplete && (
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-sm rounded-lg">
+            <div class="text-center space-y-2">
+                <h3 class="text-sm font-semibold text-gray-700">¡Perfil incompleto!</h3>
+                <p class="text-xs text-gray-600 max-w-[200px]">
+                    Completa tu perfil para desbloquear toda la información y características
+                </p>
+            </div>
+            <button class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-xs py-2 px-3 rounded transition-colors">
+                Completar Perfil
+            </button>
+        </div>
+    )}
+</div>

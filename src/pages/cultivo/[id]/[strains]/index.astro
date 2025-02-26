@@ -1,0 +1,40 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { supabase } from '../../../../lib/supabase';
+import { authenticate } from '../../../../lib/auth';
+import StrainPlanner from '../../../../components/cultivos/StrainPlanner';
+
+const { id } = Astro.params;
+const { user } = await authenticate(Astro);
+
+const user_id = user?.id;
+
+const { data: cultivo} = await supabase
+  .from('cultivos')
+  .select('config')
+  .eq('id', id)
+  .eq('uuid', user_id)
+  .single();
+
+
+
+const { data: strains, error } = await supabase
+  .from('cultivos')
+  .select('strains')
+  .eq('cultivo_id', id)
+  .eq('uuid', user_id);
+
+const config = cultivo?.config;
+console.log(config);
+---
+
+<Layout title="Cultivo" description="Cultivo">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-6">Cultivo</h1>
+    </div>
+    <StrainPlanner 
+    client:visible 
+    formData={config}
+    />
+
+</Layout>

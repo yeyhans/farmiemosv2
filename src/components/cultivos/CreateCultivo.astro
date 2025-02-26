@@ -8,12 +8,12 @@ const { initialPrompt = "" } = Astro.props;
 
 
 
-  <form id="sessionsForm" class="space-y-6">
+  <form id="cultivoCreateForm" class="space-y-6">
         <!-- Add Session Button -->
         <button
         type="submit"
-        id="submitButton"
-        class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-xs py-2 px-3 rounded transition-colors"
+        id="submitCultivoButton"
+        class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-3 rounded transition-colors"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -34,12 +34,12 @@ const showFeedback = (message, isError = false) => {
 };
 
 const setLoading = (loading) => {
-  const button = document.getElementById('submitButton');
+  const button = document.getElementById('submitCultivoButton');
   button.disabled = loading;
   button.textContent = loading ? 'Procesando...' : 'Crear y Ejecutar';
 };
 
-document.getElementById('sessionsForm').addEventListener('submit', async (e) => {
+document.getElementById('cultivoCreateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   setLoading(true);
   
@@ -47,9 +47,12 @@ document.getElementById('sessionsForm').addEventListener('submit', async (e) => 
     const formData = new FormData(e.target);
     
     // 1. Create session
-    const sessionResponse = await fetch('/api/chat/sessions', {
+    const sessionResponse = await fetch('/api/cultivos/crear-cultivo', {
       method: 'POST',
-      body: formData
+      body: JSON.stringify({
+        nombre: "Cultivo sin nombre",
+        descripcion: "Sin descripción"
+      })
     });
     
     const sessionData = await sessionResponse.json();
@@ -59,7 +62,7 @@ document.getElementById('sessionsForm').addEventListener('submit', async (e) => 
 
 
     // 3. Redirect to session
-    window.location.href = `/c/${sessionData.sessionId}`;
+    window.location.href = `/cultivo/${sessionData.id}`;
 
   } catch (error) {
     showFeedback(error.message, true);
