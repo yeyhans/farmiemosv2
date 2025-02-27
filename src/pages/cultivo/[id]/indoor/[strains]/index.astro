@@ -1,11 +1,15 @@
 ---
-import Layout from '../../../../layouts/Layout.astro';
-import { supabase } from '../../../../lib/supabase';
-import { authenticate } from '../../../../lib/auth';
-import StrainPlanner from '../../../../components/cultivos/StrainPlanner';
+import Layout from '../../../../../layouts/Layout.astro';
+import { supabase } from '../../../../../lib/supabase';
+import { authenticate } from '../../../../../lib/auth';
+import StrainPlanner from '../../../../../components/cultivos/indoor/StrainPlanner';
 
 const { id } = Astro.params;
-const { user } = await authenticate(Astro);
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
 
 const user_id = user?.id;
 
@@ -25,7 +29,7 @@ const { data: strains, error } = await supabase
   .eq('uuid', user_id);
 
 const config = cultivo?.config;
-console.log(config);
+console.log(id);
 ---
 
 <Layout title="Cultivo" description="Cultivo">
@@ -35,6 +39,7 @@ console.log(config);
     <StrainPlanner 
     client:visible 
     formData={config}
+    cultivoId={id}
     />
 
 </Layout>

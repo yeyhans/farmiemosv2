@@ -64,7 +64,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
  
       const body = await request.json();
-      const { descripcion } = body;
+      const { tipo, descripcion } = body;
       console.log(body);
 
       if (!body || typeof body !== "object") {
@@ -79,11 +79,12 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
           {
             uuid: user.id,
             descripcion: descripcion || "Sin descripción",
+            tipo_cultivo: tipo || "Indoor",
             iluminacion: {},
             ambiente: {},
             config: {},
             suelo: {},
-            plantas: {},
+            strains: {},
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },

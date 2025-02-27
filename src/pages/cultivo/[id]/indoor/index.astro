@@ -1,0 +1,81 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { supabase } from '../../../../lib/supabase';
+import { authenticate } from '../../../../lib/auth';
+import StrainView from '../../../../components/cultivos/indoor/StrainView';
+import AmbienteLogs from '../../../../components/cultivos/indoor/AmbienteLogs';
+import AmbienteLogsGraph from '../../../../components/cultivos/indoor/AmbienteLogsGraph';
+import AmbienteLogsList from '../../../../components/cultivos/indoor/AmbienteLogsList';
+
+const { id } = Astro.params;
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const user_id = user?.id;
+
+const { data: cultivo} = await supabase
+  .from('cultivos')
+  .select('config')
+  .eq('id', id)
+  .eq('uuid', user_id)
+  .single();
+
+
+const { data: strains } = await supabase
+  .from('cultivos')
+  .select('strains')
+  .eq('id', id)
+  .eq('uuid', user_id)
+  .single();
+
+const { data: ambiente_data } = await supabase
+  .from('cultivos')
+  .select('ambiente_logs')
+  .eq('id', id)
+  .eq('uuid', user_id)
+  .single();
+
+const config = cultivo?.config;
+const ambiente_logs = ambiente_data?.ambiente_logs;
+
+console.log(ambiente_logs);
+
+
+---
+
+<Layout title="Cultivo" description="Cultivo">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-6">Cultivo N° {id}</h1>
+        {config && (
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Configuración del Cultivo</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-medium">Número de Plantas:</p>
+                        <p class="text-gray-600">{config.numPlantas}</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">Capacidad Máxima:</p>
+                        <p class="text-gray-600">{config.maxCapacity} plantas</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">Dimensiones del Macetero:</p>
+                        <p class="text-gray-600">{config.maceteroAncho}cm x {config.maceteroLargo}cm</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">Espacio Disponible:</p>
+                        <p class="text-gray-600">{config.espacioAncho}cm x {config.espacioLargo}cm</p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        <StrainView client:visible formData={config} cultivoId={id} />
+        <AmbienteLogs client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
+        <AmbienteLogsGraph client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
+        <AmbienteLogsList client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
+    </div>
+</Layout>

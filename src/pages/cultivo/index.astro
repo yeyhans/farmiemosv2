@@ -58,7 +58,7 @@ const cultivosCount = cultivos_data.length;
                         Cultivo: {cultivo.id}
                     </a>
                     <button
-                        onclick={`eliminarRegistro('${cultivo.id}')`}
+                        onclick={`showDeleteModal('${cultivo.id}')`}
                         class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
                     >
                         Eliminar
@@ -70,50 +70,108 @@ const cultivosCount = cultivos_data.length;
   
   </div>
   
-  <script is:inline>
-  
-    // Get DOM elements
-  
-    const searchInput = document.getElementById('search-input');
-    const sessionList = document.getElementById('session-list');
-    const sessions = [...sessionList.querySelectorAll('li')];
-  
-    // Filter sessions on search input
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-  
-      sessions.forEach((session) => {
-        const sessionName = session.getAttribute('data-session-name');
-        session.style.display = sessionName.includes(query) ? 'block' : 'none';
-      });
-    });
-  
-    async function eliminarRegistro(sessionId) {
-        if (!confirm('¿Estás seguro de que deseas eliminar este cultivo?')) return;
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+        <h3 class="text-lg font-bold mb-4">Confirmar eliminación</h3>
+        <p class="text-sm text-gray-600 mb-4">
+            Escribe "DELETE" para confirmar la eliminación del cultivo
+        </p>
+        <input 
+            type="text" 
+            id="deleteConfirmInput"
+            class="w-full px-3 py-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
+            placeholder="Escribe DELETE"
+        />
+        <div class="flex justify-end gap-2">
+            <button
+                onclick="closeDeleteModal()"
+                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            >
+                Cancelar
+            </button>
+            <button
+                id="confirmDeleteButton"
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+                Eliminar
+            </button>
+        </div>
+    </div>
+</div>
 
-        try {
-            const response = await fetch(`/api/cultivos/crear-cultivo?id=${sessionId}`, {
-                method: 'DELETE'
+<script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get DOM elements
+        const searchInput = document.getElementById('search-input');
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteConfirmInput = document.getElementById('deleteConfirmInput');
+        const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+        let currentSessionId = null;
+
+        // Solo configura el buscador si los elementos existen
+        if (searchInput && document.getElementById('session-list')) {
+            const sessionList = document.getElementById('session-list');
+            const sessions = [...sessionList.querySelectorAll('li')];
+            
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                sessions.forEach((session) => {
+                    const sessionName = session.getAttribute('data-session-name');
+                    session.style.display = sessionName.includes(query) ? 'block' : 'none';
+                });
             });
-
-            const result = await response.json();
-            if (result.success) {
-                const elementToRemove = document.querySelector(`li[key="${sessionId}"]`);
-                if (elementToRemove) {
-                    elementToRemove.remove();
-                    // Actualizar el contador de cultivos
-                    const countElement = document.querySelector('.text-green-500');
-                    const currentCount = parseInt(countElement.textContent);
-                    countElement.textContent = currentCount - 1;
-                }
-            } else {
-                alert('Error: ' + result.error);
-            }
-        } catch (error) {
-            alert('Error de red: ' + error.message);
         }
-    }
-  </script>
+
+        // Funciones del modal
+        window.showDeleteModal = function(sessionId) {
+            console.log('Showing modal for session:', sessionId);
+            currentSessionId = sessionId;
+            deleteModal.classList.remove('hidden');
+            deleteConfirmInput.value = '';
+            confirmDeleteButton.disabled = true;
+        }
+
+        window.closeDeleteModal = function() {
+            deleteModal.classList.add('hidden');
+            currentSessionId = null;
+        }
+
+        deleteConfirmInput.addEventListener('input', (e) => {
+            confirmDeleteButton.disabled = e.target.value !== 'DELETE';
+        });
+
+        confirmDeleteButton.addEventListener('click', async () => {
+            if (deleteConfirmInput.value === 'DELETE' && currentSessionId) {
+                try {
+                    console.log('Attempting to delete session:', currentSessionId);
+                    const response = await fetch(`/api/cultivos/crear-cultivo?id=${currentSessionId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        const elementToRemove = document.querySelector(`li[key="${currentSessionId}"]`);
+                        if (elementToRemove) {
+                            elementToRemove.remove();
+                            // Actualizar el contador de cultivos
+                            const countElement = document.querySelector('.text-green-500');
+                            if (countElement) {
+                                const currentCount = parseInt(countElement.textContent);
+                                countElement.textContent = currentCount - 1;
+                            }
+                        }
+                        closeDeleteModal();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error deleting:', error);
+                    alert('Error de red: ' + error.message);
+                }
+            }
+        });
+    });
+</script>
     
 
 

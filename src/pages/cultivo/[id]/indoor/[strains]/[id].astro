@@ -1,0 +1,63 @@
+---
+import Layout from '../../../../../layouts/Layout.astro';
+import { authenticate } from '../../../../../lib/auth';
+import { supabase } from '../../../../../lib/supabase';
+
+// Renombrar los parámetros para evitar conflictos
+const { id: strainId, strains } = Astro.params;
+// Obtener el ID del cultivo de la URL
+const cultivoId = Astro.url.pathname.split('/')[2];
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const user_id = user?.id;
+
+// Obtener la información específica del strain
+const { data: strainData, error } = await supabase
+    .from('cultivos')
+    .select('strains')
+    .eq('id', cultivoId)
+    .eq('uuid', user_id)
+    .single();
+
+
+
+
+// Encontrar el strain específico dentro del array JSONB
+const specificStrain = strainData?.strains?.find(strain => strain.id.toString() === strainId);
+
+console.log('Strain específico:', specificStrain);
+---
+
+<Layout title="Cultivo" description="Cultivo">
+    <div class="container mx-auto p-4">
+        {specificStrain && (
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Detalles del Strain</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700">Nombre:</span>
+                        <span class="text-gray-600">{specificStrain.nombre}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700">Nombre Base:</span>
+                        <span class="text-gray-600">{specificStrain.nombreBase}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700">ID:</span>
+                        <span class="text-gray-600">{specificStrain.id}</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-semibold text-gray-700">Color:</span>
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded-full mr-2" style={`background-color: ${specificStrain.color}`}></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+    </div>
+</Layout>

@@ -11,6 +11,7 @@ interface FormData {
     maceteroLargo: number;
     espacioAncho: number;
     espacioLargo: number;
+    maxCapacity?: number;
 }
 
 interface Props {
@@ -145,21 +146,6 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
         })));
     }, [initialFormData]);
 
-    const calculateMaxCapacity = () => {
-        // Opción 1: Orientación normal
-        const maxMacetasAncho = Math.floor(formData.espacioAncho / formData.maceteroAncho);
-        const maxMacetasLargo = Math.floor(formData.espacioLargo / formData.maceteroLargo);
-        const capacidadNormal = maxMacetasAncho * maxMacetasLargo;
-
-        // Opción 2: Orientación invertida
-        const maxMacetasAnchoInverso = Math.floor(formData.espacioAncho / formData.maceteroLargo);
-        const maxMacetasLargoInverso = Math.floor(formData.espacioLargo / formData.maceteroAncho);
-        const capacidadInvertida = maxMacetasAnchoInverso * maxMacetasLargoInverso;
-
-        // Retornar la mayor capacidad entre las dos orientaciones posibles
-        return Math.max(capacidadNormal, capacidadInvertida);
-    };
-
     return (
         <div className="mt-8">
 
@@ -171,16 +157,16 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
                 <p className="text-gray-600">
                     Por favor, completa todos los campos del formulario para visualizar la disposición.
                 </p>
-            ) : formData.numPlantas > calculateMaxCapacity() ? (
+            ) : formData.numPlantas > (formData.maxCapacity || 0) ? (
                 <p className="text-red-600">
-                    Error: El número de plantas ({formData.numPlantas}) excede la capacidad máxima del espacio ({calculateMaxCapacity()} plantas).
+                    Error: El número de plantas ({formData.numPlantas}) excede la capacidad máxima del espacio ({formData.maxCapacity} plantas).
                     Por favor, reduce el número de plantas o aumenta el espacio de cultivo.
                 </p>
             ) : (
                 <>
                     <p className="text-green-600 mb-4">
                         ¡Las {formData.numPlantas} plantas caben en el espacio!
-                        (Capacidad máxima: {calculateMaxCapacity()} plantas)
+                        (Capacidad máxima: {formData.maxCapacity} plantas)
                     </p>
 
                     <div

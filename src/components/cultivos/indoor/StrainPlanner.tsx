@@ -14,13 +14,15 @@ interface FormData {
     maceteroLargo: number;
     espacioAncho: number;
     espacioLargo: number;
+    maxCapacity: number;
 }
 
 interface Props {
     formData: FormData;
+    cultivoId: string;
 }
 
-export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) => {
+export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cultivoId }) => {
     const [formData, setFormData] = useState(() => {
         // Validar si tenemos todos los datos necesarios
         if (!initialFormData.numPlantas || 
@@ -73,6 +75,7 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
     const [nombreBase, setNombreBase] = useState('');
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [macetasParaActualizar, setMacetasParaActualizar] = useState<Maceta[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const handleUpdatePlanner = (event: CustomEvent<FormData>) => {
@@ -206,10 +209,10 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
         return `hsl(${hue}, 70%, 50%)`;
     };
 
-    const aplicarNombres = () => {
+    const aplicarNombres = async () => {
         const color = generarColorAleatorio();
         let contador = 1;
-        setMacetas(macetas.map(maceta => {
+        const nuevasMacetas = macetas.map(maceta => {
             if (maceta.selected) {
                 return {
                     ...maceta,
@@ -220,7 +223,30 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
                 };
             }
             return maceta;
-        }));
+        });
+
+        setMacetas(nuevasMacetas);
+
+        // Guardar en la base de datos
+        try {
+            const response = await fetch('/api/cultivos/config-strain', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cultivoId: cultivoId,
+                    strains: nuevasMacetas
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al guardar las plantas');
+            }
+        } catch (error) {
+            console.error('Error al guardar las plantas:', error);
+            // Manejar el error apropiadamente
+        }
 
         setShowModal(false);
         setShowConfirmModal(false);
@@ -239,70 +265,106 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
         return grupos;
     }, {});
 
+    // Modificar el useEffect de carga de datos
+    useEffect(() => {
+        const cargarDatos = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`/api/cultivos/config-strain?cultivoId=${cultivoId}`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar los datos');
+                }
+                const { success, data } = await response.json();
+                if (success && data && Array.isArray(data)) {
+                    // Asegurarse de que los datos mantengan la estructura correcta
+                    const macetasActualizadas = data.map(maceta => ({
+                        ...maceta,
+                        selected: false // Asegurarse de que selected esté definido
+                    }));
+                    setMacetas(macetasActualizadas);
+                }
+            } catch (error) {
+                console.error('Error al cargar los datos:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (cultivoId) {
+            cargarDatos();
+        }
+    }, [cultivoId]);
+
     return (
         <div className="mt-8 flex flex-col lg:flex-row">
-            <div className="w-full lg:w-3/4">
-                <div
-                    className="relative border-2 border-gray-300 bg-gray-100 mx-auto"
-                    style={{
-                        width: `${formData.plantasPorFila * formData.maceteroAncho + (formData.plantasPorFila + 1) * formData.espacioEntreAncho}px`,
-                        height: `${formData.plantasPorColumna * formData.maceteroLargo + (formData.plantasPorColumna + 1) * formData.espacioEntreLargo}px`,
-                        maxWidth: '100%',
-                        transform: 'scale(var(--scale-factor, 1))',
-                        transformOrigin: 'top left',
-                    }}
-                >
-                    {macetas.map((maceta, index) => {
-                        const columna = index % formData.plantasPorFila;
-                        const fila = Math.floor(index / formData.plantasPorFila);
-                        const left = formData.espacioEntreAncho + columna * (formData.maceteroAncho + formData.espacioEntreAncho);
-                        const top = formData.espacioEntreLargo + fila * (formData.maceteroLargo + formData.espacioEntreLargo);
-                        const numero = maceta.nombre ? maceta.nombre.split('n').pop() : '';
+            {isLoading ? (
+                <div className="w-full text-center py-8">
+                    Cargando plantas...
+                </div>
+            ) : (
+                <div className="w-full lg:w-3/4">
+                    <div
+                        className="relative border-2 border-gray-300 bg-gray-100 mx-auto"
+                        style={{
+                            width: `${formData.plantasPorFila * formData.maceteroAncho + (formData.plantasPorFila + 1) * formData.espacioEntreAncho}px`,
+                            height: `${formData.plantasPorColumna * formData.maceteroLargo + (formData.plantasPorColumna + 1) * formData.espacioEntreLargo}px`,
+                            maxWidth: '100%',
+                            transform: 'scale(var(--scale-factor, 1))',
+                            transformOrigin: 'top left',
+                        }}
+                    >
+                        {macetas.map((maceta, index) => {
+                            const columna = index % formData.plantasPorFila;
+                            const fila = Math.floor(index / formData.plantasPorFila);
+                            const left = formData.espacioEntreAncho + columna * (formData.maceteroAncho + formData.espacioEntreAncho);
+                            const top = formData.espacioEntreLargo + fila * (formData.maceteroLargo + formData.espacioEntreLargo);
+                            const numero = maceta.nombre ? maceta.nombre.split('n').pop() : '';
 
-                        return (
-                            <div
-                                key={maceta.id}
-                                className={`absolute cursor-pointer hover:bg-green-100 transition-all duration-200 ${
-                                    maceta.selected ? 'ring-4 ring-green-500' : ''
-                                }`}
-                                style={{
-                                    left: `${left}px`,
-                                    top: `${top}px`,
-                                    width: `${formData.maceteroAncho}px`,
-                                    height: `${formData.maceteroLargo}px`,
-                                    padding: '4px',
-                                    borderRadius: '8px',
-                                    backgroundColor: maceta.color || 'transparent'
-                                }}
-                                onClick={() => toggleSeleccion(maceta.id)}
-                            >
-                                <div className="relative w-full h-full">
-                                    <div className="absolute inset-0 bg-white bg-opacity-50 border-2 border-brown-300 rounded-md shadow-md">
-                                        <div className="absolute inset-0 flex items-center justify-center text-3xl">
-                                            🌱
+                            return (
+                                <div
+                                    key={maceta.id}
+                                    className={`absolute cursor-pointer hover:bg-green-100 transition-all duration-200 ${
+                                        maceta.selected ? 'ring-4 ring-green-500' : ''
+                                    }`}
+                                    style={{
+                                        left: `${left}px`,
+                                        top: `${top}px`,
+                                        width: `${formData.maceteroAncho}px`,
+                                        height: `${formData.maceteroLargo}px`,
+                                        padding: '4px',
+                                        borderRadius: '8px',
+                                        backgroundColor: maceta.color || 'transparent'
+                                    }}
+                                    onClick={() => toggleSeleccion(maceta.id)}
+                                >
+                                    <div className="relative w-full h-full">
+                                        <div className="absolute inset-0 bg-white bg-opacity-50 border-2 border-brown-300 rounded-md shadow-md">
+                                            <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                                                🌱
+                                            </div>
                                         </div>
+                                        {numero && (
+                                            <div className="absolute -bottom-8 left-0 w-full text-center text-sm font-bold bg-white px-2 py-1 rounded shadow-sm">
+                                                {numero}
+                                            </div>
+                                        )}
                                     </div>
-                                    {numero && (
-                                        <div className="absolute -bottom-8 left-0 w-full text-center text-sm font-bold bg-white px-2 py-1 rounded shadow-sm">
-                                            {numero}
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                        
+                    </div>
+                    <div className="mt-4 flex justify-center">
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-full shadow-lg"
+                    >
+                        Nombrar
+                    </button>
+                    </div>
                     
                 </div>
-                <div className="mt-4 flex justify-center">
-                <button
-                    onClick={() => setShowModal(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-full shadow-lg"
-                >
-                    Nombrar
-                </button>
-                </div>
-                
-            </div>
+            )}
 
             <div className="w-full lg:w-1/4 p-4">
                 <h3 className="text-lg font-bold mb-4">Grupos de Plantas</h3>
@@ -321,10 +383,6 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
                     </div>
                 ))}
             </div>
-
-
-
-
 
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -391,4 +449,4 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
     );
 };
 
-export default CultivoPlanner; 
+export default StrainPlanner; 

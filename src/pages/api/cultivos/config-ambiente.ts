@@ -32,19 +32,19 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
     if (method === "PUT") {
       const body = await request.json();
-      const { cultivoId, strains } = body;
+      const { cultivoId, ambiente } = body;
 
-      if (!cultivoId || !strains) {
+      if (!cultivoId || !ambiente) {
         return new Response(
           JSON.stringify({ success: false, error: "Datos incompletos" }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
 
-      // Primero obtenemos el registro actual para verificar si ya existe strains
+      // Primero obtenemos el registro actual para verificar si ya existe ambiente
       const { data: currentData, error: fetchError } = await supabase
         .from("cultivos")
-        .select("strains")
+        .select("ambiente")
         .eq("id", cultivoId)
         .eq("uuid", user.id)
         .single();
@@ -56,11 +56,11 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
         );
       }
 
-      // Actualizamos el campo strains
+      // Actualizamos el campo ambiente
       const { error: updateError } = await supabase
         .from("cultivos")
         .update({ 
-          strains: strains,
+          ambiente: ambiente,
           updated_at: new Date().toISOString()
         })
         .eq("id", cultivoId)
@@ -76,14 +76,14 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Plantas actualizadas correctamente",
-          data: strains
+          message: "Ambiente actualizado correctamente",
+          data: ambiente
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // GET para obtener las plantas de un cultivo específico
+    // GET para obtener el ambiente de un cultivo específico
     if (method === "GET") {
       const cultivoId = new URL(request.url).searchParams.get("cultivoId");
 
@@ -96,7 +96,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
 
       const { data, error } = await supabase
         .from("cultivos")
-        .select("strains")
+        .select("ambiente")
         .eq("id", cultivoId)
         .eq("uuid", user.id)
         .single();
@@ -109,7 +109,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, data: data.strains }),
+        JSON.stringify({ success: true, data: data.ambiente }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -120,7 +120,7 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
     );
 
   } catch (err: any) {
-    console.error("Error en ALL /api/cultivos/config-strain:", err);
+    console.error("Error en ALL /api/cultivos/config-ambiente:", err);
     return new Response(
       JSON.stringify({ success: false, error: err.message }),
       { status: 500, headers: { "Content-Type": "application/json" } }

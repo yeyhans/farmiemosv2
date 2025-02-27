@@ -2,10 +2,13 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 import { authenticate } from '../../lib/auth';
-import CultivoPlanner from '../../components/cultivos/CultivoPlanner';
+import CultivoPlanner from '../../components/cultivos/indoor/CultivoPlanner';
 
 const { id } = Astro.params;
-const { user } = await authenticate(Astro);
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
 
 const user_id = user?.id;
 
@@ -17,13 +20,21 @@ const { data: cultivo, error } = await supabase
   .eq('uuid', user_id)
   .single();
 
+// Add redirect if config already exists and has data
+if (cultivo?.config?.numPlantas > 0) {
+    return Astro.redirect(`/cultivo/${id}/indoor`);
+}
+
 const config = cultivo?.config || {
     numPlantas: 0,
     maceteroAncho: 0,
     maceteroLargo: 0,
     espacioAncho: 0,
-    espacioLargo: 0
+    espacioLargo: 0,
+    maxCapacity: 0,
 };
+
+console.log(config);
 ---
 
 
@@ -32,6 +43,7 @@ const config = cultivo?.config || {
         <h1 class="text-2xl font-bold mb-6">Planificador de Cultivo</h1>
         
         <form id="cultivoForm" class="space-y-4">
+            <input type="hidden" name="maxCapacity" value={config.maxCapacity} />
             <div class="space-y-2">
                 <label class="block">
                     Número de plantas:
@@ -113,6 +125,7 @@ const config = cultivo?.config || {
         <CultivoPlanner 
             client:visible 
             formData={config}
+            cultivoId={id}
         />
     </div>
 </Layout>
@@ -121,6 +134,23 @@ const config = cultivo?.config || {
     const form = document.querySelector('#cultivoForm') as HTMLFormElement;
     const inputs = form?.querySelectorAll('input');
     const cultivoId = window.location.pathname.split('/').pop();
+
+    const calculateMaxCapacity = (data: any) => {
+        // Opción 1: Orientación normal
+        const maxMacetasAncho = Math.floor(data.espacioAncho / data.maceteroAncho);
+        const maxMacetasLargo = Math.floor(data.espacioLargo / data.maceteroLargo);
+        const capacidadNormal = maxMacetasAncho * maxMacetasLargo;
+
+        // Opción 2: Orientación invertida
+        const maxMacetasAnchoInverso = Math.floor(data.espacioAncho / data.maceteroLargo);
+        const maxMacetasLargoInverso = Math.floor(data.espacioLargo / data.maceteroAncho);
+        const capacidadInvertida = maxMacetasAnchoInverso * maxMacetasLargoInverso;
+
+        // Retornar la mayor capacidad entre las dos orientaciones posibles
+        return Math.max(capacidadNormal, capacidadInvertida);
+    };
+
+
 
     const updatePlanner = () => {
         if (!form) return;
@@ -131,8 +161,19 @@ const config = cultivo?.config || {
             maceteroAncho: Number(formData.get('maceteroAncho')) || 0,
             maceteroLargo: Number(formData.get('maceteroLargo')) || 0,
             espacioAncho: Number(formData.get('espacioAncho')) || 0,
-            espacioLargo: Number(formData.get('espacioLargo')) || 0
+            espacioLargo: Number(formData.get('espacioLargo')) || 0,
+            maxCapacity: Number(formData.get('maxCapacity')) || 0,
         };
+
+        // Calculamos maxCapacity y lo añadimos al objeto data
+        data.maxCapacity = calculateMaxCapacity(data);
+        
+        
+        // Actualizamos el valor del input oculto
+        const maxCapacityInput = form.querySelector('input[name="maxCapacity"]') as HTMLInputElement;
+        if (maxCapacityInput) {
+            maxCapacityInput.value = data.maxCapacity.toString();
+        }
 
         const event = new CustomEvent('updatePlanner', { detail: data });
         window.dispatchEvent(event);
@@ -148,7 +189,8 @@ const config = cultivo?.config || {
             maceteroAncho: Number(formData.get('maceteroAncho')) || 0,
             maceteroLargo: Number(formData.get('maceteroLargo')) || 0,
             espacioAncho: Number(formData.get('espacioAncho')) || 0,
-            espacioLargo: Number(formData.get('espacioLargo')) || 0
+            espacioLargo: Number(formData.get('espacioLargo')) || 0,
+            maxCapacity: Number(formData.get('maxCapacity')) || 0,
         };
 
         try {
@@ -166,7 +208,8 @@ const config = cultivo?.config || {
             const data = await response.json();
             
             if (data.success) {
-                alert('Configuración guardada exitosamente');
+                // Redirect after successful save
+                window.location.href = `/cultivo/${cultivoId}/indoor/strains`;
             } else {
                 alert('Error al guardar la configuración: ' + data.error);
             }

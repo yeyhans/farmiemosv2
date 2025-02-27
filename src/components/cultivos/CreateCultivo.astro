@@ -50,8 +50,8 @@ document.getElementById('cultivoCreateForm').addEventListener('submit', async (e
     const sessionResponse = await fetch('/api/cultivos/crear-cultivo', {
       method: 'POST',
       body: JSON.stringify({
-        nombre: "Cultivo sin nombre",
-        descripcion: "Sin descripción"
+        tipo: "Indoor",
+        descripcion: "Sin descripcións"
       })
     });
     
