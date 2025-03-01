@@ -10,69 +10,106 @@ const { title, description } = Astro.props;
 const avatarUrl = user?.user_metadata.avatar_url;
 ---
 
-<!DOCTYPE html>
+
 <html lang="es">
   <head>
     <BaseHead title={title} description={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <div class="min-h-screen flex flex-col bg-gray-50">
-      <header class="flex items-center justify-between bg-white px-4 py-2 shadow sticky top-0 z-10 ">
+    <div class="">
+      <header class="flex items-center justify-between bg-white px-3 sm:px-4 py-2 shadow sticky top-0 z-10">
         <!-- Logo -->
         <div class="flex items-center">
           <a href="/" class="flex items-center">
-            <img src="/logo.png" alt="Farmiemos" class="h-10 w-10">
+            <img src="/logo.png" alt="Farmiemos" class="h-8 w-8 sm:h-10 sm:w-10">
           </a>
         </div>
         
+        <!-- Mobile Menu Button (Hamburger) - Visible on mobile only -->
+        <button id="mobileMenuButton" class="md:hidden flex items-center p-1 text-gray-700 hover:text-gray-900">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        
+        <!-- Desktop Navigation - Hidden on mobile -->
+        <div class="hidden md:flex items-center space-x-4">
+          {user ? (
+            <!-- User Menu -->
+            <div class="relative">
+              <!-- Avatar Button -->
+              <button id="userMenuButton" class="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-400">
+                <img 
+                  src={avatarUrl}
+                  alt="User Avatar" 
+                  class="h-8 w-8 rounded-full"
+                />
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div class="py-1">
+                  <a href="/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">🏠 Dashboard</a>
+                  <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">⚙️ Configuracion</a>
+                  <form action="/api/auth/signout">
+                    <button type="submit" class="block w-full px-4 py-2 bg-custom-red text-white rounded-md">Salir</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <!-- Register Button -->
+            <a href="/register" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+              Registrarse
+            </a>
+          )}
+        </div>
+      </header>
+      
+      <!-- Mobile Menu - Initially hidden -->
+      <div id="mobileMenu" class="hidden md:hidden bg-white shadow-md py-2 px-4">
         {user ? (
-          <!-- User Menu -->
-          <div class="relative">
-            <!-- Avatar Button -->
-            <button id="userMenuButton" class="flex items-center justify-center w-10 h-10 rounded-full  focus:outline-none focus:ring-2 focus:ring-gray-400">
+          <div class="flex flex-col space-y-3">
+            <div class="flex items-center space-x-3 pb-2 border-b border-gray-200">
               <img 
                 src={avatarUrl}
                 alt="User Avatar" 
                 class="h-8 w-8 rounded-full"
               />
-            </button>
-            
-            <!-- Dropdown Menu -->
-            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-              <div class="py-1">
-                <a href="/dashboard" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">🏠 Dashboard</a>
-                <a href="/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">⚙️ Configuracion</a>
-                <form action="/api/auth/signout">
-                  <button type="submit" class="block w-full px-4 py-2 bg-custom-red text-white rounded-md">Salir</button>
-                </form>
-              </div>
+              <span class="text-gray-700 font-medium">{user.email}</span>
             </div>
+            <a href="/dashboard" class="block py-2 text-gray-700">🏠 Dashboard</a>
+            <a href="/profile" class="block py-2 text-gray-700">⚙️ Configuracion</a>
+            <form action="/api/auth/signout">
+              <button type="submit" class="mt-2 block w-full px-4 py-2 bg-custom-red text-white rounded-md">Salir</button>
+            </form>
           </div>
         ) : (
-          <!-- Register Button -->
-          <a href="/register" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-            Registrarse
-          </a>
+          <div class="py-2">
+            <a href="/register" class="block w-full text-center bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+              Registrarse
+            </a>
+          </div>
         )}
-      </header>
+      </div>
       
-
+      <main class="px-2 sm:px-4 py-4 overflow-x-hidden w-full">
         <slot />
-
-
-
+      </main>
     </div>
 
     <script is:inline>
       // Esperar a que el DOM esté listo
       document.addEventListener('DOMContentLoaded', () => {
+        // User dropdown menu functionality
         const userMenuButton = document.getElementById('userMenuButton');
         const userMenu = document.getElementById('userMenu');
         let isMenuOpen = false;
 
         // Función para abrir/cerrar el menú
         const toggleMenu = (event) => {
-          event.stopPropagation();
+          if (event) event.stopPropagation();
           isMenuOpen = !isMenuOpen;
           
           if (isMenuOpen) {
@@ -91,12 +128,14 @@ const avatarUrl = user?.user_metadata.avatar_url;
           }
         };
 
-        // Event listener para el botón
-        userMenuButton.addEventListener('click', toggleMenu);
+        // Event listener para el botón (verificar si existe primero)
+        if (userMenuButton) {
+          userMenuButton.addEventListener('click', toggleMenu);
+        }
 
         // Cerrar el menú cuando se hace clic fuera
         document.addEventListener('click', (event) => {
-          if (isMenuOpen && !userMenu.contains(event.target) && event.target !== userMenuButton) {
+          if (userMenu && isMenuOpen && !userMenu.contains(event.target) && event.target !== userMenuButton) {
             toggleMenu(event);
           }
         });
@@ -105,6 +144,39 @@ const avatarUrl = user?.user_metadata.avatar_url;
         document.addEventListener('keydown', (event) => {
           if (event.key === 'Escape' && isMenuOpen) {
             toggleMenu(event);
+          }
+        });
+
+        // Mobile menu functionality
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenu = document.getElementById('mobileMenu');
+        let isMobileMenuOpen = false;
+
+        if (mobileMenuButton && mobileMenu) {
+          mobileMenuButton.addEventListener('click', () => {
+            isMobileMenuOpen = !isMobileMenuOpen;
+            
+            if (isMobileMenuOpen) {
+              mobileMenu.classList.remove('hidden');
+              mobileMenu.style.opacity = '0';
+              setTimeout(() => {
+                mobileMenu.style.opacity = '1';
+                mobileMenu.style.transition = 'opacity 200ms ease-in-out';
+              }, 0);
+            } else {
+              mobileMenu.style.opacity = '0';
+              setTimeout(() => {
+                mobileMenu.classList.add('hidden');
+              }, 200);
+            }
+          });
+        }
+
+        // Close mobile menu on window resize (if switching to desktop)
+        window.addEventListener('resize', () => {
+          if (window.innerWidth >= 768 && isMobileMenuOpen && mobileMenu) {
+            mobileMenu.classList.add('hidden');
+            isMobileMenuOpen = false;
           }
         });
       });

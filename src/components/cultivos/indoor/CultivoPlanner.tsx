@@ -146,6 +146,26 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
         })));
     }, [initialFormData]);
 
+    // Función para calcular la escala de visualización
+    const getScaleFactor = () => {
+        // Calculamos el ancho y alto total real del espacio
+        const anchoTotal = formData.plantasPorFila * formData.maceteroAncho + 
+                          (formData.plantasPorFila + 1) * formData.espacioEntreAncho;
+        const altoTotal = formData.plantasPorColumna * formData.maceteroLargo + 
+                         (formData.plantasPorColumna + 1) * formData.espacioEntreLargo;
+        
+        // Definimos un tamaño máximo para la visualización
+        const maxVisualizationWidth = 700;
+        const maxVisualizationHeight = 500;
+        
+        // Calculamos factores de escala para ancho y alto
+        const scaleFactorWidth = maxVisualizationWidth / anchoTotal;
+        const scaleFactorHeight = maxVisualizationHeight / altoTotal;
+        
+        // Usamos el menor para mantener la proporción
+        return Math.min(scaleFactorWidth, scaleFactorHeight, 1); // No agrandamos si es menor
+    };
+
     return (
         <div className="mt-8">
 
@@ -169,45 +189,73 @@ export const CultivoPlanner: React.FC<Props> = ({ formData: initialFormData }) =
                         (Capacidad máxima: {formData.maxCapacity} plantas)
                     </p>
 
-                    <div
-                        className="relative border-2 border-gray-300 bg-gray-100"
-                        style={{
-                            width: `${formData.plantasPorFila * formData.maceteroAncho + (formData.plantasPorFila + 1) * formData.espacioEntreAncho}px`,
-                            height: `${formData.plantasPorColumna * formData.maceteroLargo + (formData.plantasPorColumna + 1) * formData.espacioEntreLargo}px`,
-                            margin: '40px auto'
-                        }}
-                    >
-                        {macetas.map((maceta, index) => {
-                            const columna = index % formData.plantasPorFila;
-                            const fila = Math.floor(index / formData.plantasPorFila);
-
-                            const left = formData.espacioEntreAncho + columna * (formData.maceteroAncho + formData.espacioEntreAncho);
-                            const top = formData.espacioEntreLargo + fila * (formData.maceteroLargo + formData.espacioEntreLargo);
-
-                            return (
+                    {(() => {
+                        // Calculamos los valores a escala
+                        const scaleFactor = getScaleFactor();
+                        const anchoTotal = (formData.plantasPorFila * formData.maceteroAncho + 
+                                          (formData.plantasPorFila + 1) * formData.espacioEntreAncho) * scaleFactor;
+                        const altoTotal = (formData.plantasPorColumna * formData.maceteroLargo + 
+                                         (formData.plantasPorColumna + 1) * formData.espacioEntreLargo) * scaleFactor;
+                        
+                        // Valores reales para mostrar en la leyenda
+                        const anchoRealCm = formData.espacioAncho;
+                        const altoRealCm = formData.espacioLargo;
+                        
+                        return (
+                            <div className="flex flex-col items-center">
+                                <div className="text-sm text-gray-600 mb-2">
+                                    {scaleFactor < 1 ? 
+                                        `Visualización a escala (${Math.round(scaleFactor * 100)}% del tamaño real)` : 
+                                        'Visualización a tamaño real'}
+                                </div>
+                                <div className="flex justify-center items-center mb-2">
+                                    <div className="text-xs text-gray-500 mr-2">Dimensiones reales: {anchoRealCm}cm × {altoRealCm}cm</div>
+                                </div>
                                 <div
-                                    key={maceta.id}
-                                    className="absolute"
+                                    className="relative border-2 border-gray-300 bg-gray-100"
                                     style={{
-                                        left: `${left}px`,
-                                        top: `${top}px`,
-                                        width: `${formData.maceteroAncho}px`,
-                                        height: `${formData.maceteroLargo}px`,
-                                        padding: '4px',
-                                        borderRadius: '8px'
+                                        width: `${anchoTotal}px`,
+                                        height: `${altoTotal}px`,
+                                        margin: '20px auto'
                                     }}
                                 >
-                                    <div className="relative w-full h-full">
-                                        <div className="absolute inset-0 bg-brown-100 border-2 border-brown-300 rounded-md shadow-md">
-                                            <div className="absolute inset-0 flex items-center justify-center text-3xl">
-                                                🌱
+                                    {macetas.map((maceta, index) => {
+                                        const columna = index % formData.plantasPorFila;
+                                        const fila = Math.floor(index / formData.plantasPorFila);
+
+                                        const left = (formData.espacioEntreAncho + columna * 
+                                                    (formData.maceteroAncho + formData.espacioEntreAncho)) * scaleFactor;
+                                        const top = (formData.espacioEntreLargo + fila * 
+                                                   (formData.maceteroLargo + formData.espacioEntreLargo)) * scaleFactor;
+
+                                        return (
+                                            <div
+                                                key={maceta.id}
+                                                className="absolute"
+                                                style={{
+                                                    left: `${left}px`,
+                                                    top: `${top}px`,
+                                                    width: `${formData.maceteroAncho * scaleFactor}px`,
+                                                    height: `${formData.maceteroLargo * scaleFactor}px`,
+                                                    padding: `${4 * scaleFactor}px`,
+                                                    borderRadius: `${8 * scaleFactor}px`
+                                                }}
+                                            >
+                                                <div className="relative w-full h-full">
+                                                    <div className="absolute inset-0 bg-brown-100 border-2 border-brown-300 rounded-md shadow-md">
+                                                        <div className="absolute inset-0 flex items-center justify-center" 
+                                                             style={{ fontSize: `${Math.max(16 * scaleFactor, 12)}px` }}>
+                                                            🌱
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        );
+                                    })}
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        );
+                    })()}
                 </>
             )}
         </div>

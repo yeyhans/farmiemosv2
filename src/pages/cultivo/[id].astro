@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from '../../layouts/DashboardLayout.astro';
 import { supabase } from '../../lib/supabase';
 import { authenticate } from '../../lib/auth';
 import CultivoPlanner from '../../components/cultivos/indoor/CultivoPlanner';
@@ -40,9 +40,9 @@ console.log(config);
 
 <Layout title="Cultivo" description="Cultivo">
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-6">Planificador de Cultivo</h1>
+        <h1 class="text-base font-bold mb-6">Planificador de Cultivo</h1>
         
-        <form id="cultivoForm" class="space-y-4">
+        <form id="cultivoForm" class="text-xs space-y-4">
             <input type="hidden" name="maxCapacity" value={config.maxCapacity} />
             <div class="space-y-2">
                 <label class="block">
@@ -59,8 +59,18 @@ console.log(config);
             </div>
 
             <div class="space-y-2">
-                <h3 class="font-bold">Dimensiones del macetero:</h3>
-                <div class="grid grid-cols-2 gap-4">
+                <h3 class="font-bold text-sm">Dimensiones del macetero:</h3>
+                <div class="mb-2">
+                    <button 
+                        type="button" 
+                        id="toggleMaceteroMode" 
+                        class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+                    >
+                        Cambiar a tamaño en litros
+                    </button>
+                </div>
+                
+                <div id="maceteroDimensiones" class="grid grid-cols-2 gap-4">
                     <label>
                         Ancho (cm):
                         <input
@@ -84,33 +94,47 @@ console.log(config);
                         />
                     </label>
                 </div>
+                
+                <div id="maceteroLitros" class="hidden">
+                    <label class="block">
+                        Tamaño del macetero:
+                        <select 
+                            name="maceteroLitros" 
+                            class="border p-2 rounded w-full"
+                            id="maceteroLitrosSelect"
+                        >
+                            <option value="" disabled selected>Selecciona un tamaño</option>
+                            <option value="1">1 litro (9×9 cm)</option>
+                            <option value="3">3 litros (15×15 cm)</option>
+                            <option value="7">7 litros (20×20 cm)</option>
+                            <option value="11">11 litros (23×23 cm)</option>
+                            <option value="20">20 litros (30×30 cm)</option>
+                        </select>
+                    </label>
+                </div>
             </div>
 
             <div class="space-y-2">
-                <h3 class="font-bold">Dimensiones del espacio de cultivo:</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <label>
-                        Ancho (cm):
-                        <input
-                            type="number"
-                            name="espacioAncho"
-                            min="1"
-                            required
-                            value={config.espacioAncho}
+                <h3 class="text-sm font-bold">Dimensiones del espacio de cultivo:</h3>
+                <div>
+                    <label class="block">
+                        Tamaño del espacio:
+                        <select 
+                            name="espacioSelect" 
                             class="border p-2 rounded w-full"
-                        />
+                            id="espacioSelect"
+                        >
+                            <option value="" disabled selected={!config.espacioAncho && !config.espacioLargo}>Selecciona un tamaño</option>
+                            <option value="60,60" selected={config.espacioAncho === 60 && config.espacioLargo === 60}>60 ancho x 60 largo</option>
+                            <option value="80,80" selected={config.espacioAncho === 80 && config.espacioLargo === 80}>80 ancho x 80 largo</option>
+                            <option value="100,100" selected={config.espacioAncho === 100 && config.espacioLargo === 100}>100 ancho x 100 largo</option>
+                            <option value="120,120" selected={config.espacioAncho === 120 && config.espacioLargo === 120}>120 ancho x 120 largo</option>
+                            <option value="240,120" selected={config.espacioAncho === 240 && config.espacioLargo === 120}>240 ancho x 120 largo</option>
+                            <option value="240,240" selected={config.espacioAncho === 240 && config.espacioLargo === 240}>240 ancho x 240 largo</option>
+                        </select>
                     </label>
-                    <label>
-                        Largo (cm):
-                        <input
-                            type="number"
-                            name="espacioLargo"
-                            min="1"
-                            required
-                            value={config.espacioLargo}
-                            class="border p-2 rounded w-full"
-                        />
-                    </label>
+                    <input type="hidden" name="espacioAncho" value={config.espacioAncho} id="espacioAncho" />
+                    <input type="hidden" name="espacioLargo" value={config.espacioLargo} id="espacioLargo" />
                 </div>
             </div>
 
@@ -134,6 +158,73 @@ console.log(config);
     const form = document.querySelector('#cultivoForm') as HTMLFormElement;
     const inputs = form?.querySelectorAll('input');
     const cultivoId = window.location.pathname.split('/').pop();
+    const espacioSelect = document.getElementById('espacioSelect') as HTMLSelectElement;
+    const espacioAnchoInput = document.getElementById('espacioAncho') as HTMLInputElement;
+    const espacioLargoInput = document.getElementById('espacioLargo') as HTMLInputElement;
+    
+    // Macetero toggle elements
+    const toggleMaceteroBtn = document.getElementById('toggleMaceteroMode') as HTMLButtonElement;
+    const maceteroDimensiones = document.getElementById('maceteroDimensiones') as HTMLDivElement;
+    const maceteroLitros = document.getElementById('maceteroLitros') as HTMLDivElement;
+    const maceteroLitrosSelect = document.getElementById('maceteroLitrosSelect') as HTMLSelectElement;
+    const maceteroAnchoInput = document.querySelector('input[name="maceteroAncho"]') as HTMLInputElement;
+    const maceteroLargoInput = document.querySelector('input[name="maceteroLargo"]') as HTMLInputElement;
+    
+    let maceteroMode = 'dimensiones'; // Initial mode
+    
+    // Toggle between input modes
+    toggleMaceteroBtn?.addEventListener('click', () => {
+        if (maceteroMode === 'dimensiones') {
+            maceteroMode = 'litros';
+            maceteroDimensiones.classList.add('hidden');
+            maceteroLitros.classList.remove('hidden');
+            toggleMaceteroBtn.textContent = 'Cambiar a dimensiones en cm';
+        } else {
+            maceteroMode = 'dimensiones';
+            maceteroDimensiones.classList.remove('hidden');
+            maceteroLitros.classList.add('hidden');
+            toggleMaceteroBtn.textContent = 'Cambiar a tamaño en litros';
+        }
+    });
+    
+    // Handle litros select change
+    maceteroLitrosSelect?.addEventListener('change', (e) => {
+        const value = (e.target as HTMLSelectElement).value;
+        let ancho = 0;
+        let largo = 0;
+        
+        switch(value) {
+            case '1':
+                ancho = largo = 9;
+                break;
+            case '3':
+                ancho = largo = 15;
+                break;
+            case '7':
+                ancho = largo = 20;
+                break;
+            case '11':
+                ancho = largo = 23;
+                break;
+            case '20':
+                ancho = largo = 30;
+                break;
+        }
+        
+        if (maceteroAnchoInput && maceteroLargoInput) {
+            maceteroAnchoInput.value = ancho.toString();
+            maceteroLargoInput.value = largo.toString();
+            updatePlanner();
+        }
+    });
+
+    // Handle the select change
+    espacioSelect?.addEventListener('change', (e) => {
+        const [ancho, largo] = (e.target as HTMLSelectElement).value.split(',');
+        espacioAnchoInput.value = ancho;
+        espacioLargoInput.value = largo;
+        updatePlanner();
+    });
 
     const calculateMaxCapacity = (data: any) => {
         // Opción 1: Orientación normal
@@ -149,8 +240,6 @@ console.log(config);
         // Retornar la mayor capacidad entre las dos orientaciones posibles
         return Math.max(capacidadNormal, capacidadInvertida);
     };
-
-
 
     const updatePlanner = () => {
         if (!form) return;

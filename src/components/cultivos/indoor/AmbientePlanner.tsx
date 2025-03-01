@@ -41,6 +41,7 @@ interface AmbientePlannerProps {
 
 function AmbientePlanner({ cultivoId }: AmbientePlannerProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('ventilacion');
 
   const { register, handleSubmit, watch, reset } = useForm<AmbienteFormData>({
     defaultValues: {
@@ -98,22 +99,22 @@ function AmbientePlanner({ cultivoId }: AmbientePlannerProps) {
   };
 
   const EquipmentFields = ({ prefix }: { prefix: 'ventilador' | 'extraccion' | 'intraccion' }) => (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
       <input
         {...register(`${prefix}.nombre` as const)}
         placeholder="Nombre"
-        className="border p-2 rounded"
+        className="border p-1.5 rounded text-sm w-full"
       />
       <input
         {...register(`${prefix}.marca` as const)}
         placeholder="Marca"
-        className="border p-2 rounded"
+        className="border p-1.5 rounded text-sm w-full"
       />
       <input
         {...register(`${prefix}.watts` as const, { valueAsNumber: true })}
         type="number"
         placeholder="Watts"
-        className="border p-2 rounded"
+        className="border p-1.5 rounded text-sm w-full"
       />
     </div>
   );
@@ -121,113 +122,164 @@ function AmbientePlanner({ cultivoId }: AmbientePlannerProps) {
   return (
     <>
       {isLoading ? (
-        <div>Cargando...</div>
+        <div className="flex justify-center p-4">
+          <div className="animate-pulse text-gray-500">Cargando...</div>
+        </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-4">
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Ventilación</h2>
-            
-            <div className="border p-4 rounded">
-              <h3 className="font-semibold mb-2">Ventilador</h3>
-              <EquipmentFields prefix="ventilador" />
-            </div>
-
-            <div className="border p-4 rounded">
-              <h3 className="font-semibold mb-2">Extracción</h3>
-              <EquipmentFields prefix="extraccion" />
-            </div>
-
-            <div className="border p-4 rounded">
-              <h3 className="font-semibold mb-2">Intracción</h3>
-              <EquipmentFields prefix="intraccion" />
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="">
+          {/* Tabs Navigation */}
+          <div className="flex border-b mb-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab('ventilacion')}
+              className={`py-2 px-4 font-medium ${
+                activeTab === 'ventilacion'
+                  ? 'border-b-2 border-green-500 text-green-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Ventilación
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('accesorios')}
+              className={`py-2 px-4 font-medium ${
+                activeTab === 'accesorios'
+                  ? 'border-b-2 border-green-500 text-green-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Accesorios
+            </button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
+          {/* Ventilación Tab */}
+          {activeTab === 'ventilacion' && (
+            <div className="space-y-3">
+              <div className="bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md">
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center mb-2">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                  Ventilador
+                </h3>
+                <EquipmentFields prefix="ventilador" />
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md">
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center mb-2">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18" />
+                  </svg>
+                  Extracción
+                </h3>
+                <EquipmentFields prefix="extraccion" />
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-4 transition-all hover:shadow-md">
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center mb-2">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 17l-4 4m0 0l-4-4m4 4V3" />
+                  </svg>
+                  Intracción
+                </h3>
+                <EquipmentFields prefix="intraccion" />
+              </div>
+            </div>
+          )}
+
+          {/* Accesorios Tab */}
+          {activeTab === 'accesorios' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg shadow-sm border p-3 transition-all hover:shadow-md flex items-center">
                 <input
                   type="checkbox"
                   {...register('filtroCarbono')}
-                  className="form-checkbox"
+                  className="form-checkbox h-4 w-4 text-green-500"
                 />
-                <span>Filtro de Carbono</span>
-              </label>
-            </div>
+                <span className="ml-2 text-sm">Filtro de Carbono</span>
+              </div>
 
-            <div className="border p-4 rounded">
-              <label className="flex items-center gap-2 mb-2">
-                <input
-                  type="checkbox"
-                  {...register('controladorAmbiental.activo')}
-                  className="form-checkbox"
-                />
-                <span>Controlador Ambiental</span>
-              </label>
-              {watch('controladorAmbiental.activo') && (
-                <select
-                  {...register('controladorAmbiental.tipo')}
-                  className="w-full border p-2 rounded"
-                >
-                  <option value="">Seleccione tipo</option>
-                  <option value="analogico">Analógico</option>
-                  <option value="wifi">WiFi</option>
-                  <option value="otro">Otro</option>
-                </select>
-              )}
-            </div>
+              <div className="bg-white rounded-lg shadow-sm border p-3 transition-all hover:shadow-md">
+                <label className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    {...register('controladorAmbiental.activo')}
+                    className="form-checkbox h-4 w-4 text-green-500"
+                  />
+                  <span className="ml-2 text-sm">Controlador Ambiental</span>
+                </label>
+                {watch('controladorAmbiental.activo') && (
+                  <select
+                    {...register('controladorAmbiental.tipo')}
+                    className="w-full border p-1.5 rounded text-sm bg-gray-50"
+                  >
+                    <option value="">Seleccione tipo</option>
+                    <option value="analogico">Analógico</option>
+                    <option value="wifi">WiFi</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                )}
+              </div>
 
-            <div className="border p-4 rounded">
-              <label className="flex items-center gap-2 mb-2">
-                <input
-                  type="checkbox"
-                  {...register('medidoresAmbientales.activo')}
-                  className="form-checkbox"
-                />
-                <span>Medidores Ambientales</span>
-              </label>
-              {watch('medidoresAmbientales.activo') && (
-                <select
-                  {...register('medidoresAmbientales.tipo')}
-                  className="w-full border p-2 rounded"
-                >
-                  <option value="">Seleccione tipo</option>
-                  <option value="analogico">Analógico</option>
-                  <option value="wifi">WiFi</option>
-                  <option value="otro">Otro</option>
-                </select>
-              )}
-            </div>
+              <div className="bg-white rounded-lg shadow-sm border p-3 transition-all hover:shadow-md">
+                <label className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    {...register('medidoresAmbientales.activo')}
+                    className="form-checkbox h-4 w-4 text-green-500"
+                  />
+                  <span className="ml-2 text-sm">Medidores Ambientales</span>
+                </label>
+                {watch('medidoresAmbientales.activo') && (
+                  <select
+                    {...register('medidoresAmbientales.tipo')}
+                    className="w-full border p-1.5 rounded text-sm bg-gray-50"
+                  >
+                    <option value="">Seleccione tipo</option>
+                    <option value="analogico">Analógico</option>
+                    <option value="wifi">WiFi</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                )}
+              </div>
 
-            <div className="border p-4 rounded">
-              <label className="flex items-center gap-2 mb-2">
-                <input
-                  type="checkbox"
-                  {...register('temporizador.activo')}
-                  className="form-checkbox"
-                />
-                <span>Temporizador</span>
-              </label>
-              {watch('temporizador.activo') && (
-                <select
-                  {...register('temporizador.tipo')}
-                  className="w-full border p-2 rounded"
-                >
-                  <option value="">Seleccione tipo</option>
-                  <option value="analogico">Analógico</option>
-                  <option value="wifi">WiFi</option>
-                  <option value="otro">Otro</option>
-                </select>
-              )}
+              <div className="bg-white rounded-lg shadow-sm border p-3 transition-all hover:shadow-md">
+                <label className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    {...register('temporizador.activo')}
+                    className="form-checkbox h-4 w-4 text-green-500"
+                  />
+                  <span className="ml-2 text-sm">Temporizador</span>
+                </label>
+                {watch('temporizador.activo') && (
+                  <select
+                    {...register('temporizador.tipo')}
+                    className="w-full border p-1.5 rounded text-sm bg-gray-50"
+                  >
+                    <option value="">Seleccione tipo</option>
+                    <option value="analogico">Analógico</option>
+                    <option value="wifi">WiFi</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                )}
+              </div>
             </div>
+          )}
+
+          {/* Submit Button - Fixed at bottom */}
+          <div className="mt-6 sticky bottom-0 py-2 bg-white border-t">
+            <button
+              type="submit"
+              className="w-full bg-green-500 text-white py-2 px-4 rounded-full hover:bg-green-600 transition-colors flex justify-center items-center shadow-sm"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Guardar Configuración
+            </button>
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
-          >
-            Guardar Configuración
-          </button>
         </form>
       )}
     </>

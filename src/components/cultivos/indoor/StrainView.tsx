@@ -79,6 +79,7 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
     const [selectedPlant, setSelectedPlant] = useState<Maceta | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedPlant, setEditedPlant] = useState<Maceta | null>(null);
+    const [currentScaleFactor, setCurrentScaleFactor] = useState(1);
 
     useEffect(() => {
         const handleUpdatePlanner = (event: CustomEvent<FormData>) => {
@@ -162,6 +163,25 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
     }, [initialFormData]);
 
     useEffect(() => {
+        const getScaleFactor = () => {
+            // Calculamos el ancho y alto total real del espacio
+            const anchoTotal = formData.plantasPorFila * formData.maceteroAncho + 
+                             (formData.plantasPorFila + 1) * formData.espacioEntreAncho;
+            const altoTotal = formData.plantasPorColumna * formData.maceteroLargo + 
+                            (formData.plantasPorColumna + 1) * formData.espacioEntreLargo;
+            
+            // Definimos un tamaño máximo para la visualización
+            const maxVisualizationWidth = 700;
+            const maxVisualizationHeight = 500;
+            
+            // Calculamos factores de escala para ancho y alto
+            const scaleFactorWidth = maxVisualizationWidth / anchoTotal;
+            const scaleFactorHeight = maxVisualizationHeight / altoTotal;
+            
+            // Usamos el menor para mantener la proporción
+            return Math.min(scaleFactorWidth, scaleFactorHeight, 1); // No agrandamos si es menor
+        };
+
         const adjustScale = () => {
             const container = document.querySelector('.relative.border-2') as HTMLElement;
             if (!container) return;
@@ -170,12 +190,12 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
             const containerWidth = formData.plantasPorFila * formData.maceteroAncho + 
                 (formData.plantasPorFila + 1) * formData.espacioEntreAncho;
 
-            if (containerWidth > parentWidth) {
-                const scale = parentWidth / containerWidth;
-                container.style.setProperty('--scale-factor', scale.toString());
-            } else {
-                container.style.setProperty('--scale-factor', '1');
-            }
+            // Usar el método de factor de escala más controlado
+            const scaleFactor = getScaleFactor();
+            container.style.setProperty('--scale-factor', scaleFactor.toString());
+            
+            // Guardar el factor de escala en el estado para mostrar en la interfaz
+            setCurrentScaleFactor(scaleFactor);
         };
 
         adjustScale();
@@ -324,6 +344,17 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
             ) : (
                 <>
                     <div className="w-full lg:w-3/4">
+                        {/* Añadir información sobre la escala */}
+                        {currentScaleFactor < 1 && (
+                            <div className="text-sm text-gray-600 mb-2 text-center">
+                                Visualización a escala ({Math.round(currentScaleFactor * 100)}% del tamaño real)
+                            </div>
+                        )}
+                        <div className="flex justify-center items-center mb-2">
+                            <div className="text-xs text-gray-500 mr-2">
+                                Dimensiones reales: {formData.espacioAncho}cm × {formData.espacioLargo}cm
+                            </div>
+                        </div>
                         <div
                             className="relative border-2 border-gray-300 bg-gray-100 mx-auto"
                             style={{
@@ -380,7 +411,13 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                     {/* Panel de información */}
                     <div className="w-full lg:w-1/4 lg:ml-4 mt-4 lg:mt-0">
                         {selectedPlant ? (
-                            <div className="bg-white p-4 rounded-lg shadow relative">
+                            <div 
+                                className="p-4 rounded-lg shadow relative"
+                                style={{
+                                    backgroundColor: selectedPlant.color || 'white',
+                                    color: selectedPlant.color ? 'white' : 'inherit'
+                                }}
+                            >
                                 {!selectedPlant.color ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-sm rounded-lg">
                                         <div className="text-center space-y-2">
@@ -401,7 +438,7 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                         {!isEditing ? (
                                             <button 
                                                 onClick={handleEdit}
-                                                className="text-gray-600 hover:text-gray-800"
+                                                className="text-white hover:text-gray-200"
                                             >
                                                 ✏️
                                             </button>
@@ -423,8 +460,8 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                         )}
                                     </div>
                                 )}
-                                <h3 className="text-lg font-semibold mb-4">Información de la Planta</h3>
-                                <div className="space-y-2">
+                                <h3 className="text-base font-semibold mb-4">Información de la Planta</h3>
+                                <div className="text-xs space-y-2">
                                     <p>
                                         <span className="font-medium">ID:</span> {selectedPlant.id + 1}
                                     </p>
@@ -465,13 +502,7 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                     )}
                                     {selectedPlant.color && (
                                         <>
-                                            <div className="flex items-center">
-                                                <span className="font-medium mr-2">Color:</span>
-                                                <div 
-                                                    className="w-6 h-6 rounded-full"
-                                                    style={{ backgroundColor: selectedPlant.color }}
-                                                />
-                                            </div>
+                                            
                                             <a
                                                 href={`/cultivo/${cultivoId}/indoor/strains/${selectedPlant.id}`}
                                                 className="mt-4 block w-full bg-custom-green hover:bg-green-600 text-white text-center py-2 px-4 rounded transition-colors"
@@ -483,7 +514,7 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-500 text-center">
+                            <div className="text-xs bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-500 text-center">
                                 Selecciona una planta para ver su información
                             </div>
                         )}
