@@ -15,8 +15,8 @@ const validCoupons: Coupon[] = [
         validUntil: new Date('2025-12-31')
     },
     {
-        code: 'SUMMER20',
-        discount: 20, // 20% de descuento
+        code: 'SUMMER50',
+        discount: 50, // 20% de descuento
         validUntil: new Date('2025-12-31')
     }
 ];

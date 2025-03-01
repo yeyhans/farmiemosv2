@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props {
   amount: number;
@@ -11,17 +11,38 @@ declare global {
 }
 
 export default function MercadoPagoButton({ amount }: Props) {
+  const [currentAmount, setCurrentAmount] = useState(amount);
+  
+  useEffect(() => {
+    // Escuchar el evento de actualización de monto
+    const handleUpdateAmount = (event: CustomEvent) => {
+      const { amount: newAmount } = event.detail;
+      console.log('Actualizando monto desde evento:', newAmount);
+      setCurrentAmount(newAmount);
+    };
+
+    // Añadir el listener de eventos
+    window.addEventListener('updateAmount', handleUpdateAmount as EventListener);
+
+    // Limpiar el listener cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('updateAmount', handleUpdateAmount as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     // Agregar el script de MercadoPago si no existe
     const script = document.createElement('script');
     script.src = "https://sdk.mercadopago.com/js/v2";
     script.type = "text/javascript";
-    document.body.appendChild(script);
+    
+    // Verificar si el script ya existe
+    if (!document.querySelector(`script[src="${script.src}"]`)) {
+      document.body.appendChild(script);
+    }
 
-    script.onload = () => {
-      console.log('Script de MercadoPago cargado correctamente');
-      loadMercadoPago();
-    };
+    let mpInstance: any = null;
+    let cardPaymentBrickRef: any = null;
 
     const loadMercadoPago = async () => {
       try {
@@ -29,15 +50,21 @@ export default function MercadoPagoButton({ amount }: Props) {
           throw new Error('MercadoPago SDK no está disponible');
         }
 
-        const mp = new window.MercadoPago(import.meta.env.PUBLIC_MERCADOPAGO_KEY, {
+        // Limpiar el contenedor antes de crear un nuevo Brick
+        const container = document.getElementById('cardPayment_container');
+        if (container) {
+          container.innerHTML = '';
+        }
+
+        mpInstance = new window.MercadoPago(import.meta.env.PUBLIC_MERCADOPAGO_KEY, {
           locale: 'es-CL'
         });
 
-        console.log('MercadoPago inicializado con monto:', amount);
+        console.log('MercadoPago inicializado con monto:', currentAmount);
 
-        await mp.bricks().create("cardPayment", "cardPayment_container", {
+        cardPaymentBrickRef = await mpInstance.bricks().create("cardPayment", "cardPayment_container", {
           initialization: {
-            amount: amount
+            amount: currentAmount
           },
           callbacks: {
             onReady: () => {
@@ -47,7 +74,7 @@ export default function MercadoPagoButton({ amount }: Props) {
               try {
                 const paymentData = {
                   ...cardFormData,
-                  transaction_amount: amount
+                  transaction_amount: currentAmount
                 };
                 
                 const response = await fetch('/api/mercadopago/farmienda', {
@@ -62,7 +89,7 @@ export default function MercadoPagoButton({ amount }: Props) {
                 
                 if (response.ok && result.status === 'success') {
                   // Guardar el monto en localStorage antes de redirigir
-                  localStorage.setItem('transactionAmount', amount.toString());
+                  localStorage.setItem('transactionAmount', currentAmount.toString());
                   // Redirigir a la página de éxito
                   window.location.href = `/pago-exitoso?payment_id=${result.data.id}`;
                 } else {
@@ -77,7 +104,6 @@ export default function MercadoPagoButton({ amount }: Props) {
             },
             onError: (error: any) => {
               console.error('Error en Card Payment:', error);
-              // Mostrar detalles específicos del error
               if (error.message) {
                 console.error('Mensaje de error:', error.message);
               }
@@ -104,11 +130,25 @@ export default function MercadoPagoButton({ amount }: Props) {
       }
     };
 
+    // Si el script ya está cargado, inicializar MercadoPago
+    if (window.MercadoPago) {
+      loadMercadoPago();
+    } else {
+      // Si no, esperar a que el script se cargue
+      script.onload = loadMercadoPago;
+    }
+
     return () => {
-      // Limpieza del script cuando el componente se desmonte
-      document.body.removeChild(script);
+      // Cleanup específico para el Brick de MercadoPago
+      if (cardPaymentBrickRef) {
+        try {
+          cardPaymentBrickRef.unmount();
+        } catch (e) {
+          console.error('Error al desmontar el Brick:', e);
+        }
+      }
     };
-  }, [amount]);
+  }, [currentAmount]); // Dependencia en currentAmount para recrear el componente cuando cambia
 
   return (
     <div 
