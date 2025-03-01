@@ -10,14 +10,14 @@ interface Coupon {
 // Lista de cupones válidos (en producción esto debería estar en una base de datos)
 const validCoupons: Coupon[] = [
     {
-        code: 'FIRST10',
-        discount: 10, // 10% de descuento
+        code: 'CHOCOFARM',
+        discount: 20, // 10% de descuento
         validUntil: new Date('2025-12-31')
     },
     {
-        code: 'SUMMER50',
-        discount: 50, // 20% de descuento
-        validUntil: new Date('2025-12-31')
+        code: 'MARZO20',
+        discount: 20, // 20% de descuento
+        validUntil: new Date('2025-03-31')
     }
 ];
 
