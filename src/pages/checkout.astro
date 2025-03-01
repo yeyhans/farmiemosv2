@@ -63,11 +63,6 @@ let total = PRICE * quantity;
                     </div>
                 </div>
 
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" name="email" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
 
                 <div>
                     <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
@@ -103,7 +98,9 @@ let total = PRICE * quantity;
 
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4">Método de pago</h2>
-            <MercadoPagoButton client:load amount={total} />
+            <div id="mercadoPagoContainer">
+                <MercadoPagoButton client:load amount={total} />
+            </div>
         </div>
     </main>
 </Layout>
@@ -111,7 +108,7 @@ let total = PRICE * quantity;
 <script>
     // Capturar los datos del formulario antes del pago
     const form = document.getElementById('shippingForm') as HTMLFormElement;
-    const mpButton = document.querySelector('#cardPayment_container');
+    const mpContainer = document.getElementById('mercadoPagoContainer');
 
     // Almacenar los datos del formulario en el localStorage
     form.addEventListener('change', () => {
@@ -157,6 +154,9 @@ let total = PRICE * quantity;
                         finalAmount: data.finalAmount,
                         discountAmount: data.discountAmount
                     }));
+                    
+                    // Actualizar el componente MercadoPago con el nuevo monto
+                    updateMercadoPagoButton(currentTotal);
                     return;
                 }
             } catch (error) {
@@ -167,6 +167,9 @@ let total = PRICE * quantity;
         // Si no hay descuento o hubo error, mostrar total base
         currentTotal = baseTotal;
         totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+        
+        // Actualizar el componente MercadoPago con el nuevo monto
+        updateMercadoPagoButton(currentTotal);
     }
 
     decreaseBtn?.addEventListener('click', () => {
@@ -236,6 +239,9 @@ let total = PRICE * quantity;
                 // Actualizar el total con el descuento
                 currentTotal = data.finalAmount;
                 totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
+                
+                // Actualizar el componente MercadoPago con el nuevo monto
+                updateMercadoPagoButton(currentTotal);
             } else {
                 discountMessage!.textContent = 'Código de descuento inválido';
                 discountMessage!.classList.remove('hidden', 'text-green-500');
@@ -271,6 +277,9 @@ let total = PRICE * quantity;
             currentTotal = PRICE * parseInt(quantityInput.value);
             totalAmount!.textContent = `$${currentTotal.toLocaleString()}`;
             
+            // Actualizar el componente MercadoPago con el monto original
+            updateMercadoPagoButton(currentTotal);
+            
             // Eliminar datos del descuento del localStorage
             localStorage.removeItem('discountData');
         }
@@ -282,5 +291,80 @@ let total = PRICE * quantity;
             removeDiscountBtn.classList.remove('hidden');
         }
     };
+
+    // Función para actualizar el componente MercadoPago
+    function updateMercadoPagoButton(amount: number) {
+        // Eliminar el componente actual
+        while (mpContainer?.firstChild) {
+            mpContainer.removeChild(mpContainer.firstChild);
+        }
+        
+        // Crear el nuevo componente con el monto actualizado
+        const newMpButton = document.createElement('div');
+        newMpButton.id = 'cardPayment_container';
+        newMpButton.style.minHeight = '200px';
+        newMpButton.style.width = '100%';
+        newMpButton.style.margin = '10px 0';
+        mpContainer?.appendChild(newMpButton);
+        
+        // Inicializar nuevamente MercadoPago con el monto actualizado
+        if (window.MercadoPago) {
+            const mp = new window.MercadoPago(import.meta.env.PUBLIC_MERCADOPAGO_KEY, {
+                locale: 'es-CL'
+            });
+            
+            mp.bricks().create("cardPayment", "cardPayment_container", {
+                initialization: {
+                    amount: amount
+                },
+                callbacks: {
+                    onReady: () => {
+                        console.log('Card Payment Brick listo');
+                    },
+                    onSubmit: async (cardFormData: any) => {
+                        try {
+                            const paymentData = {
+                                ...cardFormData,
+                                transaction_amount: amount
+                            };
+                            
+                            const response = await fetch('/api/mercadopago/farmienda', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(paymentData)
+                            });
+
+                            const result = await response.json();
+                            
+                            if (response.ok && result.status === 'success') {
+                                localStorage.setItem('transactionAmount', amount.toString());
+                                window.location.href = `/pago-exitoso?payment_id=${result.data.id}`;
+                            } else {
+                                window.location.href = `/pago-fallido?error=${encodeURIComponent(result.message)}`;
+                            }
+                            
+                        } catch (error) {
+                            console.error('Error procesando el pago:', error);
+                            window.location.href = `/pago-fallido?error=${encodeURIComponent('Error en el proceso de pago')}`;
+                        }
+                    },
+                    onError: (error: any) => {
+                        console.error('Error en Card Payment:', error);
+                    },
+                    onBinChange: (bin: string) => {
+                        console.log('Primeros 6 dígitos de la tarjeta:', bin);
+                    },
+                    onFetching: (resource: string) => {
+                        console.log('Fetching recurso:', resource);
+                    }
+                },
+                style: {
+                    theme: 'default'
+                }
+            });
+        }
+    }
 </script>
 

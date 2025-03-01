@@ -37,10 +37,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Verificar el estado del pago
     if (paymentData.status === 'approved') {
-      // Enviar correo electrónico
-      const { data , error } = await transporter.sendMail({
+      // Enviar correo electrónico al cliente
+      const { data, error } = await transporter.sendMail({
         from: import.meta.env.EMAIL_USER,
-        to: [cardFormData.payer.email, 'yeysonhans@gmail.com'],
+        to: [cardFormData.payer.email],
         subject: 'Confirmación de Compra - Farmienda',
         html: `
           <h1>¡Gracias por tu compra!</h1>
@@ -54,12 +54,34 @@ export const POST: APIRoute = async ({ request }) => {
         `
       });
 
-      console.log(data);
+      // Enviar correo con los detalles de la compra al administrador
+      const { data: adminEmailData, error: adminEmailError } = await transporter.sendMail({
+        from: import.meta.env.EMAIL_USER,
+        to: ['yeysonhans@gmail.com'],
+        subject: 'Nueva venta en Farmienda',
+        html: `
+          <h1>Se ha realizado una nueva venta</h1>
+          <p>Detalles completos de la transacción:</p>
+          <ul>
+            <li>ID de Pago: ${paymentData.id}</li>
+            <li>Monto: ${cardFormData.transaction_amount}</li>
+            <li>Método de Pago: ${cardFormData.payment_method_id}</li>
+            <li>Cuotas: ${cardFormData.installments}</li>
+            <li>Estado: ${paymentData.status}</li>
+            <li>Fecha: ${new Date().toLocaleString()}</li>
+            <li>Descripción: Farmienda - Enmienda Agrícola Premium</li>
+          </ul>
+          <h2>Datos del cliente:</h2>
+          <ul>
+            <li>Email: ${cardFormData.payer.email}</li>
+          </ul>
+        `
+      });
 
-      if (error) {
-        console.error('Error al enviar el correo electrónico:', error);
+      if (adminEmailError) {
+        console.error('Error al enviar el correo al administrador:', adminEmailError);
       } else {
-        console.log('Correo electrónico enviado correctamente');
+        console.log('Correo al administrador enviado correctamente');
       }
 
       return new Response(
