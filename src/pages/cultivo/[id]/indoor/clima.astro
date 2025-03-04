@@ -5,6 +5,8 @@ import { authenticate } from '../../../../lib/auth';
 import AmbienteLogs from '../../../../components/cultivos/indoor/AmbienteLogs';
 import AmbientePlanner from '../../../../components/cultivos/indoor/AmbientePlanner';   
 import AmbienteLogsList from '../../../../components/cultivos/indoor/AmbienteLogsList';
+import AmbienteBitacoraViews from '../../../../components/cultivos/indoor/AmbienteBitacoraViews';
+
 const { id } = Astro.params;
 
 const { user, redirect } = await authenticate(Astro);
@@ -87,7 +89,7 @@ if (!id || !user_id) {
         <h1 class="text-2xl font-bold mb-6">AMBIENTE</h1>
         <AmbientePlanner client:load cultivoId={id} ambiente={ambiente}/>
         <AmbienteLogs client:load cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
-
+        <AmbienteBitacoraViews client:load cultivoId={id} user_id={user_id} />
     </div>
 </Layout>
 

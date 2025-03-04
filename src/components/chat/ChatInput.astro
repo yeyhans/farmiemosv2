@@ -124,6 +124,23 @@ import { marked } from 'marked';
   const profile = { user_name: "Tú" };
   let isStreaming = false;
 
+  // Añadir un solo listener para todos los botones mediante delegación de eventos
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('button');
+    if (!target) return;
+    
+    if (target.classList.contains('copy-btn')) {
+      const index = parseInt(target.getAttribute('data-index'));
+      copyToClipboard(index);
+    } else if (target.classList.contains('like-btn')) {
+      const index = parseInt(target.getAttribute('data-index'));
+      handleFeedback(index, true);
+    } else if (target.classList.contains('dislike-btn')) {
+      const index = parseInt(target.getAttribute('data-index'));
+      handleFeedback(index, false);
+    }
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (isStreaming) return;
@@ -262,23 +279,6 @@ import { marked } from 'marked';
 
       // Agregar el contenedor para los botones a la respuesta del asistente
       assistantDiv.querySelector('.flex-col').insertAdjacentHTML('beforeend', actionButtonsHTML);
-
-      // Add event listeners specifically for this new set of buttons
-      const newCopyBtn = assistantDiv.querySelector(`.copy-btn[data-index="${responseIndex}"]`);
-      const newLikeBtn = assistantDiv.querySelector(`.like-btn[data-index="${responseIndex}"]`);
-      const newDislikeBtn = assistantDiv.querySelector(`.dislike-btn[data-index="${responseIndex}"]`);
-      
-      if (newCopyBtn) {
-        newCopyBtn.addEventListener('click', () => copyToClipboard(responseIndex));
-      }
-      
-      if (newLikeBtn) {
-        newLikeBtn.addEventListener('click', () => handleFeedback(responseIndex, true));
-      }
-      
-      if (newDislikeBtn) {
-        newDislikeBtn.addEventListener('click', () => handleFeedback(responseIndex, false));
-      }
 
     } catch (error) {
       isStreaming = false;
