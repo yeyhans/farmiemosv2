@@ -68,7 +68,7 @@ const avatarUrl = user?.user_metadata.avatar_url;
       </header>
       
       <!-- Mobile Menu - Initially hidden -->
-      <div id="mobileMenu" class="hidden md:hidden bg-white shadow-md py-2 px-4">
+      <div id="mobileMenu" class="hidden md:hidden bg-white shadow-md py-2 px-4 fixed w-full z-20">
         {user ? (
           <div class="flex flex-col space-y-3">
             <div class="flex items-center space-x-3 pb-2 border-b border-gray-200">
@@ -150,6 +150,7 @@ const avatarUrl = user?.user_metadata.avatar_url;
         // Mobile menu functionality
         const mobileMenuButton = document.getElementById('mobileMenuButton');
         const mobileMenu = document.getElementById('mobileMenu');
+        const body = document.body;
         let isMobileMenuOpen = false;
 
         if (mobileMenuButton && mobileMenu) {
@@ -157,6 +158,13 @@ const avatarUrl = user?.user_metadata.avatar_url;
             isMobileMenuOpen = !isMobileMenuOpen;
             
             if (isMobileMenuOpen) {
+              // Prevenir scroll del body cuando el menú está abierto
+              body.style.overflow = 'hidden';
+              
+              // Posicionar el menú justo debajo del header
+              const headerHeight = document.querySelector('header').offsetHeight;
+              mobileMenu.style.top = `${headerHeight}px`;
+              
               mobileMenu.classList.remove('hidden');
               mobileMenu.style.opacity = '0';
               setTimeout(() => {
@@ -164,6 +172,9 @@ const avatarUrl = user?.user_metadata.avatar_url;
                 mobileMenu.style.transition = 'opacity 200ms ease-in-out';
               }, 0);
             } else {
+              // Restaurar scroll del body
+              body.style.overflow = '';
+              
               mobileMenu.style.opacity = '0';
               setTimeout(() => {
                 mobileMenu.classList.add('hidden');
@@ -177,6 +188,8 @@ const avatarUrl = user?.user_metadata.avatar_url;
           if (window.innerWidth >= 768 && isMobileMenuOpen && mobileMenu) {
             mobileMenu.classList.add('hidden');
             isMobileMenuOpen = false;
+            // Restaurar scroll del body
+            body.style.overflow = '';
           }
         });
       });
