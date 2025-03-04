@@ -1,23 +1,32 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+const { cookies, redirect } = Astro;
+
+const accessToken = cookies.get("sb-access-token");
+const refreshToken = cookies.get("sb-refresh-token");
+
+if (accessToken && refreshToken) {
+  const redirectUrl = Astro.url.searchParams.get('redirect') || '/dashboard';
+  return redirect(redirectUrl);
+}
 ---
 
-<Layout title="Register">
+<Layout title="Farmiemos - Registro" description="Crea una cuenta en Farmiemos para comenzar a cuidar tus plantas.">
 
-    <!-- Formulario - Lado izquierdo -->
-    <div class="flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
       <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-          <h1 class="text-3xl font-bold text-gray-900">Crear cuenta</h1>
+          <h1 class="text-3xl font-black text-custom-yellow md:text-4xl">Únete a la familia <span class="text-custom-green">Farmiemos</span>!</h1>
           <p class="mt-2 text-sm text-gray-600">
             ¿Ya tienes una cuenta? 
-            <a href="/signin" class="font-medium text-indigo-600 hover:text-indigo-500">
+            <a href="/signin" class="font-medium text-indigo-600 hover:text-custom-blue">
               Iniciar sesión
             </a>
           </p>
         </div>
-
+        
+        <!-- Formulario de registro con email/password -->
         <form action="/api/auth/register" method="post" class="mt-8 space-y-6">
           <div class="space-y-4">
             <div>
@@ -28,6 +37,7 @@ import Layout from "../layouts/Layout.astro";
                 type="email"
                 name="email"
                 id="email"
+                required
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -40,6 +50,7 @@ import Layout from "../layouts/Layout.astro";
                 type="password"
                 name="password"
                 id="password"
+                required
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -48,24 +59,70 @@ import Layout from "../layouts/Layout.astro";
           <div class="flex flex-col space-y-4">
             <button
               type="submit"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-custom-green hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Registrarse
             </button>
-            
-
           </div>
         </form>
+        
+        <!-- Separador -->
+        <div class="mt-6">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">O continuar con</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones de registro con proveedores -->
+        <div class="mt-6 grid grid-cols-2 gap-3">
+          <form action="/api/auth/signin" method="post">
+            <input type="hidden" name="provider" value="google" />
+            <button
+              type="submit"
+              class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+              </svg>
+              <span class="ml-2">Google</span>
+            </button>
+          </form>
+          
+          <form action="/api/auth/signin" method="post">
+            <input type="hidden" name="provider" value="discord" />
+            <button
+              type="submit"
+              class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3847-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/>
+              </svg>
+              <span class="ml-2">Discord</span>
+            </button>
+          </form>
+        </div>
+        
+        <div class="mt-6 text-center text-sm text-gray-600">
+          <p>
+            Al continuar, aceptas nuestras 
+            <a href="/politicas/politicas-de-privacidad" class="font-medium text-indigo-600 hover:text-custom-blue">Políticas de privacidad</a> 
+            y 
+            <a href="/politicas/terminos-de-uso" class="font-medium text-indigo-600 hover:text-custom-blue">Términos de uso</a>.
+          </p>
+        </div>
+
+        <img
+          width="50"
+          height=""
+          src="/mascota_dance.gif"
+          alt="Register illustration"
+          class="object-cover w-full h-full mt-8"
+        />
       </div>
     </div>
-
-    <!-- Imagen - Lado derecho -->
-    <div class="hidden lg:block">
-      <img
-        src="/logo.png"
-        alt="Register illustration"
-        class="object-cover w-full h-full"
-      />
-    </div>
-  </div>
 </Layout>
