@@ -1,12 +1,36 @@
 import type { APIRoute } from 'astro';
 import { chromium } from 'playwright';
 
+// Variables para el sistema de caché
+let cachedData = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+
 export const GET: APIRoute = async () => {
+  // Verificar si tenemos datos en caché que sean válidos
+  const currentTime = Date.now();
+  if (cachedData && (currentTime - lastFetchTime < CACHE_DURATION)) {
+    console.log('Sirviendo datos desde caché');
+    return new Response(JSON.stringify(cachedData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
   let browser;
   try {
     // Iniciamos el navegador
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ 
+      headless: true,
+      // Estos args pueden ayudar en entornos serverless
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
     const page = await browser.newPage();
+    
+    // Establecer un timeout más bajo para prevenir bloqueos
+    page.setDefaultTimeout(15000);
     
     // Navegamos a la página principal de cultivadores
     await page.goto('https://seedfinder.eu/es/database/breeder/');
@@ -60,11 +84,15 @@ export const GET: APIRoute = async () => {
       return result;
     });
     
-    return new Response(JSON.stringify({ 
+    // Guardar en caché
+    cachedData = { 
       success: true, 
       data: breeders,
       count: breeders.length
-    }), {
+    };
+    lastFetchTime = currentTime;
+    
+    return new Response(JSON.stringify(cachedData), {
       status: 200,
       headers: {
         'Content-Type': 'application/json'
@@ -73,6 +101,21 @@ export const GET: APIRoute = async () => {
     
   } catch (error) {
     console.error('Error al hacer scraping:', error);
+    
+    // Si hay un error pero tenemos caché, usar la caché aunque sea antigua
+    if (cachedData) {
+      console.log('Error en scraping actual, sirviendo datos de caché antiguos');
+      return new Response(JSON.stringify({
+        ...cachedData,
+        fromStaleCache: true
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
     return new Response(JSON.stringify({ 
       success: false, 
       error: 'Error al obtener datos: ' + (error instanceof Error ? error.message : String(error))
