@@ -1,0 +1,142 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+
+
+// Obtener el ID del breeder de los parámetros de la URL
+export async function getStaticPaths() {
+  return [
+    // Este objeto vacío es necesario para la generación dinámica de rutas
+    // pero los valores reales se obtendrán en tiempo de ejecución
+    { params: { id: 'dynamic-placeholder' } }
+  ];
+}
+
+const { id } = Astro.params;
+
+// Función para obtener los datos de un breeder específico
+async function getBreederStrains(breederId: string) {
+  try {
+    // Hacemos la petición a nuestra propia API
+    const response = await fetch(`http://localhost:4321/api/database/seedfinder/get-breeder?breeder=${breederId}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener datos del breeder:", error);
+    return { success: false, data: [], breeder: breederId };
+  }
+}
+
+// Obtenemos los datos del breeder
+const breederResponse = await getBreederStrains(id || '');
+
+// Formateamos el nombre del breeder para mostrarlo
+const breederName = id ? id.split('-').map(word => 
+  word.charAt(0).toUpperCase() + word.slice(1)
+).join(' ') : '';
+---
+<Layout title={`${breederName} - Banco de Semillas de Cannabis`}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+      <a href="/database/seedfinder/breeder" class="inline-flex items-center text-green-700 hover:text-green-900">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Volver a la lista de Bancos
+      </a>
+    </div>
+
+    <h1 class="text-3xl font-bold text-center mb-6 text-green-700">{breederName}</h1>
+    
+    <div class="sticky top-0 bg-white py-4 shadow-md z-10 rounded-lg mb-6">
+      <h2 class="text-xl font-semibold mb-3">Buscar Genéticas de {breederName}</h2>
+      <div class="relative mb-4">
+        <input 
+          id="searchInput" 
+          placeholder="Buscar cepas..." 
+          type="text" 
+          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+    </div>
+    
+    {!breederResponse.success ? (
+      <div class="bg-red-100 text-red-700 p-4 rounded-lg shadow">
+        <p>Error al cargar los datos. Por favor, intenta más tarde.</p>
+      </div>
+    ) : (
+      <div>
+        <p class="text-gray-600 mb-6 text-center">Total de cepas: <span class="font-semibold">{breederResponse.data.length}</span></p>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead class="bg-green-50">
+              <tr>
+                <th class="p-4 text-left text-green-800 font-semibold">Nombre</th>
+                <th class="p-4 text-left text-green-800 font-semibold">Tiempo de Floración</th>
+                <th class="p-4 text-left text-green-800 font-semibold">Genética</th>
+                <th class="p-4 text-left text-green-800 font-semibold">Feminizada</th>
+              </tr>
+            </thead>
+            <tbody id="strainsTableBody">
+              {breederResponse.data.map((strain: any, index: number) => {
+                // Extraer el nombre de la cepa para la URL
+                const strainUrlName = strain.name.toLowerCase().replace(/\s+/g, '-');
+                // Componer el ID para la ruta
+                const strainId = `${strainUrlName}_${id}`;
+                
+                return (
+                  <tr class="strain-row border-b border-gray-100 hover:bg-green-50 transition-colors duration-150">
+                    <td class="p-4">
+                      <a href={`/database/seedfinder/strains/${strainId}`} class="strain-name font-medium text-green-700 hover:text-green-900 hover:underline">
+                        {strain.name}
+                      </a>
+                    </td>
+                    <td class="p-4 text-gray-700">{strain.floweringTime}</td>
+                    <td class="p-4 text-gray-700">{strain.genetics}</td>
+                    <td class="p-4 text-gray-700">{strain.feminized}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+  </div>
+  
+  <script>
+    // Script para la funcionalidad de búsqueda
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('searchInput');
+      const strainRows = document.querySelectorAll('.strain-row');
+      
+      searchInput?.addEventListener('input', (e) => {
+        const searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
+        
+        // Filtrar las filas de cepas
+        strainRows.forEach(row => {
+          const strainName = row.querySelector('.strain-name')?.textContent?.toLowerCase() || '';
+          const genetics = row.querySelector('td:nth-child(3)')?.textContent?.toLowerCase() || '';
+          
+          if (strainName.includes(searchTerm) || genetics.includes(searchTerm)) {
+            (row as HTMLElement).style.display = '';
+          } else {
+            (row as HTMLElement).style.display = 'none';
+          }
+        });
+        
+        // Actualizar contador de resultados
+        const visibleRows = document.querySelectorAll('.strain-row:not([style="display: none;"])');
+        const countDisplay = document.querySelector('span.font-semibold');
+        if (countDisplay) {
+          countDisplay.textContent = visibleRows.length.toString();
+        }
+      });
+    });
+  </script>
+</Layout>

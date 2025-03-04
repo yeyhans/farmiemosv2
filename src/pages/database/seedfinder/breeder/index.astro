@@ -1,0 +1,168 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+// Importamos las utilidades necesarias
+import { type APIContext } from 'astro';
+
+// Función para obtener los datos de los criadores/bancos
+async function getBreeders() {
+  try {
+    // Hacemos la petición a nuestra propia API
+    const response = await fetch('http://localhost:4321/api/database/seedfinder/get-breeders');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener datos de criadores:", error);
+    return { success: false, data: [], count: 0 };
+  }
+}
+
+// Obtenemos los datos
+const breedersResponse = await getBreeders();
+
+// Organizamos los criadores por sección
+const breedersBySection = {};
+
+if (breedersResponse.success) {
+  breedersResponse.data.forEach(breeder => {
+    if (!breedersBySection[breeder.section]) {
+      breedersBySection[breeder.section] = [];
+    }
+    breedersBySection[breeder.section].push(breeder);
+  });
+}
+
+// Crear array de todas las letras disponibles para navegación
+const allLetters = ['0-9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+                    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+---
+
+<Layout title="Bancos de Semillas de Cannabis">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-6 text-green-700">Bancos de Semillas de Cannabis</h1>
+    
+    <div class="sticky top-0 bg-white py-4 shadow-md z-10 rounded-lg mb-6">
+      <h2 class="text-xl font-semibold mb-3">Buscar / Ordenar Bancos de Cannabis</h2>
+      <div class="relative mb-4">
+        <input 
+          id="searchInput" 
+          placeholder="Buscar bancos..." 
+          type="text" 
+          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+        >
+        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-1 mt-2">
+        {allLetters.map(letter => (
+          <a 
+            href={`#${letter}`} 
+            class="px-2 py-1 text-sm bg-green-100 hover:bg-green-600 hover:text-white text-green-800 rounded transition duration-200 ease-in-out"
+          >
+            {letter}
+          </a>
+        ))}
+      </div>
+    </div>
+    
+    {!breedersResponse.success ? (
+      <div class="bg-red-100 text-red-700 p-4 rounded-lg shadow">
+        <p>Error al cargar los datos. Por favor, intenta más tarde.</p>
+      </div>
+    ) : (
+      <div>
+        <p class="text-gray-600 mb-6 text-center">Total de bancos: <span class="font-semibold">{breedersResponse.count}</span></p>
+        
+        {Object.keys(breedersBySection).sort().map(section => (
+          <div id={section} class="section mb-10">
+            <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-green-500">{section}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 breeder-container">
+              {breedersBySection[section].map(breeder => {
+                // Extraer el ID del banco de la URL original
+                const urlParts = breeder.url.split('/');
+                const breederId = urlParts[urlParts.length - 1];
+                
+                return (
+                  <a href={`/database/seedfinder/breeder/${breederId}`} 
+                     class="breeder-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 border border-gray-200 hover:border-green-400">
+                    <div class="breeder-name font-semibold text-green-700 mb-2">{breeder.name}</div>
+                    <div class="strain-count text-sm text-gray-600">Cepas: <span class="font-medium">{breeder.strainCount}</span></div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+  
+  <script>
+    // Script para la funcionalidad de búsqueda
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('searchInput');
+      const breederCards = document.querySelectorAll('.breeder-card');
+      const breederContainers = document.querySelectorAll('.breeder-container');
+      const sections = document.querySelectorAll('.section');
+      
+      // Añadir listener para ajustar el desplazamiento en navegación alfabética
+      const alphabetLinks = document.querySelectorAll('a[href^="#"]');
+      alphabetLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+          
+          if (targetElement) {
+            // Obtener la altura del componente sticky
+            const stickyNav = document.querySelector('.sticky');
+            const offsetTop = stickyNav ? stickyNav.offsetHeight + 20 : 100;
+            
+            // Calcular la posición de desplazamiento
+            const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offsetTop;
+            
+            // Desplazar suavemente a la posición ajustada
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+      
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        
+        // Filtrar las tarjetas de criadores
+        breederCards.forEach(card => {
+          const breederName = card.querySelector('.breeder-name').textContent.toLowerCase();
+          if (breederName.includes(searchTerm)) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+        
+        // Ocultar secciones vacías
+        sections.forEach(section => {
+          const visibleCards = section.querySelectorAll('.breeder-card:not(.hidden)');
+          if (visibleCards.length === 0) {
+            section.classList.add('hidden');
+          } else {
+            section.classList.remove('hidden');
+          }
+        });
+      });
+    });
+  </script>
+  
+  <style>
+    /* Añadir margen superior para los elementos de sección cuando se desplazan a ellos */
+    .section {
+      scroll-margin-top: 150px; /* Ajustar según la altura del componente sticky */
+    }
+  </style>
+</Layout>

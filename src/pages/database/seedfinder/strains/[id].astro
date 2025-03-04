@@ -1,0 +1,292 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+
+// Obtener el ID de la cepa de los parámetros de la URL
+export async function getStaticPaths() {
+  return [
+    // Este objeto vacío es necesario para la generación dinámica de rutas
+    { params: { id: 'dynamic-placeholder' } }
+  ];
+}
+
+const { id } = Astro.params;
+
+// Función para parsear el ID y obtener el nombre de la cepa y el breeder
+function parseStrainId(id: string) {
+  try {
+    // Formato esperado: {strain-name}___{breeder-name}
+    const parts = id.split('_');
+    if (parts.length === 2) {
+      return {
+        strain: parts[0],
+        breeder: parts[1]
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error al parsear ID de cepa:", error);
+    return null;
+  }
+}
+
+// Función para obtener los datos detallados de una cepa específica
+async function getStrainInfo(strain: string, breeder: string) {
+  try {
+    // Hacemos la petición a nuestra propia API
+    const response = await fetch(`http://localhost:4321/api/database/seedfinder/get-straininfo?strain=${strain}&breeder=${breeder}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener datos de la cepa:", error);
+    return { success: false, data: null };
+  }
+}
+
+// Función para obtener los datos del linaje de una cepa específica
+async function getStrainLineage(strain: string, breeder: string) {
+  try {
+    // Hacemos la petición a nuestra API de linaje
+    const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:4321'}/api/database/seedfinder/get-strainlinage?strain=${strain}&breeder=${breeder}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener datos del linaje:", error);
+    return { success: false, data: null };
+  }
+}
+
+// Parseamos el ID y obtenemos los datos de la cepa
+const parsedId = id ? parseStrainId(id) : null;
+const strainInfo = parsedId ? await getStrainInfo(parsedId.strain, parsedId.breeder) : { success: false, data: null };
+// Obtener específicamente los datos del linaje
+const lineageInfo = parsedId ? await getStrainLineage(parsedId.strain, parsedId.breeder) : { success: false, data: null };
+
+// Formatear nombre de la cepa para mostrar
+const strainName = strainInfo.success ? strainInfo.data.name : (parsedId?.strain.split('-').map(word => 
+  word.charAt(0).toUpperCase() + word.slice(1)
+).join(' ') || 'Cepa');
+
+// Formatear nombre del breeder para mostrar
+const breederName = strainInfo.success ? strainInfo.data.breeder : (parsedId?.breeder.split('-').map(word => 
+  word.charAt(0).toUpperCase() + word.slice(1)
+).join(' ') || 'Banco');
+---
+
+<Layout title={`${strainName} - ${breederName} - Información de Cepa de Cannabis`}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+      <a href={`/database/seedfinder/breeder/${parsedId?.breeder}`} class="inline-flex items-center text-green-700 hover:text-green-900">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Volver a {breederName}
+      </a>
+    </div>
+
+    {!strainInfo.success || !strainInfo.data ? (
+      <div class="bg-red-100 text-red-700 p-4 rounded-lg shadow">
+        <p>Error al cargar los datos de la cepa. Por favor, intenta más tarde.</p>
+      </div>
+    ) : (
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold text-center mb-2 text-green-700">{strainInfo.data.name}</h1>
+        <p class="text-center text-gray-600 mb-6">por <span class="font-semibold">{strainInfo.data.breeder}</span></p>
+        
+        {/* Información básica */}
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold mb-3 text-green-800">Información Básica</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-green-50 rounded-lg">
+              <h3 class="text-lg font-medium text-green-700 mb-2">Tipo</h3>
+              <p>{strainInfo.data.type || 'No especificado'}</p>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg">
+              <h3 class="text-lg font-medium text-green-700 mb-2">Tiempo de Floración</h3>
+              <p>{strainInfo.data.floweringTime || 'No especificado'}</p>
+            </div>
+            {strainInfo.data.characteristics && (
+              <>
+                <div class="p-4 bg-green-50 rounded-lg">
+                  <h3 class="text-lg font-medium text-green-700 mb-2">Genética</h3>
+                  <p>{strainInfo.data.characteristics.genetics || 'No especificado'}</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                  <h3 class="text-lg font-medium text-green-700 mb-2">Tipo de Semilla</h3>
+                  <p>{strainInfo.data.characteristics.seedType || 'No especificado'}</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                  <h3 class="text-lg font-medium text-green-700 mb-2">Floración Interior</h3>
+                  <p>{strainInfo.data.characteristics.indoorFlowering || 'No especificado'}</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                  <h3 class="text-lg font-medium text-green-700 mb-2">Floración Exterior</h3>
+                  <p>{strainInfo.data.characteristics.outdoorFlowering || 'No especificado'}</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Descripción */}
+        {strainInfo.data.description && (
+          <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-3 text-green-800">Descripción</h2>
+            <div class="p-4 bg-white border border-gray-200 rounded-lg">
+              <div set:html={strainInfo.data.description} />
+            </div>
+          </div>
+        )}
+        
+        {/* Linaje/Genética */}
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold mb-3 text-green-800">Linaje / Genealogía</h2>
+          
+          {/* Renderizamos el árbol genealógico usando el HTML de la API específica de linaje */}
+          {lineageInfo.success && lineageInfo.data?.lineageHtml ? (
+            <div class="p-4 bg-white border border-gray-200 rounded-lg overflow-x-auto lineage-container">
+              <div class="lineage-tree" set:html={lineageInfo.data.lineageHtml} />
+            </div>
+          ) : (
+            <div class="p-4 bg-white border border-gray-200 rounded-lg">
+              <p class="text-gray-700">No hay datos de linaje disponibles</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+  
+  {/* CSS para los elementos heredados de SeedFinder */}
+  <style>
+    /* Estilos para la tarjeta de información */
+    .strain-info-card :global(.card) {
+      font-family: inherit;
+      max-width: 100%;
+    }
+    
+    .strain-info-card :global(.card h1) {
+      font-size: 1.75rem;
+      font-weight: bold;
+      color: #166534;
+      margin-bottom: 0.5rem;
+    }
+    
+    .strain-info-card :global(.card h2) {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #166534;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .strain-info-card :global(.card p) {
+      margin-bottom: 1rem;
+    }
+    
+    .strain-info-card :global(.card a.link),
+    .lineage-container :global(a.link) {
+      color: #15803d;
+      text-decoration: underline;
+    }
+    
+    /* Estilos mejorados para el árbol genealógico */
+    .lineage-container {
+      font-size: 14px;
+      overflow-x: auto;
+    }
+    
+    .lineage-container :global(ul) {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    
+    .lineage-container :global(li) {
+      padding: 0.25rem 0.5rem;
+      margin: 0;
+      position: relative;
+    }
+    
+    .lineage-container :global(.border) {
+      border: 1px solid #d1d5db;
+    }
+    
+    .lineage-container :global(.border-black) {
+      border-color: #000;
+    }
+    
+    .lineage-container :global(.border-b-0) {
+      border-bottom: 0;
+    }
+    
+    .lineage-container :global(.border-r-0) {
+      border-right: 0;
+    }
+    
+    .lineage-container :global(.ml-2) {
+      margin-left: 0.5rem;
+    }
+    
+    .lineage-container :global(.pl-1) {
+      padding-left: 0.25rem;
+    }
+    
+    .lineage-container :global(.font-bold) {
+      font-weight: bold;
+    }
+    
+    .lineage-container :global(.text-base) {
+      font-size: 1rem;
+    }
+    
+    .lineage-container :global(.text-sm) {
+      font-size: 0.875rem;
+    }
+    
+    .lineage-container :global(.bg-\[#eefdea\]) {
+      background-color: #f0fdf4;
+    }
+    
+    .lineage-container :global(.bg-\[#c2f5c4\]) {
+      background-color: #dcfce7;
+    }
+    
+    .lineage-container :global(.bg-\[#e8ffeb\]) {
+      background-color: #ecfdf5;
+    }
+    
+    .lineage-container :global(.bg-\[#eeeeee\]) {
+      background-color: #f9fafb;
+    }
+    
+    .lineage-container :global(.text-\[#003300\]) {
+      color: #166534;
+    }
+    
+    .lineage-container :global(.text-\[#666633\]) {
+      color: #4d7c0f;
+    }
+    
+    .lineage-container :global(.font-semibold) {
+      font-weight: 600;
+    }
+    
+    .lineage-container :global(.underline) {
+      text-decoration: underline;
+    }
+    
+    /* Ajustamos el espaciado y apariencia general del árbol */
+    .lineage-container :global(a) {
+      text-decoration: none;
+    }
+    
+    .lineage-container :global(a.link) {
+      color: #15803d;
+      text-decoration: underline;
+    }
+    
+    .lineage-container :global(a.font-bold) {
+      font-weight: bold;
+    }
+  </style>
+</Layout>
