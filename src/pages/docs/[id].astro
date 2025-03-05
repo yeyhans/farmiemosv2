@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/DashboardLayout.astro';
+import { supabase } from '../../lib/supabase';
+import { authenticate } from '../../lib/auth';
+
+// Autenticar usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtener ID del documento desde los parámetros de la URL
+const { id } = Astro.params;
+
+// Buscar el documento específico en la base de datos
+const { data: document, error } = await supabase
+  .from('documents')
+  .select('*')
+  .eq('id', id)
+  .single();
+
+// Manejar casos de error o documento no encontrado
+if (error || !document) {
+  return Astro.redirect('/docs');
+}
+
+// Verificar que el usuario solo pueda acceder a sus propios documentos
+if (document.user_id !== user?.id) {
+  return Astro.redirect('/docs');
+}
+
+// Obtener URL firmada para el documento
+const { data: urlData } = await supabase.storage
+  .from('documents')
+  .createSignedUrl(document.file_path, 3600); // URL válida por 1 hora
+
+const documentUrl = urlData?.signedUrl;
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+
+// Formatear tamaño del archivo
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return bytes + ' bytes';
+  else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+---
+
+<Layout title={document.title || "Document Viewer"}>
+  <main class="container mx-auto px-4 py-8">
+    <div class="mb-4">
+      <a href="/docs" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="mr-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+        </svg>
+        Volver a Documentos
+      </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h1 class="text-3xl font-bold mb-4">{document.title}</h1>
+      
+      {document.description && (
+        <p class="text-gray-700 mb-6">{document.description}</p>
+      )}
+      
+      <div class="border-t border-b py-3 my-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p class="text-sm text-gray-500">Fecha de carga</p>
+            <p class="font-medium">{new Date(document.uploaded_at).toLocaleString()}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Tipo de archivo</p>
+            <p class="font-medium">{document.file_type}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Tamaño</p>
+            <p class="font-medium">{formatFileSize(document.file_size)}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8">
+        <h2 class="text-xl font-bold mb-4">Vista previa del documento</h2>
+        
+        {document.file_type.includes('image') ? (
+          <img 
+            src={documentUrl} 
+            alt={document.title} 
+            class="max-w-full mx-auto border rounded-lg shadow-sm" 
+          />
+        ) : document.file_type.includes('pdf') ? (
+          <div class="w-full h-[700px] border rounded-lg">
+            <iframe 
+              src={documentUrl} 
+              class="w-full h-full" 
+              title={document.title}
+            ></iframe>
+          </div>
+        ) : (
+          <div class="text-center py-10 border rounded-lg">
+            <p class="mb-4">Este tipo de archivo no puede ser visualizado directamente.</p>
+            <a 
+              href={documentUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Descargar archivo
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </main>
+</Layout>

@@ -28,6 +28,7 @@
     "date-fns": "^4.1.0",
     "deepseek": "^0.0.2",
     "hast-util-raw": "^9.1.0",
+    "langchain": "^0.3.19",
     "marked": "^15.0.6",
     "mercadopago": "^2.2.0",
     "mongodb": "^6.13.1",

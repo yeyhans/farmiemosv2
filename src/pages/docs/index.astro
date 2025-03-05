@@ -1,0 +1,53 @@
+---
+import Layout from '../../layouts/DashboardLayout.astro';
+import { supabase } from '../../lib/supabase';
+import DocumentUploader from '../../components/docs/DocumentUploader';
+import { authenticate } from '../../lib/auth';
+import DocumentViewer from '../../components/docs/DocumentViewer';
+
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const userId = user?.id;
+// Fetch existing documents
+const { data: documents } = await supabase
+  .from('documents')
+  .select('*')
+  .order('uploaded_at', { ascending: false })
+  .eq('user_id', userId);
+
+
+// Get Supabase URL for document links
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+---
+
+<Layout title="Documentation Repository">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Documentation Repository</h1>
+    
+
+      <!-- Upload Form using React -->
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Upload New Document</h2>
+        <DocumentUploader 
+          client:load 
+          userId={userId} 
+          onDocumentUploaded={(doc) => {
+            // Optional: You can add client-side refresh logic here
+          }} 
+        />
+      </div>
+      
+      <!-- Document Viewer Component -->
+      <DocumentViewer 
+        documents={documents || []} 
+        supabaseUrl={supabaseUrl} 
+        client:load 
+      />
+
+  </main>
+</Layout>
+
+<!-- Modal para edición se maneja dentro del componente DocumentHistory -->

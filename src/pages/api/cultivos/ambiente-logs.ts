@@ -114,6 +114,81 @@ export const ALL: APIRoute = async ({ request, cookies }) => {
       );
     }
 
+    // DELETE para eliminar un registro de ambiente específico
+    if (method === "DELETE") {
+      const body = await request.json();
+      const { cultivoId, timestamp } = body;
+
+      if (!cultivoId || !timestamp) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Datos incompletos. Se requiere cultivoId y timestamp." }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Obtener los registros actuales de ambiente_logs
+      const { data: cultivoData, error: fetchError } = await supabase
+        .from("cultivos")
+        .select("ambiente_logs")
+        .eq("id", cultivoId)
+        .eq("uuid", user.id)
+        .single();
+
+      if (fetchError) {
+        return new Response(
+          JSON.stringify({ success: false, error: fetchError.message }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verificar que existen logs de ambiente
+      if (!Array.isArray(cultivoData?.ambiente_logs)) {
+        return new Response(
+          JSON.stringify({ success: false, error: "No hay registros de ambiente para este cultivo" }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Filtrar el registro con el timestamp especificado
+      const updatedLogs = cultivoData.ambiente_logs.filter(
+        (log) => log.timestamp !== timestamp
+      );
+
+      // Si el tamaño de los arrays es igual, el registro no fue encontrado
+      if (updatedLogs.length === cultivoData.ambiente_logs.length) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Registro no encontrado" }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Actualizar el cultivo con los nuevos logs filtrados
+      const { error: updateError } = await supabase
+        .from("cultivos")
+        .update({ 
+          ambiente_logs: updatedLogs,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", cultivoId)
+        .eq("uuid", user.id);
+
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ success: false, error: updateError.message }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Registro de ambiente eliminado correctamente",
+          data: updatedLogs
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ success: false, error: "Método no permitido" }),
       { status: 405, headers: { "Content-Type": "application/json" } }

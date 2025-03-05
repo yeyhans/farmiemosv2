@@ -7,7 +7,7 @@ import AmbienteLogs from '../../../../components/cultivos/indoor/AmbienteLogs';
 import AmbienteLogsGraph from '../../../../components/cultivos/indoor/AmbienteLogsGraph';
 import AmbienteLogsList from '../../../../components/cultivos/indoor/AmbienteLogsList';
 import AmbienteLogsConclusion from '../../../../components/cultivos/indoor/AmbienteLogsConclusion';
-
+import AmbienteBitacoraViews from '../../../../components/cultivos/indoor/AmbienteBitacoraViews';
 const { id } = Astro.params;
 
 const { user, redirect } = await authenticate(Astro);
@@ -106,7 +106,9 @@ console.log(ambiente_logs);
         )}
 
         <StrainView client:visible formData={config} cultivoId={id} />
+
         <AmbienteLogs client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
+        <AmbienteBitacoraViews client:visible cultivoId={id} user_id={user_id} />
         <AmbienteLogsGraph client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
         <AmbienteLogsList client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
         <AmbienteLogsConclusion client:visible cultivoId={id} user_id={user_id} ambiente_logs={ambiente_logs} />
