@@ -150,8 +150,8 @@ const profilePrompt = profileData?.prompt_profile || "";
     const completionStream = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: conversationHistory,
-      temperature: 0.7,
-      max_tokens: 2000,
+      temperature: 0.3,
+      max_tokens: 10000,
       stream: true,
     });
 
@@ -162,51 +162,66 @@ const profilePrompt = profileData?.prompt_profile || "";
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Establecer un timeout más amplio para la respuesta
+          const abortController = new AbortController();
+          const timeoutId = setTimeout(() => abortController.abort(), 120000); // 2 minutos de timeout
+          
           for await (const chunk of completionStream) {
             const content = chunk.choices[0]?.delta?.content || "";
             aiResponse += content;
             responseTokensUsed += content.length; // Estimación simple de tokens en la respuesta
             controller.enqueue(content);
           }
+          
+          clearTimeout(timeoutId);
+          
+          // Asegurar que se envíe un mensaje de finalización
+          controller.enqueue("\n\n[FIN]");
         } catch (error) {
           console.error("Error en el stream:", error);
-          controller.enqueue("[ERROR]");
+          // Proporcionar un mensaje de error más descriptivo
+          controller.enqueue(`\n\n[ERROR: ${error.message || "Error desconocido durante la generación"}]`);
         } finally {
-          controller.close();
+          // Pequeña pausa antes de cerrar para asegurar que los últimos chunks se envíen
+          setTimeout(() => {
+            controller.close();
 
-          if (aiResponse.trim().length > 0) {
-            try {
-              const updatedUserPrompts = [...(chatSession.user_prompt || []), combinedPrompt];
-              const updatedAiResponses = [...(chatSession.ai_response || []), aiResponse];
+            if (aiResponse.trim().length > 0) {
+              try {
+                const updatedUserPrompts = [...(chatSession.user_prompt || []), combinedPrompt];
+                const updatedAiResponses = [...(chatSession.ai_response || []), aiResponse];
 
-              // Actualizar tokens usados
-              const totalResponseTokens = (chatSession.response_tokens_used || 0) + responseTokensUsed;
-              const totalPromptTokens = (chatSession.prompt_tokens_used || 0) + promptTokensUsed;
+                // Actualizar tokens usados
+                const totalResponseTokens = (chatSession.response_tokens_used || 0) + responseTokensUsed;
+                const totalPromptTokens = (chatSession.prompt_tokens_used || 0) + promptTokensUsed;
 
-              await supabase
-                .from("chats")
-                .update({
-                  user_prompt: updatedUserPrompts,
-                  ai_response: updatedAiResponses,
-                  response_tokens_used: totalResponseTokens,
-                  prompt_tokens_used: totalPromptTokens,
-                  model: "gpt-4o",
-                  updated_at: new Date().toISOString(),
-                  session_name: sessionName
-                })
-                .eq("id", sessionId)
-                .eq("user_id", sessionData.user.id);
+                await supabase
+                  .from("chats")
+                  .update({
+                    user_prompt: updatedUserPrompts,
+                    ai_response: updatedAiResponses,
+                    response_tokens_used: totalResponseTokens,
+                    prompt_tokens_used: totalPromptTokens,
+                    model: "gpt-4o",
+                    updated_at: new Date().toISOString(),
+                    session_name: sessionName
+                  })
+                  .eq("id", sessionId)
+                  .eq("user_id", sessionData.user.id);
 
-            } catch (dbError) {
-              console.error("Error al actualizar la base de datos:", dbError);
+              } catch (dbError) {
+                console.error("Error al actualizar la base de datos:", dbError);
+              }
+            } else {
+              console.warn("Respuesta de IA vacía, no se actualiza la base de datos.");
             }
-          } else {
-            console.warn("Respuesta de IA vacía, no se actualiza la base de datos.");
-          }
+          }, 500);
         }
       },
       cancel() {
         console.log("Stream cancelado por el cliente");
+        // Intentar finalizar correctamente
+        completionStream.controller?.abort();
       }
     });
 

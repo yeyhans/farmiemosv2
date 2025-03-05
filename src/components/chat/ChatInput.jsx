@@ -55,11 +55,15 @@ const ChatInput = ({ sessionId, onMessageSent }) => {
         onMessageSent(userMessage);
       }
       
-      // Iniciar streaming de la respuesta
+      // Iniciar streaming de la respuesta con un timeout más amplio
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutos
+      
       const res = await fetch('/api/chat/assistents', {
         method: 'POST',
         body: formData,
         credentials: 'include',
+        signal: controller.signal
       });
       
       if (!res.ok) {
@@ -71,21 +75,47 @@ const ChatInput = ({ sessionId, onMessageSent }) => {
       const decoder = new TextDecoder();
       let fullResponse = '';
       
+      // Establecer un contador de reintentos para manejar interrupciones temporales
+      let retryCount = 0;
+      const maxRetries = 3;
+      
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        
-        fullResponse += chunk;
-        
-        // Actualizar la respuesta en tiempo real
-        if (onMessageSent) {
-          onMessageSent({
-            type: 'streaming',
-            text: fullResponse
-          });
+        try {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          fullResponse += chunk;
+          
+          // Verificar si la respuesta contiene una marca de finalización
+          if (chunk.includes('[FIN]')) {
+            fullResponse = fullResponse.replace('[FIN]', '');
+            break;
+          }
+          
+          // Actualizar la respuesta en tiempo real
+          if (onMessageSent) {
+            onMessageSent({
+              type: 'streaming',
+              text: fullResponse
+            });
+          }
+          
+          // Restablecer contador de reintentos cuando recibimos datos con éxito
+          retryCount = 0;
+        } catch (streamError) {
+          // Intentar recuperarse de errores temporales
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.warn(`Error en el stream (intento ${retryCount}/${maxRetries}):`, streamError);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo antes de reintentar
+            continue;
+          }
+          throw streamError;
         }
       }
+      
+      clearTimeout(timeoutId);
       
       // Finalizar stream y enviar respuesta completa
       if (onMessageSent) {
