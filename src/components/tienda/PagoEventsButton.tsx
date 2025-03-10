@@ -252,7 +252,7 @@ export default function MercadoPagoButton({ amount }: Props) {
         }
       }
     };
-  }, [currentAmount, eventData, attendees, quantity]);
+  }, [currentAmount, eventData, quantity]);
 
   return (
     <div className="space-y-6">
