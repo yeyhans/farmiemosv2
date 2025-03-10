@@ -35,13 +35,21 @@ const description_general = product.description_general;
 const img_principal = product.img_principal;
 const event_restriction = product.event_restriction;
 
+console.log(product);
+const description_incluye = product.description_incluye;
+
+// Parse description_incluye from string to array if needed
+const descriptionItems = typeof description_incluye === 'string' 
+    ? description_incluye.split(',').map(item => item.trim())
+    : description_incluye || [];
+
 const maxCapacity = product.capacity_event;
 let { data: asistentes } = await supabase
     .from('asistentes_evento')
     .select('*')
     .eq('event_day', day_event);
 
-const asistentesCount = asistentes.length;
+const asistentesCount = asistentes?.length || 0;
 console.log(asistentesCount);
 
 // Calculate remaining tickets
@@ -84,7 +92,18 @@ const isSoldOut = remainingTickets <= 0;
                     <p class="text-sm font-medium">
                         {isSoldOut 
                             ? '⚠️ Evento sin disponibilidad de tickets' 
-                            : `🎫 Quedan ${remainingTickets} tickets disponibles de ${maxCapacity}`}
+                            : (
+                                <>
+                                    {`🎫 Quedan ${remainingTickets} tickets disponibles.`}
+                                    <ul class="mt-2 text-sm">
+                                        {descriptionItems.map(item => (
+                                            <li class="flex items-center gap-1">
+                                                <span class="text-green-600">✓</span> {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
                     </p>
                 </div>
 
@@ -239,6 +258,10 @@ const isSoldOut = remainingTickets <= 0;
                 checkoutButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
                 checkoutButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 checkoutButton.disabled = false;
+                
+                // Store the referee code in localStorage
+                localStorage.setItem('refereeCode', code);
+                
                 return true;
             } else {
                 // Invalid code
@@ -246,6 +269,10 @@ const isSoldOut = remainingTickets <= 0;
                 checkoutButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 checkoutButton.classList.add('bg-gray-400', 'cursor-not-allowed');
                 checkoutButton.disabled = true;
+                
+                // Clear the referee code from localStorage
+                localStorage.removeItem('refereeCode');
+                
                 return false;
             }
         }
@@ -481,6 +508,7 @@ const isSoldOut = remainingTickets <= 0;
             checkoutButton.addEventListener('click', () => {
                 console.log("Botón de reserva clickeado");
                 const quantity = parseInt(quantityInput.value) || 1;
+                const refereeCode = refereeInput.value.trim();
                 
                 // Prepare checkout section
                 updateSummary();
@@ -492,10 +520,12 @@ const isSoldOut = remainingTickets <= 0;
                     quantity: quantity,
                     price: eventInfo.price,
                     totalAmount: eventInfo.price * quantity,
-                    attendees: attendees
+                    attendees: attendees,
+                    referee: refereeCode
                 };
                 
                 localStorage.setItem('eventData', JSON.stringify(eventData));
+                localStorage.setItem('refereeCode', refereeCode);
                 
                 // Show checkout section
                 if (checkoutSection) {
