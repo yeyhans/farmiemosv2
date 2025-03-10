@@ -44,25 +44,42 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
     
-    // Create payment in MercadoPago with more detailed error handling
+    // Determine payment method type (could be card, bank_transfer, etc.)
+    const paymentMethodType = requestData.payment_method_id ? 
+      requestData.payment_method_id.split('.')[0] : 'card';
+    
+    // Create payment in MercadoPago with enhanced method support
     let paymentData;
     try {
-      paymentData = await payment.create({
-        body: {
-          transaction_amount: requestData.transaction_amount,
-          token: requestData.token,
-          description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
-          installments: requestData.installments,
-          payment_method_id: requestData.payment_method_id,
-          payer: {
-            email: requestData.payer.email
-          },
-          metadata: {
-            eventDay: eventData?.eventDay || '22',
-            quantity: eventData?.quantity || 1,
-            attendees: eventData?.attendees || []
-          }
+      // Base payment data
+      const paymentPayload = {
+        transaction_amount: requestData.transaction_amount,
+        description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
+        payment_method_id: requestData.payment_method_id || requestData.paymentMethodId,
+        payer: {
+          email: requestData.payer.email
+        },
+        metadata: {
+          eventDay: eventData?.eventDay || '22',
+          quantity: eventData?.quantity || 1,
+          attendees: eventData?.attendees || []
         }
+      };
+      
+      // Add token for card payments
+      if (requestData.token) {
+        paymentPayload.token = requestData.token;
+        paymentPayload.installments = requestData.installments;
+      }
+      
+      // Add bank transfer specific fields if needed
+      if (paymentMethodType === 'bank_transfer') {
+        // Add any bank transfer specific fields here
+        // This will depend on MercadoPago's requirements
+      }
+      
+      paymentData = await payment.create({
+        body: paymentPayload
       });
       
       console.log('MercadoPago payment response:', JSON.stringify(paymentData, null, 2));
@@ -91,7 +108,7 @@ export const POST: APIRoute = async ({ request }) => {
         .insert({
           payment_id: paymentData.id,
           transaction_amount: requestData.transaction_amount,
-          payment_method_id: requestData.payment_method_id,
+          payment_method_id: requestData.payment_method_id || requestData.paymentMethodId,
           installments: requestData.installments,
           status: paymentData.status,
           description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
@@ -103,6 +120,18 @@ export const POST: APIRoute = async ({ request }) => {
       
       if (paymentError) {
         console.error('Error guardando datos de pago en Supabase:', paymentError);
+        console.error('Datos que intentamos guardar:', {
+          payment_id: paymentData.id,
+          payment_method_id: requestData.payment_method_id || requestData.paymentMethodId,
+          transaction_amount: requestData.transaction_amount,
+          installments: requestData.installments,
+          status: paymentData.status,
+          description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
+          payer_email: requestData.payer.email,
+          event_day: eventData?.eventDay || '22',
+          quantity: eventData?.quantity || 1,
+          created_at: new Date().toISOString()
+        });
       }
       
       // Guardar información de asistentes en la tabla "asistentes_evento"
