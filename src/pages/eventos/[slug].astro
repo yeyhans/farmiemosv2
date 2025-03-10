@@ -3,38 +3,46 @@ import Layout from '../../layouts/Layout.astro';
 import MercadoPagoButton from '../../components/tienda/PagoEventsButton';
 import { supabase } from '../../lib/supabase';
 
+// Get the slug from URL parameters
+const { slug } = Astro.params;
 
+// Fetch the product with the matching slug
 let { data: products, error } = await supabase
   .from('products')
   .select('*')
-  .eq('id', 1);
+  .eq('slug', slug)
+  .limit(1);
 
 if (error) {
   console.error('Error fetching products:', error);
 }
-          
-const slug = products[0].slug;
-const price = products[0].price;
-const description = products[0].description;
-const fecha_event = products[0].fecha_event;
-const day_event = products[0].day_event;
-const day_name_event = products[0].day_name_event;
-const month_event = products[0].month_event;
-const referee = products[0].referee;
-const description_general = products[0].description_general;
-const img_principal = products[0].img_principal;
-const event_restriction = products[0].event_restriction;
 
-const maxCapacity = products[0].capacity_event;
+// Handle case where no product is found
+if (!products || products.length === 0) {
+  return Astro.redirect('/404'); // Redirect to 404 page if event not found
+}
+
+// Get product data
+const product = products[0];
+const price = product.price;
+const description = product.description;
+const fecha_event = product.fecha_event;
+const day_event = product.day_event;
+const day_name_event = product.day_name_event;
+const month_event = product.month_event;
+const referee = product.referee;
+const description_general = product.description_general;
+const img_principal = product.img_principal;
+const event_restriction = product.event_restriction;
+
+const maxCapacity = product.capacity_event;
 let { data: asistentes } = await supabase
     .from('asistentes_evento')
     .select('*')
     .eq('event_day', day_event);
 
-
 const asistentesCount = asistentes.length;
 console.log(asistentesCount);
-
 
 // Calculate remaining tickets
 const remainingTickets = maxCapacity - asistentesCount;

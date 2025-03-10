@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import AttendeeForm from './AttendeeForm';
 
 interface Props {
   amount: number;
+  eventDay?: string;
+  description?: string;
+  fecha_event?: string;
+  referee?: string;
+  isSoldOut?: boolean;
+  attendees: Attendee[];
 }
 
 interface Attendee {
@@ -22,62 +27,49 @@ declare global {
   }
 }
 
-export default function MercadoPagoButton({ amount }: Props) {
+export default function MercadoPagoButton({ amount, eventDay = '', description = '', fecha_event = '', referee = '', isSoldOut = false, attendees = [] }: Props) {
   const [currentAmount, setCurrentAmount] = useState(amount);
   const [eventDetails, setEventDetails] = useState({
-    eventDay: '',
-    description: ''
+    eventDay: eventDay || '',
+    description: description || ''
   });
   const [eventData, setEventData] = useState<any>({});
   const [quantity, setQuantity] = useState(1);
-  const [attendees, setAttendees] = useState<Attendee[]>([{ name: '', phone: '', instagram: '' }]);
   const [formErrors, setFormErrors] = useState<{[key: string]: boolean}>({});
-  const [isFormComplete, setIsFormComplete] = useState(false);
 
-  // Handle attendee field changes
-  const handleAttendeeChange = (index: number, field: keyof Attendee, value: string) => {
-    const newAttendees = [...attendees];
-    newAttendees[index] = { ...newAttendees[index], [field]: value };
-    setAttendees(newAttendees);
-    
-    // Clear error for this field if it was previously marked as error
-    if (formErrors[`${field}-${index}`]) {
-      const newErrors = { ...formErrors };
-      delete newErrors[`${field}-${index}`];
-      setFormErrors(newErrors);
-    }
-  };
-
-  // Validate form before submission
+  // Update validateForm to work with props instead of state
   const validateForm = (): boolean => {
-    const newErrors: {[key: string]: boolean} = {};
     let isValid = true;
 
-    attendees.forEach((attendee, index) => {
-      if (!attendee.name.trim()) {
-        newErrors[`name-${index}`] = true;
-        isValid = false;
-      }
-      if (!attendee.phone.trim()) {
-        newErrors[`phone-${index}`] = true;
+    attendees.forEach((attendee) => {
+      if (!attendee.name.trim() || !attendee.phone.trim()) {
         isValid = false;
       }
     });
 
-    setFormErrors(newErrors);
-    setIsFormComplete(isValid);
     return isValid;
   };
   
-  // Check form completeness whenever attendees change
   useEffect(() => {
-    validateForm();
-  }, [attendees]);
-  
-  useEffect(() => {
+    // Initialize eventDetails from props
+    setEventDetails({
+      eventDay: eventDay || '',
+      description: description || ''
+    });
+    
+    // Initialize eventData with props data
+    setEventData({
+      ...eventData,
+      eventDay: eventDay,
+      description: description,
+      fecha_event: fecha_event,
+      referee: referee,
+      attendees: attendees
+    });
+
     // Listen for amount update events from the page
     const handleUpdateAmount = (event: CustomEvent) => {
-      const { amount: newAmount, eventDay, description, eventData } = event.detail;
+      const { amount: newAmount, eventDay, description, eventData: newEventData } = event.detail;
       console.log('Updating amount from event:', newAmount);
       console.log('Event details:', eventDay, description);
       setCurrentAmount(newAmount);
@@ -85,16 +77,15 @@ export default function MercadoPagoButton({ amount }: Props) {
         eventDay: eventDay || '',
         description: description || ''
       });
-      if (eventData) {
-        setEventData(eventData);
-        // Update quantity and attendees based on event data
-        if (eventData.quantity && eventData.quantity !== quantity) {
-          setQuantity(eventData.quantity);
-          // Create new array with the correct number of attendee objects
-          const newAttendees = Array(eventData.quantity).fill(null).map((_, i) => 
-            attendees[i] || { name: '', phone: '', instagram: '' }
-          );
-          setAttendees(newAttendees);
+      if (newEventData) {
+        // Preserve attendees data if it exists in the current state
+        setEventData({
+          ...newEventData,
+          attendees: newEventData.attendees || attendees
+        });
+        // Update quantity based on event data
+        if (newEventData.quantity && newEventData.quantity !== quantity) {
+          setQuantity(newEventData.quantity);
         }
       }
     };
@@ -103,7 +94,16 @@ export default function MercadoPagoButton({ amount }: Props) {
     const handleUpdateEventData = (event: CustomEvent) => {
       if (event.detail.eventData) {
         console.log('Updating event data:', event.detail.eventData);
-        setEventData(event.detail.eventData);
+        // Merge the new event data with existing data
+        setEventData(prevData => ({
+          ...prevData,
+          ...event.detail.eventData,
+          // Ensure we don't lose the event details
+          eventDay: eventDay || prevData.eventDay,
+          description: description || prevData.description,
+          fecha_event: fecha_event || prevData.fecha_event,
+          referee: referee || prevData.referee
+        }));
       }
     };
 
@@ -116,12 +116,14 @@ export default function MercadoPagoButton({ amount }: Props) {
       window.removeEventListener('updateAmount', handleUpdateAmount as EventListener);
       window.removeEventListener('updateEventData', handleUpdateEventData as EventListener);
     };
-  }, [quantity, attendees]);
+  }, [quantity, eventDay, description, fecha_event, referee, attendees]);
 
   useEffect(() => {
-    // Don't initialize MercadoPago if form is not complete
-    if (!isFormComplete) return;
-    
+    // Update currentAmount when the amount prop changes
+    setCurrentAmount(amount);
+  }, [amount]);
+
+  useEffect(() => {
     // Add MercadoPago script if it doesn't exist
     const script = document.createElement('script');
     script.src = "https://sdk.mercadopago.com/js/v2";
@@ -134,6 +136,7 @@ export default function MercadoPagoButton({ amount }: Props) {
 
     let mpInstance: any = null;
     let cardPaymentBrickRef: any = null;
+    let isInitializing = false;
 
     const loadMercadoPago = async () => {
       try {
@@ -143,10 +146,22 @@ export default function MercadoPagoButton({ amount }: Props) {
           return;
         }
 
-        // Clear container before creating a new Brick
+        // Prevent multiple initializations running at the same time
+        if (isInitializing) return;
+        isInitializing = true;
+
+        // Properly clear container before creating a new Brick
         const container = document.getElementById('cardPayment_container');
         if (container) {
+          // Completely reset the container to avoid DOM manipulation conflicts
           container.innerHTML = '';
+        }
+
+        // Create a fresh container if needed
+        if (!document.getElementById('cardPayment_container')) {
+          console.error('Payment container not found');
+          isInitializing = false;
+          return;
         }
 
         mpInstance = new window.MercadoPago(import.meta.env.PUBLIC_MERCADOPAGO_KEY, {
@@ -155,22 +170,20 @@ export default function MercadoPagoButton({ amount }: Props) {
 
         console.log('MercadoPago initialized with amount:', currentAmount);
 
+        // Make sure any previous instance is unmounted first
+        if (cardPaymentBrickRef) {
+          try {
+            await cardPaymentBrickRef.unmount();
+          } catch (e) {
+            console.warn('Error unmounting previous Brick instance:', e);
+          }
+          cardPaymentBrickRef = null;
+        }
+
+        // Create the new Brick instance
         cardPaymentBrickRef = await mpInstance.bricks().create("cardPayment", "cardPayment_container", {
           initialization: {
-            amount: currentAmount.toString(),
-            payer: {
-              email: "",
-            },
-          },
-          customization: {
-            paymentMethods: {
-              maxInstallments: 1,
-            },
-            visual: {
-              style: {
-                theme: 'default'
-              }
-            }
+            amount: currentAmount,
           },
           callbacks: {
             onReady: () => {
@@ -184,13 +197,29 @@ export default function MercadoPagoButton({ amount }: Props) {
                   return;
                 }
                 
-                // Update local eventData with current attendee information
+                // Get updated attendees from props or local storage as backup
+                const currentAttendees = attendees.length > 0 ? 
+                  attendees : 
+                  (eventData.attendees || JSON.parse(localStorage.getItem('eventData') || '{}').attendees || []);
+                
+                // Make sure we're capturing all relevant event data
                 const updatedEventData = {
                   ...eventData,
-                  attendees: attendees,
+                  eventDay: eventDay || eventData.eventDay || '',
+                  description: description || eventData.description || '',
+                  fecha_event: fecha_event || eventData.fecha_event || '',
+                  referee: referee || eventData.referee || '',
+                  attendees: currentAttendees.map(att => ({
+                    name: att.name,
+                    phone: att.phone,
+                    instagram: att.instagram || ''
+                  })),
                   quantity: quantity,
                   totalAmount: currentAmount
                 };
+                
+                // Log the event data to verify its structure
+                console.log('Event data being saved:', JSON.stringify(updatedEventData));
                 
                 // Update localStorage with the new data
                 localStorage.setItem('eventData', JSON.stringify(updatedEventData));
@@ -199,12 +228,12 @@ export default function MercadoPagoButton({ amount }: Props) {
                 
                 const paymentData = {
                   ...cardFormData,
-                  transaction_amount: parseFloat(currentAmount.toString()),
-                  eventData: updatedEventData,
-                  description: eventDetails.description || 'Evento'
+                  transaction_amount: currentAmount,
+                  eventData: updatedEventData
                 };
                 
-                console.log('Sending payment data:', JSON.stringify(paymentData));
+                // Debugging log to see what's being sent to API
+                console.log('Sending to API:', JSON.stringify(paymentData));
                 
                 const response = await fetch('/api/mercadopago/eventos', {
                   method: 'POST',
@@ -239,11 +268,6 @@ export default function MercadoPagoButton({ amount }: Props) {
               }
               if (error.cause) {
                 console.error('Error cause:', error.cause);
-                
-                // Display user-friendly error message based on error cause
-                if (error.cause === 'secure_fields_card_token_creation_failed') {
-                  alert('Hubo un problema con la información de la tarjeta. Por favor, verifica que los datos ingresados sean correctos.');
-                }
               }
             },
             onBinChange: (bin: string) => {
@@ -252,6 +276,9 @@ export default function MercadoPagoButton({ amount }: Props) {
             onFetching: (resource: string) => {
               console.log('Fetching resource:', resource);
             }
+          },
+          style: {
+            theme: 'default'
           }
         });
       } catch (error) {
@@ -280,32 +307,19 @@ export default function MercadoPagoButton({ amount }: Props) {
         }
       }
     };
-  }, [currentAmount, eventData, attendees, quantity, isFormComplete, eventDetails]);
+  }, [currentAmount, eventData, attendees, quantity]);
 
   return (
     <div className="space-y-6">
-      {/* Use the separate AttendeeForm component */}
-      <AttendeeForm 
-        attendees={attendees}
-        formErrors={formErrors}
-        onAttendeeChange={handleAttendeeChange}
-      />
-
-      {/* MercadoPago button - only show when form is complete */}
-      {isFormComplete ? (
-        <div 
-          id="cardPayment_container" 
-          style={{
-            minHeight: '200px',
-            width: '100%',
-            margin: '10px 0'
-          }}
-        ></div>
-      ) : (
-        <div className="p-4 bg-gray-100 rounded-md text-center">
-          <p className="text-gray-700">Complete todos los campos obligatorios para continuar con el pago</p>
-        </div>
-      )}
+      {/* MercadoPago button */}
+      <div 
+        id="cardPayment_container" 
+        style={{
+          minHeight: '200px',
+          width: '100%',
+          margin: '10px 0'
+        }}
+      ></div>
     </div>
   );
 }
