@@ -1,0 +1,368 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import MercadoPagoButton from '../../components/tienda/PagoEventsButton';
+import { supabase } from '../../lib/supabase';
+
+
+let { data: products, error } = await supabase
+  .from('products')
+  .select('*')
+  .eq('id', 2);
+
+if (error) {
+  console.error('Error fetching products:', error);
+}
+          
+
+
+const price = products[0].price;
+const description = products[0].description;
+const fecha_event = products[0].fecha_event;
+const day_event = products[0].day_event;
+const referee = products[0].referee;
+
+let { data: asistentes } = await supabase
+    .from('asistentes_evento')
+    .select('*')
+    .eq('event_day', day_event);
+
+
+const asistentesCount = asistentes.length;
+console.log(asistentesCount);
+
+// Define maximum capacity for the event
+const maxCapacity = 15;
+// Calculate remaining tickets
+const remainingTickets = maxCapacity - asistentesCount;
+// Check if event is sold out
+const isSoldOut = remainingTickets <= 0;
+
+
+
+---
+
+<Layout title="Evento de Catación | Exclusivo para Jardineros" description="Eventos exclusivos en Antofagasta para elevar la cannacultura local. Aprende a catar tomates en un ambiente especializado para jardineros.">
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 class="text-4xl font-bold text-center mb-8">Eventos Exclusivos en Antofagasta</h1>
+        
+        <div class="bg-green-50 p-6 rounded-lg mb-8 border-l-4 border-green-500">
+            <p class="text-lg font-medium mb-4">🌿✨¡EVENTOS EXCLUSIVOS EN ANTOFAGASTA!✨🍻</p>
+            <p class="mb-4">Llegó la hora de elevar la cannacultura local con información innovadora. ¡Te invitamos a ser parte de esta experiencia única en la región!</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-12">
+            <div class="product-images space-y-4">
+                <img id="event-image" src="/tienda/eventos/21-03-25.png" alt="Evento de Catación en Antofagasta" class="rounded-lg shadow-lg w-full">
+            </div>
+            
+            <div class="product-info space-y-6">
+                <div>
+                    <h2 class="text-2xl font-semibold mb-2">VIERNES 21 DE MARZO</h2>
+                    <p class="text-sm text-gray-600">Exclusivo para jardineros</p>
+                    
+                    <p id="current-price" class="text-2xl font-bold text-blue-600 mt-4">${price.toLocaleString()}</p>
+                    <p id="event-description" class="text-sm text-gray-700 mt-2">{description}</p>
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 leading-relaxed">
+                        Un evento único para aprender a catar tomates con precisión y 
+                        disfrutar de una experiencia educativa y social. CUPOS LIMITADOS.
+                    </p>
+                </div>
+
+                <!-- Add ticket availability component -->
+                <div class="bg-blue-50 p-3 rounded-md">
+                    <p class="text-sm font-medium">
+                        {isSoldOut 
+                            ? '⚠️ Evento sin disponibilidad de tickets' 
+                            : `🎫 Quedan ${remainingTickets} tickets disponibles de ${maxCapacity}`}
+                    </p>
+                </div>
+
+                {!isSoldOut && (
+                <div class="flex items-end gap-4 pt-4">
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium mb-2">Cantidad:</label>
+                        <input 
+                            type="number" 
+                            id="quantity" 
+                            name="quantity" 
+                            min="1" 
+                            max="5"
+                            value="1" 
+                            class="w-24 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+                )}
+
+                <div class="flex flex-col gap-4 pt-4">
+                    {!isSoldOut ? (
+                    <>
+                        <div>
+                            <label for="referee-code" class="block text-sm font-medium mb-2">Código de referencia:</label>
+                            <input 
+                                type="text" 
+                                id="referee-code" 
+                                name="referee-code" 
+                                placeholder="Ingresa tu código de referencia" 
+                                class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                            />
+                            <p id="referee-error" class="text-red-500 text-sm mt-1 hidden">Código de referencia inválido</p>
+                        </div>
+                        
+                        <button 
+                            id="checkout-button"
+                            class="flex-grow bg-gray-400 text-white px-6 py-2 rounded-md transition-colors cursor-not-allowed"
+                            disabled
+                        >
+                            Reservar Ahora
+                        </button>
+                    </>
+                    ) : (
+                        <div class="bg-red-100 border-l-4 border-red-500 p-4 rounded-md">
+                            <p class="text-lg font-bold text-red-700">SOLD OUT</p>
+                            <p class="text-sm text-red-600">Este evento ha alcanzado su capacidad máxima.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-12">
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4">📅 VIERNES 21 DE MARZO</h3>
+                <p class="mb-4">Un encuentro privado para lxs jardinerxs más entusiastas de Antofagasta. ¿El objetivo? Intercambiar ideas, debatir técnicas y dominar el arte de "catar tomates con precisión"🍅🔍 (sí, hablamos de "ese" tomate). ¡Un espacio para usuarixs especializadxs que buscan calidad y conocimiento!</p>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-6 rounded-lg mt-8">
+            <h3 class="text-xl font-bold mb-4">¿POR QUÉ ASISTIR?</h3>
+            <ul class="list-disc list-inside space-y-2">
+                <li>✅ Aprenderás de forma entretenida.</li>
+                <li>✅ Conocerás a una comunidad con tus mismos intereses.</li>
+                <li>✅ Combina cultura, sabor y una buena experiencia.</li>
+            </ul>
+            
+            <div class="mt-6 grid md:grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="font-medium">📍 Ubicación privada</p>
+                    <p class="text-sm text-gray-600">(¡solo para inscritos!)</p>
+                </div>
+                <div>
+                    <p class="font-medium">⏰ Horarios personalizados</p>
+                    <p class="text-sm text-gray-600">(escríbenos para detalles)</p>
+                </div>
+                <div>
+                    <p class="font-medium">🔗 ¡CUPOS LIMITADOS!</p>
+                    <p class="text-sm text-gray-600">Reserva tu lugar antes del 18/03</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nueva sección para información de asistentes y pago -->
+        <div id="checkout-section" class="mt-12 pt-12 border-t-2 border-dashed border-gray-300 hidden">
+            <h2 class="text-2xl font-bold text-center mb-8">Completa el pago de tu reserva</h2>
+            
+            <!-- Contenedor para el pago -->
+            <div id="checkout-payment-container" class="bg-white p-6 rounded-lg shadow-md mx-auto max-w-xl">
+                <p id="checkout-summary" class="mb-4 text-sm text-gray-600"></p>
+                <div class="mercadopago-container">
+                    <MercadoPagoButton amount={price} client:load />
+                </div>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script define:vars={{ price, description, fecha_event, referee, day_event, isSoldOut }}>
+    // Elements
+    const currentPriceElement = document.getElementById('current-price');
+    const eventDescriptionElement = document.getElementById('event-description');
+    const quantityInput = document.getElementById('quantity');
+    const refereeInput = document.getElementById('referee-code');
+    const refereeError = document.getElementById('referee-error');
+    const checkoutButton = document.getElementById('checkout-button');
+    const checkoutSection = document.getElementById('checkout-section');
+    const checkoutSummary = document.getElementById('checkout-summary');
+    const checkoutPaymentContainer = document.getElementById('checkout-payment-container');
+    
+    // Skip all functionality if the event is sold out
+    if (isSoldOut) {
+        console.log("Event is sold out, payment functionality disabled");
+    } else {
+        // Define event data
+        const eventInfo = {
+            price: price,
+            description: description,
+            fecha_event: fecha_event,
+            day_event: day_event
+        };
+        
+        // Valid referee codes
+        const validRefereeCodes = referee.split(', ');
+        
+        // Validate referee code
+        function validateRefereeCode() {
+            const code = refereeInput.value.trim().toLowerCase();
+            
+            if (validRefereeCodes.includes(code)) {
+                // Valid code
+                refereeError.classList.add('hidden');
+                checkoutButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                checkoutButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                checkoutButton.disabled = false;
+                return true;
+            } else {
+                // Invalid code
+                refereeError.classList.remove('hidden');
+                checkoutButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                checkoutButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                checkoutButton.disabled = true;
+                return false;
+            }
+        }
+        
+        // Add event listener for referee code input
+        if (refereeInput) {
+            refereeInput.addEventListener('input', validateRefereeCode);
+        }
+        
+        // Format date function (YYYY-MM-DD to DD de Mes)
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate();
+            const monthNames = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            const month = monthNames[date.getMonth()];
+            return `${day + 1} de ${month}`;
+        }
+        
+        // Update price when quantity changes
+        function updatePrice() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            const totalPrice = eventInfo.price * quantity;
+            
+            // Update price display
+            currentPriceElement.textContent = `$${totalPrice.toLocaleString()}`;
+            
+            // Dispatch event to update MercadoPago button amount
+            const amountUpdateEvent = new CustomEvent('updateAmount', {
+                detail: { 
+                    amount: totalPrice,
+                    eventDay: eventInfo.day_event,
+                    description: eventInfo.description
+                }
+            });
+            window.dispatchEvent(amountUpdateEvent);
+        }
+        
+        // Update the summary information
+        function updateSummary() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            const totalPrice = eventInfo.price * quantity;
+            
+            // Format the date from fecha_event
+            const formattedDate = formatDate(eventInfo.fecha_event);
+            
+            // Actualizar el resumen de la compra
+            checkoutSummary.innerHTML = `
+                <strong>Resumen:</strong><br>
+                ${quantity} entrada${quantity > 1 ? 's' : ''} para el evento del ${formattedDate}<br> 
+                Total: $${totalPrice.toLocaleString()}
+            `;
+        }
+        
+        // Update the form when quantity changes
+        if (quantityInput) {
+            quantityInput.addEventListener('change', () => {
+                // Ensure quantity is at least 1
+                if (parseInt(quantityInput.value) < 1) {
+                    quantityInput.value = '1';
+                }
+                
+                // Limit to maximum 5 tickets per purchase
+                if (parseInt(quantityInput.value) > 3) {
+                    quantityInput.value = '3';
+                }
+                
+                updatePrice();
+                
+                // Only update summary if checkout section is visible
+                if (checkoutSection && !checkoutSection.classList.contains('hidden')) {
+                    updateSummary();
+                }
+            });
+        }
+        
+        // Direct checkout when "Reservar Ahora" button is clicked
+        if (checkoutButton) {
+            checkoutButton.addEventListener('click', () => {
+                console.log("Botón de reserva clickeado");
+                const quantity = parseInt(quantityInput.value) || 1;
+                
+                // Prepare checkout section
+                updateSummary();
+                
+                // Store initial event data in localStorage
+                const eventData = {
+                    eventDay: eventInfo.day_event,
+                    eventDescription: eventInfo.description,
+                    quantity: quantity,
+                    price: eventInfo.price,
+                    totalAmount: eventInfo.price * quantity
+                };
+                
+                localStorage.setItem('eventData', JSON.stringify(eventData));
+                
+                // Show checkout section
+                if (checkoutSection) {
+                    checkoutSection.classList.remove('hidden');
+                    
+                    // Scroll to checkout section
+                    checkoutSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+                // Fix: use the correct payment container element
+                if (checkoutPaymentContainer) {
+                    checkoutPaymentContainer.classList.remove('hidden');
+                }
+                
+                // Make sure MercadoPago button is visible by updating its amount
+                const totalPrice = eventInfo.price * quantity;
+                const amountUpdateEvent = new CustomEvent('updateAmount', {
+                    detail: { 
+                        amount: totalPrice,
+                        eventDay: eventInfo.day_event,
+                        description: eventInfo.description,
+                        eventData: eventData
+                    }
+                });
+                window.dispatchEvent(amountUpdateEvent);
+
+                // Ensure we have time for the MercadoPago component to load
+                setTimeout(() => {
+                    // Trigger another update to ensure the component is refreshed
+                    window.dispatchEvent(new CustomEvent('updateAmount', {
+                        detail: { 
+                            amount: totalPrice,
+                            eventDay: eventInfo.day_event,
+                            description: eventInfo.description,
+                            eventData: eventData
+                        }
+                    }));
+                }, 500);
+            });
+        } else {
+            console.error("El botón de checkout no se encontró en el DOM");
+        }
+        
+        // Initialize with default values
+        if (currentPriceElement) {
+            updatePrice();
+        }
+    }
+</script>
