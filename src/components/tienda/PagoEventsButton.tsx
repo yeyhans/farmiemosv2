@@ -32,6 +32,7 @@ export default function MercadoPagoButton({ amount }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [attendees, setAttendees] = useState<Attendee[]>([{ name: '', phone: '', instagram: '' }]);
   const [formErrors, setFormErrors] = useState<{[key: string]: boolean}>({});
+  const [isFormComplete, setIsFormComplete] = useState(false);
 
   // Handle attendee field changes
   const handleAttendeeChange = (index: number, field: keyof Attendee, value: string) => {
@@ -64,8 +65,14 @@ export default function MercadoPagoButton({ amount }: Props) {
     });
 
     setFormErrors(newErrors);
+    setIsFormComplete(isValid);
     return isValid;
   };
+  
+  // Check form completeness whenever attendees change
+  useEffect(() => {
+    validateForm();
+  }, [attendees]);
   
   useEffect(() => {
     // Listen for amount update events from the page
@@ -112,6 +119,9 @@ export default function MercadoPagoButton({ amount }: Props) {
   }, [quantity, attendees]);
 
   useEffect(() => {
+    // Don't initialize MercadoPago if form is not complete
+    if (!isFormComplete) return;
+    
     // Add MercadoPago script if it doesn't exist
     const script = document.createElement('script');
     script.src = "https://sdk.mercadopago.com/js/v2";
@@ -252,26 +262,32 @@ export default function MercadoPagoButton({ amount }: Props) {
         }
       }
     };
-  }, [currentAmount, eventData, quantity]);
+  }, [currentAmount, eventData, attendees, quantity, isFormComplete]);
 
   return (
     <div className="space-y-6">
-      {/* Attendee information form */}
+      {/* Use the separate AttendeeForm component */}
       <AttendeeForm 
-        attendees={attendees} 
-        formErrors={formErrors} 
-        onAttendeeChange={handleAttendeeChange} 
+        attendees={attendees}
+        formErrors={formErrors}
+        onAttendeeChange={handleAttendeeChange}
       />
 
-      {/* MercadoPago button */}
-      <div 
-        id="cardPayment_container" 
-        style={{
-          minHeight: '200px',
-          width: '100%',
-          margin: '10px 0'
-        }}
-      ></div>
+      {/* MercadoPago button - only show when form is complete */}
+      {isFormComplete ? (
+        <div 
+          id="cardPayment_container" 
+          style={{
+            minHeight: '200px',
+            width: '100%',
+            margin: '10px 0'
+          }}
+        ></div>
+      ) : (
+        <div className="p-4 bg-gray-100 rounded-md text-center">
+          <p className="text-gray-700">Complete todos los campos obligatorios para continuar con el pago</p>
+        </div>
+      )}
     </div>
   );
 }
