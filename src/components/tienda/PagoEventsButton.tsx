@@ -157,7 +157,20 @@ export default function MercadoPagoButton({ amount }: Props) {
 
         cardPaymentBrickRef = await mpInstance.bricks().create("cardPayment", "cardPayment_container", {
           initialization: {
-            amount: currentAmount,
+            amount: currentAmount.toString(),
+            payer: {
+              email: "",
+            },
+          },
+          customization: {
+            paymentMethods: {
+              maxInstallments: 1,
+            },
+            visual: {
+              style: {
+                theme: 'default'
+              }
+            }
           },
           callbacks: {
             onReady: () => {
@@ -186,9 +199,12 @@ export default function MercadoPagoButton({ amount }: Props) {
                 
                 const paymentData = {
                   ...cardFormData,
-                  transaction_amount: currentAmount,
-                  eventData: updatedEventData
+                  transaction_amount: parseFloat(currentAmount.toString()),
+                  eventData: updatedEventData,
+                  description: eventDetails.description || 'Evento'
                 };
+                
+                console.log('Sending payment data:', JSON.stringify(paymentData));
                 
                 const response = await fetch('/api/mercadopago/eventos', {
                   method: 'POST',
@@ -223,6 +239,11 @@ export default function MercadoPagoButton({ amount }: Props) {
               }
               if (error.cause) {
                 console.error('Error cause:', error.cause);
+                
+                // Display user-friendly error message based on error cause
+                if (error.cause === 'secure_fields_card_token_creation_failed') {
+                  alert('Hubo un problema con la información de la tarjeta. Por favor, verifica que los datos ingresados sean correctos.');
+                }
               }
             },
             onBinChange: (bin: string) => {
@@ -231,9 +252,6 @@ export default function MercadoPagoButton({ amount }: Props) {
             onFetching: (resource: string) => {
               console.log('Fetching resource:', resource);
             }
-          },
-          style: {
-            theme: 'default'
           }
         });
       } catch (error) {
@@ -262,7 +280,7 @@ export default function MercadoPagoButton({ amount }: Props) {
         }
       }
     };
-  }, [currentAmount, eventData, attendees, quantity, isFormComplete]);
+  }, [currentAmount, eventData, attendees, quantity, isFormComplete, eventDetails]);
 
   return (
     <div className="space-y-6">

@@ -23,28 +23,65 @@ export const POST: APIRoute = async ({ request }) => {
     const requestData = await request.json();
     const { eventData } = requestData;
     
-    // Add debugging to see what's being received
+    // Enhanced debugging to see what's being received
     console.log('Received payment request with data:', JSON.stringify(requestData, null, 2));
     console.log('Event data:', JSON.stringify(eventData, null, 2));
     
-    // Create payment in MercadoPago
-    const paymentData = await payment.create({
-      body: {
-        transaction_amount: requestData.transaction_amount,
-        token: requestData.token,
-        description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
-        installments: requestData.installments,
-        payment_method_id: requestData.payment_method_id,
-        payer: {
-          email: requestData.payer.email
-        },
-        metadata: {
-          eventDay: eventData?.eventDay || '22',
-          quantity: eventData?.quantity || 1,
-          attendees: eventData?.attendees || []
+    // Validate required fields
+    if (!requestData.token) {
+      console.error('Missing payment token in request');
+      return new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'Falta el token de pago. Verifica que los campos de tarjeta estén correctamente configurados.'
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    });
+      );
+    }
+    
+    // Create payment in MercadoPago with more detailed error handling
+    let paymentData;
+    try {
+      paymentData = await payment.create({
+        body: {
+          transaction_amount: requestData.transaction_amount,
+          token: requestData.token,
+          description: `Evento de Catación - ${eventData?.eventDay || '22'} de Marzo`,
+          installments: requestData.installments,
+          payment_method_id: requestData.payment_method_id,
+          payer: {
+            email: requestData.payer.email
+          },
+          metadata: {
+            eventDay: eventData?.eventDay || '22',
+            quantity: eventData?.quantity || 1,
+            attendees: eventData?.attendees || []
+          }
+        }
+      });
+      
+      console.log('MercadoPago payment response:', JSON.stringify(paymentData, null, 2));
+    } catch (mpError) {
+      console.error('MercadoPago payment creation error:', mpError);
+      return new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'Error al procesar el pago con MercadoPago',
+          details: mpError instanceof Error ? mpError.message : 'Unknown error'
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
 
     // Check payment status - accept both approved and in_process
     if (paymentData.status === 'approved' || paymentData.status === 'in_process') {
