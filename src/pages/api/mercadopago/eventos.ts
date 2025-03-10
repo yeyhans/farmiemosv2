@@ -205,8 +205,7 @@ export const POST: APIRoute = async ({ request }) => {
           </ul>
           ${additionalInfo}
           ${attendeesHtml}
-          <p>Te enviaremos instrucciones sobre la ubicación exacta del evento por WhatsApp un día antes.</p>
-          <p><a href="https://chat.whatsapp.com/C45HeFUYUJWFlEWumbWoPJ">Ingresa a nuestro grupo de Whatsapp</a></p>
+          <p>Nos pondremos en contacto contigo a la brevedad y te enviaremos instrucciones sobre la ubicación exacta del evento por WhatsApp el mismo día.</p>
           <p>¡Nos vemos pronto!</p>
         `
       });
