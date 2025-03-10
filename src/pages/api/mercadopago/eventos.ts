@@ -129,7 +129,7 @@ export const POST: APIRoute = async ({ request }) => {
         subject: 'Confirmación de Reserva - Evento de Catación',
         html: `
           <h1>¡Gracias por tu reserva!</h1>
-          <p>Has reservado para ${eventData?.description} del ${eventData?.eventDay || '22'} de Marzo.</p>
+          <p>Has reservado para ${eventData?.description || 'Catación'} del ${eventData?.eventDay || '22'} de Marzo.</p>
           <p>Detalles de la transacción:</p>
           <ul>
             <li>ID de Pago: ${paymentData.id}</li>
