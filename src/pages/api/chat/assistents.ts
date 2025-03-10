@@ -113,7 +113,7 @@ const profilePrompt = profileData?.prompt_profile || "";
       imageAnalysis = response.choices[0]?.message?.content || "No se pudo obtener una respuesta para la imagen.";
     } catch (error) {
       // Manejar errores específicos y genéricos
-      console.error("Error al procesar la imagen:", error.message);
+      console.error("Error al procesar la imagen:", error instanceof Error ? error.message : String(error));
       imageAnalysis = "Ocurrió un error al procesar la imagen. Por favor, intenta nuevamente.";
     }
     
@@ -139,7 +139,7 @@ const profilePrompt = profileData?.prompt_profile || "";
 
     const conversationHistory: ChatMessage[] = [
       { role: "system", content: "Eres un experto en cultivar todo tipo de plantas. Proporciona respuestas claras y precisas basadas en el contexto proporcionado." },
-      ...(chatSession.user_prompt || []).flatMap((prompt, i) => [
+      ...(chatSession.user_prompt || []).flatMap((prompt: string, i: number) => [
         { role: "user", content: prompt },
         { role: "assistant", content: chatSession.ai_response[i] }
       ]),
@@ -180,7 +180,7 @@ const profilePrompt = profileData?.prompt_profile || "";
         } catch (error) {
           console.error("Error en el stream:", error);
           // Proporcionar un mensaje de error más descriptivo
-          controller.enqueue(`\n\n[ERROR: ${error.message || "Error desconocido durante la generación"}]`);
+          controller.enqueue(`\n\n[ERROR: ${error instanceof Error ? error.message : "Error desconocido durante la generación"}]`);
         } finally {
           // Pequeña pausa antes de cerrar para asegurar que los últimos chunks se envíen
           setTimeout(() => {
@@ -195,19 +195,24 @@ const profilePrompt = profileData?.prompt_profile || "";
                 const totalResponseTokens = (chatSession.response_tokens_used || 0) + responseTokensUsed;
                 const totalPromptTokens = (chatSession.prompt_tokens_used || 0) + promptTokensUsed;
 
-                await supabase
-                  .from("chats")
-                  .update({
-                    user_prompt: updatedUserPrompts,
-                    ai_response: updatedAiResponses,
-                    response_tokens_used: totalResponseTokens,
-                    prompt_tokens_used: totalPromptTokens,
-                    model: "gpt-4o",
-                    updated_at: new Date().toISOString(),
-                    session_name: sessionName
-                  })
-                  .eq("id", sessionId)
-                  .eq("user_id", sessionData.user.id);
+                // Crear una función asíncrona inmediatamente invocada para usar await
+                (async () => {
+                  await supabase
+                    .from("chats")
+                    .update({
+                      user_prompt: updatedUserPrompts,
+                      ai_response: updatedAiResponses,
+                      response_tokens_used: totalResponseTokens,
+                      prompt_tokens_used: totalPromptTokens,
+                      model: "gpt-4o",
+                      updated_at: new Date().toISOString(),
+                      session_name: sessionName
+                    })
+                    .eq("id", sessionId)
+                    .eq("user_id", sessionData.user?.id || "");
+                })().catch(dbError => {
+                  console.error("Error al actualizar la base de datos:", dbError);
+                });
 
               } catch (dbError) {
                 console.error("Error al actualizar la base de datos:", dbError);
