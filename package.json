@@ -36,6 +36,7 @@
     "openai": "^4.77.0",
     "playwright": "^1.50.1",
     "react": "^19.0.0",
+    "react-date-range": "^2.0.1",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",

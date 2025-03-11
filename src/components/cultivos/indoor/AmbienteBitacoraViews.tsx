@@ -731,13 +731,28 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
 
   return (
     <div className="mt-8 space-y-4">
+
       <div className="flex justify-between items-center">
+        
+        <div>
         <h2 className="text-xl font-semibold">Bitácora del Cultivo</h2>
         {(bitacoraEntries.length + filteredLogs.length + actionLogs.length > 4) && (
-          <span className="text-sm text-gray-500">
+          <span className="text-xs text-gray-500">
             Mostrando 4 de {bitacoraEntries.length + filteredLogs.length + actionLogs.length} entradas
           </span>
+          
         )}
+        </div>
+        
+
+
+        <a
+          href={`/cultivo/${cultivoId}/indoor/logs`}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >Ver más...
+        </a>
+
+        
       </div>
       
       {timelineEntries.length === 0 ? (

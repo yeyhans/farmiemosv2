@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface AccionesCalculatorProps {
   cultivoId: string;
   user_id: string;
   onClose: () => void;
+  selectedDate?: Date;
 }
 
 interface Action {
@@ -17,7 +18,7 @@ interface SelectedAction {
   data: any;
 }
 
-export default function AccionesCalculator({ cultivoId, user_id, onClose }: AccionesCalculatorProps) {
+export default function AccionesCalculator({ cultivoId, user_id, onClose, selectedDate }: AccionesCalculatorProps) {
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [currentPopup, setCurrentPopup] = useState<string | null>(null);
   const [actionData, setActionData] = useState<{[key: string]: any}>({});
@@ -31,11 +32,18 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
   ];
 
   const toggleAction = (actionId: string) => {
-    if (selectedAction === actionId) {
-      setSelectedAction(null);
-    } else {
-      setSelectedAction(actionId);
-    }
+    const newSelectedAction = selectedAction === actionId ? null : actionId;
+    setSelectedAction(newSelectedAction);
+    
+    // Broadcast action selection in real-time
+    const actionSelectionEvent = new CustomEvent('accion-selection-changed', {
+      detail: { 
+        actionId: newSelectedAction,
+        cultivoId,
+        timestamp: selectedDate ? selectedDate.toISOString() : new Date().toISOString()
+      }
+    });
+    window.dispatchEvent(actionSelectionEvent);
   };
 
   const openPopup = (actionId: string) => {
@@ -51,6 +59,18 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
     newActionData[actionId] = data;
     setActionData(newActionData);
     closePopup();
+    
+    // Broadcast action data changes in real-time
+    const actionDataEvent = new CustomEvent('accion-data-changed', {
+      detail: { 
+        actionId,
+        data,
+        allData: newActionData,
+        cultivoId,
+        timestamp: selectedDate ? selectedDate.toISOString() : new Date().toISOString()
+      }
+    });
+    window.dispatchEvent(actionDataEvent);
     
     console.log(`Guardando ${actionId}:`, data);
     // Here you would typically save this to your backend
@@ -73,7 +93,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
       const actionToSave = {
         tipo: selectedAction,
         data: actionData[selectedAction] || {},
-        timestamp: new Date().toISOString(),
+        timestamp: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
         id: uniqueId,
         cultivoId,
         user_id
@@ -95,13 +115,76 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
       
       const data = await response.json();
       if (data.success) {
+        // Emitir evento para notificar a otros componentes
+        const accionUpdateEvent = new CustomEvent('cultivo-data-updated', {
+          detail: {
+            type: 'accion',
+            cultivoId,
+            action: actionToSave,
+            timestamp: actionToSave.timestamp,
+            success: true
+          }
+        });
+        window.dispatchEvent(accionUpdateEvent);
+        
         console.log(`Acción guardada exitosamente`);
+        
+        // Close the modal
         onClose();
+        
+        // Set a small timeout to ensure the modal is closed before reload
+        setTimeout(() => {
+          // Reload the page to refresh all components with new data
+          window.location.reload();
+        }, 100);
       }
     } catch (error: any) {
       console.error('Error al guardar la acción:', error);
       alert('Error al guardar la acción: ' + (error.message || 'Error desconocido'));
     }
+  };
+
+  // Añadir un efecto para escuchar actualizaciones globales
+  useEffect(() => {
+    const handleGlobalUpdate = (event: CustomEvent<any>) => {
+      const { type, cultivoId: updatedCultivoId } = event.detail;
+      
+      if (updatedCultivoId === cultivoId) {
+        // Podríamos hacer algo cuando se actualizan otros datos
+        console.log(`Se ha registrado una actualización de ${type}`);
+      }
+    };
+    
+    window.addEventListener('cultivo-data-updated', handleGlobalUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('cultivo-data-updated', handleGlobalUpdate as EventListener);
+    };
+  }, [cultivoId]);
+
+  // Add this section to generically handle form field changes and broadcast them
+  const handleActionFieldChange = (actionId: string, field: string, value: any) => {
+    setActionData(prev => {
+      const updatedData = { 
+        ...prev,
+        [actionId]: { ...(prev[actionId] || {}), [field]: value }
+      };
+      
+      // Broadcast individual field changes in real-time
+      const fieldChangeEvent = new CustomEvent('accion-field-changed', {
+        detail: { 
+          actionId,
+          field,
+          value,
+          allData: updatedData,
+          cultivoId,
+          timestamp: selectedDate ? selectedDate.toISOString() : new Date().toISOString()
+        }
+      });
+      window.dispatchEvent(fieldChangeEvent);
+      
+      return updatedData;
+    });
   };
 
   return (
@@ -117,6 +200,19 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
         </button>
 
         <h3 className="text-lg font-medium text-gray-800 mb-4">📈 Selecciona una Acción</h3>
+        
+        {selectedDate && (
+          <div className="mb-4 text-sm text-gray-600">
+            Fecha seleccionada: {selectedDate.toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </div>
+        )}
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {actions.map((action) => (
@@ -182,10 +278,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="riego-cantidad"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.riego?.cantidad || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      riego: { ...actionData.riego, cantidad: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('riego', 'cantidad', e.target.value)}
                   />
                 </div>
                 
@@ -195,10 +288,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="riego-tipo"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.riego?.tipo || 'manual'}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      riego: { ...actionData.riego, tipo: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('riego', 'tipo', e.target.value)}
                   >
                     <option value="manual">Manual</option>
                     <option value="goteo">Goteo</option>
@@ -213,10 +303,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     rows={3}
                     value={actionData.riego?.notas || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      riego: { ...actionData.riego, notas: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('riego', 'notas', e.target.value)}
                   ></textarea>
                 </div>
               </div>
@@ -256,10 +343,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="poda-tipo"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.poda?.tipo || 'formacion'}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      poda: { ...actionData.poda, tipo: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('poda', 'tipo', e.target.value)}
                   >
                     <option value="formacion">Formación</option>
                     <option value="mantenimiento">Mantenimiento</option>
@@ -276,10 +360,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="Ej: Tijeras, sierra..."
                     value={actionData.poda?.herramientas || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      poda: { ...actionData.poda, herramientas: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('poda', 'herramientas', e.target.value)}
                   />
                 </div>
 
@@ -290,10 +371,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     rows={3}
                     value={actionData.poda?.notas || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      poda: { ...actionData.poda, notas: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('poda', 'notas', e.target.value)}
                   ></textarea>
                 </div>
               </div>
@@ -333,10 +411,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="fertilizacion-tipo"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.fertilizacion?.tipo || 'organico'}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      fertilizacion: { ...actionData.fertilizacion, tipo: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('fertilizacion', 'tipo', e.target.value)}
                   >
                     <option value="organico">Orgánico</option>
                     <option value="mineral">Mineral</option>
@@ -352,10 +427,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="fertilizacion-cantidad"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.fertilizacion?.cantidad || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      fertilizacion: { ...actionData.fertilizacion, cantidad: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('fertilizacion', 'cantidad', e.target.value)}
                   />
                 </div>
 
@@ -366,10 +438,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     rows={3}
                     value={actionData.fertilizacion?.notas || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      fertilizacion: { ...actionData.fertilizacion, notas: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('fertilizacion', 'notas', e.target.value)}
                   ></textarea>
                 </div>
               </div>
@@ -409,10 +478,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="tratamiento-tipo"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.tratamiento?.tipo || 'fungicida'}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      tratamiento: { ...actionData.tratamiento, tipo: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('tratamiento', 'tipo', e.target.value)}
                   >
                     <option value="fungicida">Fungicida</option>
                     <option value="insecticida">Insecticida</option>
@@ -428,10 +494,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     id="tratamiento-producto"
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     value={actionData.tratamiento?.producto || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      tratamiento: { ...actionData.tratamiento, producto: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('tratamiento', 'producto', e.target.value)}
                   />
                 </div>
 
@@ -443,10 +506,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="Ej: 100ml/100L"
                     value={actionData.tratamiento?.dosis || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      tratamiento: { ...actionData.tratamiento, dosis: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('tratamiento', 'dosis', e.target.value)}
                   />
                 </div>
 
@@ -457,10 +517,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     rows={3}
                     value={actionData.tratamiento?.notas || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      tratamiento: { ...actionData.tratamiento, notas: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('tratamiento', 'notas', e.target.value)}
                   ></textarea>
                 </div>
               </div>
@@ -503,10 +560,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="Ej: Limpieza, Inspección..."
                     value={actionData.otro?.nombre || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      otro: { ...actionData.otro, nombre: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('otro', 'nombre', e.target.value)}
                   />
                 </div>
 
@@ -517,10 +571,7 @@ export default function AccionesCalculator({ cultivoId, user_id, onClose }: Acci
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     rows={4}
                     value={actionData.otro?.descripcion || ''}
-                    onChange={(e) => setActionData({
-                      ...actionData,
-                      otro: { ...actionData.otro, descripcion: e.target.value }
-                    })}
+                    onChange={(e) => handleActionFieldChange('otro', 'descripcion', e.target.value)}
                   ></textarea>
                 </div>
               </div>

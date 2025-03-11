@@ -43,6 +43,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const imageFile = formData.get("image") as File;
     const cultivoId = formData.get("cultivoId") as string; 
     const notaUsuario = formData.get("note") as string;
+    const customTimestamp = formData.get("timestamp") as string;
     
     if (!imageFile) {
       return new Response(
@@ -151,7 +152,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .getPublicUrl(filePath);
     
     // 4. TERCERO: Crear la entrada de bitácora
-    const timestamp = new Date().toISOString();
+    const timestamp = customTimestamp || new Date().toISOString();
     const bitacoraEntry = {
       timestamp,
       descripcion: description,
