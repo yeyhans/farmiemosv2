@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AmbienteBitacoraLogs from './AmbienteBitacoraLogs';
+import AccionesCalculator from './AccionesCalculator';
 
 interface AmbienteLog {
   timestamp: string;
@@ -38,6 +39,7 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
   });
 
   const [showBitacora, setShowBitacora] = useState(false);
+  const [showAcciones, setShowAcciones] = useState(false);
 
   // Memoizar funciones de cálculo
   const calcularVPD = useCallback((temp: number, hum: number) => {
@@ -207,6 +209,17 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
               </svg>
               Subir Foto
             </button>
+            
+            <button
+              type="button"
+              onClick={() => setShowAcciones(true)}
+              className="flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-xs py-2 px-3 rounded transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Acciones
+            </button>
           </div>
         </div>
       </form>
@@ -216,6 +229,14 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
           cultivoId={cultivoId} 
           user_id={user_id} 
           onClose={() => setShowBitacora(false)} 
+        />
+      )}
+      
+      {showAcciones && (
+        <AccionesCalculator
+          cultivoId={cultivoId}
+          user_id={user_id}
+          onClose={() => setShowAcciones(false)}
         />
       )}
     </div>

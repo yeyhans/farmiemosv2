@@ -28,51 +28,20 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
     const userId = sessionData.user.id;
     const body = await request.json();
-    const { cultivoId, timestamp, newDescription } = body;
+    const { cultivoId, actions_logs } = body;
 
-    if (!cultivoId || !timestamp || !newDescription) {
+    if (!cultivoId || !actions_logs) {
       return new Response(
         JSON.stringify({ success: false, error: "Datos incompletos" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Obtener el registro actual
-    const { data: cultivoData, error: cultivoError } = await supabase
-      .from("cultivos")
-      .select("bitacora_logs")
-      .eq("id", cultivoId)
-      .eq("uuid", userId)
-      .single();
-
-    if (cultivoError) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Error al obtener datos del cultivo" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Verificar que existan logs de bitácora
-    if (!Array.isArray(cultivoData?.bitacora_logs)) {
-      return new Response(
-        JSON.stringify({ success: false, error: "No hay entradas de bitácora para este cultivo" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Encontrar y actualizar la entrada específica
-    const updatedLogs = cultivoData.bitacora_logs.map(entry => {
-      if (entry.timestamp === timestamp) {
-        return { ...entry, descripcion: newDescription };
-      }
-      return entry;
-    });
-
     // Actualizar en Supabase
     const { error: updateError } = await supabase
       .from("cultivos")
       .update({
-        bitacora_logs: updatedLogs,
+        actions_logs: actions_logs,
         updated_at: new Date().toISOString()
       })
       .eq("id", cultivoId)
@@ -80,7 +49,7 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
     if (updateError) {
       return new Response(
-        JSON.stringify({ success: false, error: "Error al actualizar la bitácora" }),
+        JSON.stringify({ success: false, error: "Error al actualizar los registros de acciones" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -88,13 +57,13 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Descripción actualizada correctamente" 
+        message: "Acción actualizada correctamente" 
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
 
   } catch (error: any) {
-    console.error("Error al editar entrada de bitácora:", error);
+    console.error("Error al actualizar registro de acción:", error);
     
     return new Response(
       JSON.stringify({ 
