@@ -2,13 +2,26 @@
 import Layout from '../../../layouts/Layout.astro';
 import { supabase } from '../../../lib/supabase';
 import { authenticate } from '../../../lib/auth';
+import SueloPlanner from '../../../components/cultivos/indoor/SueloPlanner';
 
 const { id } = Astro.params;
 const { user } = await authenticate(Astro);
+
+if (!id) {
+    return Astro.redirect('/404');
+}
+
+// Fetch ambiente data if needed
+const { data: ambiente } = await supabase
+    .from('ambientes')
+    .select('*')
+    .eq('cultivo_id', id)
+    .single();
 ---
 
 <Layout title="Cultivo" description="Cultivo">
     <div class="container mx-auto p-4">
         <h1 class="text-2xl font-bold mb-6">SUELO</h1>
+        <SueloPlanner client:load cultivoId={id} ambiente={ambiente} />
     </div>
 </Layout>

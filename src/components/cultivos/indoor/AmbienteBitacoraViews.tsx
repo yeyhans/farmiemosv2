@@ -806,7 +806,7 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                     />
                   </div>
                   <div className="p-3 flex-1 flex flex-col">
-                    <p className="text-sm line-clamp-3 text-gray-700 overflow-hidden">{bitacoraEntry.descripcion}</p>
+                    <p className="text-xs line-clamp-3 text-gray-700 overflow-hidden">{bitacoraEntry.descripcion}</p>
                   </div>
                 </div>
               );
@@ -844,24 +844,40 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                   </div>
                   
                   {/* Cuerpo con valores de ambiente */}
-                  <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="grid grid-cols-4 xs:grid-cols-2 sm:grid-cols-2 gap-2 w-full">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="text-lg sm:text-3xl font-bold text-orange-500">{formatNumber(ambienteLog.temperatura)}°C</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">Temperatura</div>
+                  <div className="p-2 flex-1 grid grid-cols-2 grid-rows-2 gap-2">
+                    {/* Tarjeta de Temperatura */}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-md p-2 border border-blue-200 shadow-sm hover:shadow transition-all">
+                      <div className="flex items-center mb-0.5">
+                        <p className="text-xs font-medium text-blue-700">🌡️ Temperatura</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="text-lg sm:text-3xl font-bold text-blue-500">{formatNumber(ambienteLog.humedad)}%</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">Humedad</div>
+                      <p className="text-xl font-bold text-gray-800">{ambienteLog.temperatura.toFixed(1)} <span className="text-sm">°C</span></p>
+                    </div>
+                    
+                    {/* Tarjeta de Humedad */}
+                    <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-md p-2 border border-cyan-200 shadow-sm hover:shadow transition-all">
+                      <div className="flex items-center mb-0.5">
+                        <p className="text-xs font-medium text-cyan-700">💧 Humedad</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="text-lg sm:text-3xl font-bold text-purple-500">{formatNumber(ambienteLog.vpd)} kPa</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">VPD</div>
+                      <p className="text-xl font-bold text-gray-800">{ambienteLog.humedad.toFixed(1)} <span className="text-sm">%</span></p>
+                    </div>
+                    
+                    {/* Tarjeta de VPD */}
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-md p-2 border border-purple-200 shadow-sm hover:shadow transition-all">
+                      <div className="flex items-center mb-0.5">
+                        <p className="text-xs font-medium text-purple-700">💨 VPD</p>
                       </div>
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="text-lg sm:text-3xl font-bold text-teal-500">{formatNumber(ambienteLog.dewpoint)}°C</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">Punto de rocío</div>
+                      <div className="flex items-baseline">
+                        <p className="text-xl font-bold text-gray-800">{ambienteLog.vpd.toFixed(2)}</p>
+                        <p className="text-xs text-gray-600 ml-1">kPa</p>
                       </div>
+                    </div>
+                    
+                    {/* Tarjeta de Punto de Rocío */}
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-md p-2 border border-green-200 shadow-sm hover:shadow transition-all">
+                      <div className="flex items-center mb-0.5">
+                        <p className="text-xs font-medium text-green-700">🌡️ Punto de Rocío</p>
+                      </div>
+                      <p className="text-xl font-bold text-gray-800">{ambienteLog.dewpoint.toFixed(1)} <span className="text-sm">°C</span></p>
                     </div>
                   </div>
                 </div>
@@ -900,21 +916,21 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                   </div>
                   
                   {/* Contenido del log de acción */}
-                  <div className="p-4 flex-1 overflow-auto">
+                  <div className="p-2 flex-1 overflow-auto">
                     <div className="mb-4 flex items-center justify-center bg-amber-50 p-2 rounded-lg">
-                      <span className="mr-2 text-2xl">{getActionIcon(actionLog.tipo)}</span>
-                      <span className="font-medium text-lg text-amber-800">{getActionName(actionLog.tipo, actionLog.data)}</span>
+                      <span className="mr-2 text-sm">{getActionIcon(actionLog.tipo)}</span>
+                      <span className="font-medium text-sm text-amber-800">{getActionName(actionLog.tipo, actionLog.data)}</span>
                     </div>
                     
                     {actionLog.tipo === 'riego' && (
-                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-24">Cantidad:</span> 
                           <span className="text-blue-600 font-medium">{actionLog.data.cantidad} L</span>
                         </div>
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-24">Tipo:</span> 
-                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-sm">
+                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
                             {actionLog.data.tipo === 'manual' ? 'Manual' : 
                              actionLog.data.tipo === 'goteo' ? 'Goteo' : 
                              actionLog.data.tipo === 'aspersion' ? 'Aspersión' : 
@@ -924,17 +940,17 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                         {actionLog.data.notas && (
                           <div>
                             <span className="font-medium text-gray-700">Notas:</span>
-                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-sm">{actionLog.data.notas}</p>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
                           </div>
                         )}
                       </div>
                     )}
                     
                     {actionLog.tipo === 'poda' && (
-                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-24">Tipo:</span>
-                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm">
+                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">
                             {actionLog.data.tipo === 'formacion' ? 'Formación' : 
                              actionLog.data.tipo === 'mantenimiento' ? 'Mantenimiento' : 
                              actionLog.data.tipo === 'sanitaria' ? 'Sanitaria' : 
@@ -943,7 +959,7 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                           </span>
                         </div>
                         {actionLog.data.herramientas && (
-                          <div className="flex items-center">
+                          <div className="flex items-center text-xs">
                             <span className="font-medium text-gray-700 w-24">Herramientas:</span>
                             <span className="text-gray-600">{actionLog.data.herramientas}</span>
                           </div>
@@ -951,17 +967,17 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                         {actionLog.data.notas && (
                           <div>
                             <span className="font-medium text-gray-700">Notas:</span>
-                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-sm">{actionLog.data.notas}</p>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
                           </div>
                         )}
                       </div>
                     )}
                     
                     {actionLog.tipo === 'fertilizacion' && (
-                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-24">Tipo:</span>
-                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-sm">
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs">
                             {actionLog.data.tipo === 'organico' ? 'Orgánico' : 
                              actionLog.data.tipo === 'mineral' ? 'Mineral' : 
                              actionLog.data.tipo === 'foliar' ? 'Foliar' : 
@@ -978,17 +994,17 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                         {actionLog.data.notas && (
                           <div>
                             <span className="font-medium text-gray-700">Notas:</span>
-                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-sm">{actionLog.data.notas}</p>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
                           </div>
                         )}
                       </div>
                     )}
                     
                     {actionLog.tipo === 'tratamiento' && (
-                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-24">Tipo:</span>
-                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-sm">
+                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
                             {actionLog.data.tipo === 'fungicida' ? 'Fungicida' : 
                              actionLog.data.tipo === 'insecticida' ? 'Insecticida' : 
                              actionLog.data.tipo === 'herbicida' ? 'Herbicida' : 
@@ -1011,7 +1027,7 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                         {actionLog.data.notas && (
                           <div>
                             <span className="font-medium text-gray-700">Notas:</span>
-                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-sm">{actionLog.data.notas}</p>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
                           </div>
                         )}
                       </div>
@@ -1020,15 +1036,15 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                     {actionLog.tipo === 'otro' && (
                       <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         {actionLog.data.nombre && (
-                          <div className="flex items-center">
+                          <div className="flex items-center text-xs">
                             <span className="font-medium text-gray-700 w-24">Acción:</span>
                             <span className="text-gray-600">{actionLog.data.nombre}</span>
                           </div>
                         )}
                         {actionLog.data.descripcion && (
                           <div>
-                            <span className="font-medium text-gray-700">Descripción:</span>
-                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-sm">{actionLog.data.descripcion}</p>
+                            <span className="font-medium text-gray-700 text-xs">Descripción:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.descripcion}</p>
                           </div>
                         )}
                       </div>
@@ -1297,11 +1313,11 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">Notas</label>
+                        <label className="block text-xs font-medium text-gray-700">Notas</label>
                         <textarea
                           value={editedAction.notas || ''}
                           onChange={(e) => setEditedAction((prev: any) => ({...prev, notas: e.target.value}))}
-                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          className="text-xs w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
                           rows={3}
                         />
                       </div>
@@ -1472,7 +1488,7 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
                 <div>
                   {/* ... render action details based on type ... */}
                   {selectedActionLog.tipo === 'riego' && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-xs">
                       <p><span className="font-medium">Cantidad:</span> {selectedActionLog.data.cantidad} L</p>
                       <p><span className="font-medium">Tipo:</span> {selectedActionLog.data.tipo === 'manual' ? 'Manual' : 
                                                              selectedActionLog.data.tipo === 'goteo' ? 'Goteo' : 

@@ -400,7 +400,7 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
         {/* Indicador de fecha seleccionada */}
         <div className="mt-2 text-center">
           <div className="flex items-center justify-center mb-1">
-            <span className="text-xs mr-2">Usar hora actual</span>
+            <span className="text-xs mr-2">Elegir hora</span>
             <button 
               type="button"
               onClick={() => setShowTimePicker(!showTimePicker)}
@@ -410,7 +410,7 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${showTimePicker ? 'translate-x-1' : 'translate-x-5'}`} 
               />
             </button>
-            <span className="text-xs ml-2">Elegir hora</span>
+            <span className="text-xs ml-2">Usar hora actual</span>
           </div>
           <span className="text-xs font-medium text-gray-700">
             Fecha seleccionada: {selectedDate.toLocaleDateString('es-ES', { 

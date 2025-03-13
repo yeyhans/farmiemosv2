@@ -1,0 +1,37 @@
+---
+import Layout from '../../../../layouts/DashboardLayout.astro';
+import SueloPlanner from '../../../../components/cultivos/indoor/SueloPlanner';
+import { supabase } from '../../../../lib/supabase';
+import { authenticate } from '../../../../lib/auth';
+// Obtener el ID del cultivo de los parámetros
+const { id } = Astro.params;
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+const user_id = user?.id;
+
+// Obtener datos del ambiente
+const { data: cultivoData } = await supabase
+  .from('cultivos')
+  .select('ambiente')
+  .eq('id', id)
+  .eq('uuid', user_id)
+  .single();
+
+const ambiente = cultivoData?.ambiente || null;
+---
+
+<Layout title="Configuración de Suelo">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Configuración del Suelo</h1>
+    
+    <SueloPlanner 
+      client:load 
+      cultivoId={id}
+      user_id={user_id}
+      ambiente={ambiente} 
+    />
+  </div>
+</Layout>

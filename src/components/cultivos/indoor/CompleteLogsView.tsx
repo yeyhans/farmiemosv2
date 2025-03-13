@@ -823,6 +823,11 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
     setShowCalendar(false);
   };
 
+  // Agregar esta función junto a las otras funciones de manejo del modal de ambiente
+  const enableAmbienteEditMode = () => {
+    setAmbienteModal(prev => ({...prev, isEditing: true}));
+  };
+
   if (isLoading) {
     return (
       <div className="mt-8 flex justify-center items-center p-8">
@@ -834,16 +839,15 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
   return (
     <div className="mt-8 space-y-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
-        <h2 className="text-2xl font-semibold">Historial Completo del Cultivo</h2>
-        
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex items-center">
-            <label htmlFor="filter" className="mr-2 text-sm text-gray-600">Filtrar por:</label>
+            <label htmlFor="filter" className="w-[70px] text-xs text-gray-600">Filtrar por:</label>
             <select 
               id="filter"
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value as any)}
-              className="border rounded-md py-1 px-3 bg-white text-gray-700 focus:ring-green-500 focus:border-green-500"
+              className="w-[200px] border rounded-md py-1 px-3 bg-white text-xs text-gray-700 focus:ring-green-500 focus:border-green-500"
             >
               <option value="all">Todos los registros</option>
               <option value="bitacora">Solo bitácora</option>
@@ -853,12 +857,12 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
           </div>
           
           <div className="flex items-center">
-            <label htmlFor="sort" className="mr-2 text-sm text-gray-600">Ordenar:</label>
+            <label htmlFor="sort" className="w-[70px] text-xs text-gray-600">Ordenar:</label>
             <select 
               id="sort"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as any)}
-              className="border rounded-md py-1 px-3 bg-white text-gray-700 focus:ring-green-500 focus:border-green-500"
+              className="w-[200px] border rounded-md py-1 px-3 bg-white text-xs text-gray-700 focus:ring-green-500 focus:border-green-500"
             >
               <option value="newest">Más recientes primero</option>
               <option value="oldest">Más antiguos primero</option>
@@ -866,64 +870,124 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
           </div>
           
           {/* Filtro de calendario nativo */}
-          <div className="relative">
+          <div className="relative flex items-center">
             <button 
               onClick={() => setShowCalendar(!showCalendar)}
-              className="flex items-center border rounded-md py-1 px-3 bg-white text-gray-700 hover:bg-gray-50 focus:ring-green-500 focus:border-green-500"
+              className="flex items-center border rounded-md py-1 px-3 bg-white text-xs text-gray-700 hover:bg-gray-50 focus:ring-green-500 focus:border-green-500 w-[200px] justify-between whitespace-nowrap overflow-hidden"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-              </svg>
-              {dateFilter.startDate || dateFilter.endDate ? (
-                <span className="text-sm">
-                  {dateFilter.startDate && new Date(dateFilter.startDate).toLocaleDateString('es-ES')} - 
-                  {dateFilter.endDate && new Date(dateFilter.endDate).toLocaleDateString('es-ES')}
+              <div className="flex items-center min-w-[90px]">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-gray-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs">
+                  {dateFilter.startDate || dateFilter.endDate ? (
+                    <span className="truncate">
+                      {dateFilter.startDate && new Date(dateFilter.startDate).toLocaleDateString('es-ES')} - 
+                      {dateFilter.endDate && new Date(dateFilter.endDate).toLocaleDateString('es-ES')}
+                    </span>
+                  ) : (
+                    'Filtrar por fecha'
+                  )}
                 </span>
-              ) : (
-                <span className="text-sm">Filtrar por fecha</span>
-              )}
+              </div>
             </button>
             
             {showCalendar && (
               <div className="absolute right-0 mt-1 z-50 bg-white rounded-lg shadow-lg p-4">
                 <div className="flex flex-col space-y-3">
                   <div className="flex flex-col">
-                    <label htmlFor="startDate" className="text-sm text-gray-600 mb-1">Fecha inicial:</label>
+                    <label className="text-xs text-gray-600 mb-1">Selecciona el rango de fechas:</label>
+                    <div className="flex gap-2 items-center">
                     <input
                       type="date"
                       id="startDate"
                       name="startDate"
                       value={dateFilter.startDate || ''}
-                      onChange={handleDateChange}
-                      className="border rounded-md py-1 px-3 text-gray-700 focus:ring-green-500 focus:border-green-500"
-                    />
+                        onChange={(e) => {
+                          handleDateChange(e);
+                          // Si la fecha final es anterior a la inicial, la actualizamos
+                          if (dateFilter.endDate && e.target.value > dateFilter.endDate) {
+                            setDateFilter(prev => ({
+                              ...prev,
+                              endDate: e.target.value
+                            }));
+                          }
+                        }}
+                        className="w-[140px] border rounded-md py-1 px-2 text-xs text-gray-700 focus:ring-green-500 focus:border-green-500"
+                      />
+                      <span className="text-xs text-gray-500">hasta</span>
+                      <input
+                        type="date"
+                        id="endDate"
+                        name="endDate"
+                        value={dateFilter.endDate || ''}
+                        onChange={handleDateChange}
+                        min={dateFilter.startDate}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="w-[140px] border rounded-md py-1 px-2 text-xs text-gray-700 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col">
-                    <label htmlFor="endDate" className="text-sm text-gray-600 mb-1">Fecha final:</label>
-                    <input
-                      type="date"
-                      id="endDate"
-                      name="endDate"
-                      value={dateFilter.endDate || ''}
-                      onChange={handleDateChange}
-                      className="border rounded-md py-1 px-3 text-gray-700 focus:ring-green-500 focus:border-green-500"
-                      min={dateFilter.startDate}
-                    />
+                  {/* Botones de acciones rápidas */}
+                  <div className="flex flex-wrap gap-1">
+                    <button 
+                      onClick={() => {
+                        const today = new Date();
+                        const startOfWeek = new Date(today);
+                        startOfWeek.setDate(today.getDate() - 7);
+                        setDateFilter({
+                          startDate: startOfWeek.toISOString().split('T')[0],
+                          endDate: today.toISOString().split('T')[0]
+                        });
+                      }}
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    >
+                      Última semana
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const today = new Date();
+                        const startOfMonth = new Date(today);
+                        startOfMonth.setDate(today.getDate() - 30);
+                        setDateFilter({
+                          startDate: startOfMonth.toISOString().split('T')[0],
+                          endDate: today.toISOString().split('T')[0]
+                        });
+                      }}
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    >
+                      Último mes
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const today = new Date();
+                        const startOfYear = new Date(today);
+                        startOfYear.setDate(today.getDate() - 365);
+                        setDateFilter({
+                          startDate: startOfYear.toISOString().split('T')[0],
+                          endDate: today.toISOString().split('T')[0]
+                        });
+                      }}
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    >
+                      Último año
+                    </button>
                   </div>
                   
-                  <div className="flex justify-between mt-2">
+                  <div className="flex justify-between pt-2 border-t">
                     <button 
                       onClick={clearDateFilter}
-                      className="text-red-600 px-3 py-1 text-sm rounded-md hover:bg-red-50"
+                      className="text-red-600 px-3 py-1 text-xs rounded-md hover:bg-red-50"
                     >
-                      Limpiar filtro
+                      Limpiar
                     </button>
                     <button 
                       onClick={applyDateFilter}
-                      className="bg-green-600 text-white px-3 py-1 text-sm rounded-md hover:bg-green-700"
+                      className="bg-green-600 text-white px-3 py-1 text-xs rounded-md hover:bg-green-700"
+                      disabled={!dateFilter.startDate || !dateFilter.endDate}
                     >
-                      Aplicar
+                      Aplicar filtro
                     </button>
                   </div>
                 </div>
@@ -1003,7 +1067,7 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
                     />
                   </div>
                   <div className="p-3 flex-1 flex flex-col">
-                    <p className="text-sm line-clamp-3 text-gray-700 overflow-hidden">{bitacoraEntry.descripcion}</p>
+                    <p className="text-xs line-clamp-3 text-gray-700 overflow-hidden">{bitacoraEntry.descripcion}</p>
                   </div>
                 </div>
               );
@@ -1124,52 +1188,139 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
                     </p>
                   </div>
                   
-                  <div className="p-3 flex-1 flex flex-col space-y-2">
-                    <div className="flex items-center">
-                      <span className="text-lg mr-2">{getActionIcon(actionLog.tipo)}</span>
-                      <p className="text-sm font-medium text-gray-700">{getActionName(actionLog.tipo, actionLog.data)}</p>
+                  <div className="p-2 flex-1 overflow-auto">
+                    <div className="mb-4 flex items-center justify-center bg-amber-50 p-2 rounded-lg">
+                      <span className="mr-2 text-sm">{getActionIcon(actionLog.tipo)}</span>
+                      <span className="font-medium text-sm text-amber-800">{getActionName(actionLog.tipo, actionLog.data)}</span>
                     </div>
                     
-                    {/* Mostrar datos específicos según el tipo de acción */}
-                    <div className="space-y-1 mt-1">
-                      {actionLog.tipo === 'riego' && (
-                        <>
-                          {actionLog.data.cantidad && (
-                            <div className="flex items-center">
-                              <span className="text-xs text-gray-500 w-16">Cantidad:</span>
-                              <span className="text-sm text-gray-700">{actionLog.data.cantidad} L</span>
-                            </div>
-                          )}
-                          {actionLog.data.ph && (
-                            <div className="flex items-center">
-                              <span className="text-xs text-gray-500 w-16">pH:</span>
-                              <span className="text-sm text-gray-700">{actionLog.data.ph}</span>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      
-                      {actionLog.tipo === 'fertilizacion' && actionLog.data.producto && (
+                    {actionLog.tipo === 'riego' && (
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center">
-                          <span className="text-xs text-gray-500 w-16">Producto:</span>
-                          <span className="text-sm text-gray-700 line-clamp-1">{actionLog.data.producto}</span>
+                          <span className="font-medium text-gray-700 w-24">Cantidad:</span> 
+                          <span className="text-blue-600 font-medium">{actionLog.data.cantidad} L</span>
                         </div>
-                      )}
-                      
-                      {actionLog.tipo === 'tratamiento' && actionLog.data.tratamiento && (
                         <div className="flex items-center">
-                          <span className="text-xs text-gray-500 w-16">Tipo:</span>
-                          <span className="text-sm text-gray-700 line-clamp-1">{actionLog.data.tratamiento}</span>
+                          <span className="font-medium text-gray-700 w-24">Tipo:</span> 
+                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
+                            {actionLog.data.tipo === 'manual' ? 'Manual' : 
+                             actionLog.data.tipo === 'goteo' ? 'Goteo' : 
+                             actionLog.data.tipo === 'aspersion' ? 'Aspersión' : 
+                             actionLog.data.tipo}
+                          </span>
                         </div>
-                      )}
-                      
-                      {actionLog.data.notas && (
-                        <div className="flex items-start">
-                          <span className="text-xs text-gray-500 w-16">Notas:</span>
-                          <span className="text-xs text-gray-600 line-clamp-2">{actionLog.data.notas}</span>
+                        {actionLog.data.notas && (
+                          <div>
+                            <span className="font-medium text-gray-700">Notas:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {actionLog.tipo === 'poda' && (
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-24">Tipo:</span>
+                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">
+                            {actionLog.data.tipo === 'formacion' ? 'Formación' : 
+                             actionLog.data.tipo === 'mantenimiento' ? 'Mantenimiento' : 
+                             actionLog.data.tipo === 'sanitaria' ? 'Sanitaria' : 
+                             actionLog.data.tipo === 'rejuvenecimiento' ? 'Rejuvenecimiento' : 
+                             actionLog.data.tipo}
+                          </span>
                         </div>
-                      )}
-                    </div>
+                        {actionLog.data.herramientas && (
+                          <div className="flex items-center text-xs">
+                            <span className="font-medium text-gray-700 w-24">Herramientas:</span>
+                            <span className="text-gray-600">{actionLog.data.herramientas}</span>
+                          </div>
+                        )}
+                        {actionLog.data.notas && (
+                          <div>
+                            <span className="font-medium text-gray-700">Notas:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {actionLog.tipo === 'fertilizacion' && (
+                      <div className="text-xs space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-24">Tipo:</span>
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-xs">
+                            {actionLog.data.tipo === 'organico' ? 'Orgánico' : 
+                             actionLog.data.tipo === 'mineral' ? 'Mineral' : 
+                             actionLog.data.tipo === 'foliar' ? 'Foliar' : 
+                             actionLog.data.tipo === 'compuesto' ? 'Compuesto NPK' : 
+                             actionLog.data.tipo}
+                          </span>
+                        </div>
+                        {actionLog.data.cantidad && (
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 w-24">Cantidad:</span>
+                            <span className="text-emerald-600 font-medium">{actionLog.data.cantidad} kg/L</span>
+                          </div>
+                        )}
+                        {actionLog.data.notas && (
+                          <div>
+                            <span className="font-medium text-gray-700">Notas:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {actionLog.tipo === 'tratamiento' && (
+                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-24">Tipo:</span>
+                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">
+                            {actionLog.data.tipo === 'fungicida' ? 'Fungicida' : 
+                             actionLog.data.tipo === 'insecticida' ? 'Insecticida' : 
+                             actionLog.data.tipo === 'herbicida' ? 'Herbicida' : 
+                             actionLog.data.tipo === 'otro' ? 'Otro' : 
+                             actionLog.data.tipo}
+                          </span>
+                        </div>
+                        {actionLog.data.producto && (
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 w-24">Producto:</span>
+                            <span className="text-gray-600">{actionLog.data.producto}</span>
+                          </div>
+                        )}
+                        {actionLog.data.dosis && (
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-700 w-24">Dosis:</span>
+                            <span className="text-purple-600 font-medium">{actionLog.data.dosis}</span>
+                          </div>
+                        )}
+                        {actionLog.data.notas && (
+                          <div>
+                            <span className="font-medium text-gray-700">Notas:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.notas}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {actionLog.tipo === 'otro' && (
+                      <div className="space-y-2 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                        {actionLog.data.nombre && (
+                          <div className="flex items-center text-xs">
+                            <span className="font-medium text-gray-700 w-24">Acción:</span>
+                            <span className="text-gray-600">{actionLog.data.nombre}</span>
+                          </div>
+                        )}
+                        {actionLog.data.descripcion && (
+                          <div>
+                            <span className="font-medium text-gray-700 text-xs">Descripción:</span>
+                            <p className="mt-1 text-gray-600 bg-gray-50 p-2 rounded text-xs">{actionLog.data.descripcion}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -1180,107 +1331,77 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
 
       {/* Modal para visualizar/editar entradas de bitácora */}
       {bitacoraModal.isOpen && selectedEntry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-3 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Registro de Bitácora
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="max-w-4xl w-full bg-white rounded-lg overflow-hidden">
+            <div className="relative">
+              <img 
+                src={selectedEntry.url_image} 
+                alt={selectedEntry.descripcion} 
+                className="w-full max-h-[70vh] object-contain"
+              />
               <button 
                 onClick={closeBitacoraViewer}
-                className="text-gray-500 hover:text-gray-700"
+                className="absolute top-4 right-4 bg-black bg-opacity-50 rounded-full p-2 text-white hover:bg-opacity-70"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
-            <div className="px-6 py-4">
-              <div className="mb-4">
+            <div className="p-6">
+              <div className="mb-2 flex justify-between">
                 <p className="text-sm text-gray-500">
                   {new Date(selectedEntry.timestamp).toLocaleString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit',
+                    year: 'numeric',
+                    month: 'long', 
+                    day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
                 </p>
-              </div>
-              
-              <div className="mb-6">
-                <img 
-                  src={selectedEntry.url_image} 
-                  alt={selectedEntry.descripcion} 
-                  className="w-full max-h-96 object-contain rounded-lg"
-                />
+                <p className="text-sm text-gray-500">
+                  {(selectedEntry.metadata.fileSize / 1024 / 1024).toFixed(2)} MB
+                </p>
               </div>
               
               {bitacoraModal.isEditing ? (
-                <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
+                <div className="mt-2">
                   <textarea
-                    id="description"
                     value={editedDescription}
                     onChange={(e) => setEditedDescription(e.target.value)}
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full p-3 border rounded-md focus:ring-green-500 focus:border-green-500 min-h-[100px]"
                   />
-                </div>
-              ) : (
-                <div className="mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-800 whitespace-pre-wrap">{selectedEntry.descripcion}</p>
-                </div>
-              )}
-              
-              <div className="flex justify-end space-x-2 mt-4">
-                {bitacoraModal.isEditing ? (
-                  <>
+                  <div className="flex justify-end gap-2 mt-2">
                     <button
                       onClick={cancelBitacoraEditMode}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
                       disabled={bitacoraModal.isSaving}
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={saveEditedDescription}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded"
                       disabled={bitacoraModal.isSaving}
                     >
-                      {bitacoraModal.isSaving ? (
-                        <span className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Guardando...
-                        </span>
-                      ) : (
-                        'Guardar Cambios'
-                      )}
+                      {bitacoraModal.isSaving ? 'Guardando...' : 'Guardar'}
                     </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => toggleBitacoraEditMode(true)}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(selectedEntry.timestamp)}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                      Eliminar
-                    </button>
-                  </>
-                )}
-              </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <p className="text-gray-700">{selectedEntry.descripcion}</p>
+                  <button
+                    onClick={() => toggleBitacoraEditMode(true)}
+                    className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar descripción
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1288,15 +1409,18 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
 
       {/* Modal para visualizar/editar logs de ambiente */}
       {ambienteModal.isOpen && selectedAmbienteLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-3 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Registro de Ambiente
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full bg-white rounded-lg overflow-hidden">
+            <div className="bg-blue-50 p-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium text-blue-700">Registro de Ambiente</h3>
+                <p className="text-sm text-gray-500">
+                  {formatReadableDate(selectedAmbienteLog.timestamp)}
+                </p>
+              </div>
               <button 
                 onClick={closeAmbienteViewer}
-                className="text-gray-500 hover:text-gray-700"
+                className="rounded-full p-2 text-gray-500 hover:bg-blue-100"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1304,166 +1428,106 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
               </button>
             </div>
             
-            <div className="px-6 py-4">
-              <div className="mb-4">
-                <p className="text-sm text-gray-500">
-                    {new Date(selectedAmbienteLog.timestamp).toLocaleString('es-ES', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {ambienteModal.isEditing ? (
-                  <>
-                    <div>
-                      <label htmlFor="temperatura" className="block text-sm font-medium text-gray-700 mb-1">
-                          Temperatura (°C)
-                        </label>
-                      <input
-                        type="text"
-                        id="temperatura"
-                        name="temperatura"
-                        value={editedAmbiente.temperatura}
-                        onChange={handleAmbienteInputChange}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                      />
+            <div className="p-6">
+              {ambienteModal.isEditing ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Temperatura (°C)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="temperatura"
+                      value={editedAmbiente.temperatura}
+                      onChange={handleAmbienteInputChange}
+                      className="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Humedad (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="humedad"
+                      value={editedAmbiente.humedad}
+                      onChange={handleAmbienteInputChange}
+                      className="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">VPD (kPa)</label>
+                    <div className="w-full p-2 border rounded-md bg-gray-50 flex items-center">
+                      <span className="text-blue-600 font-medium">{editedAmbiente.vpd}</span>
+                      <span className="ml-1 text-gray-500 text-sm">calculado automáticamente</span>
                     </div>
-                    
-                    <div>
-                      <label htmlFor="humedad" className="block text-sm font-medium text-gray-700 mb-1">
-                          Humedad (%)
-                        </label>
-                      <input
-                        type="text"
-                        id="humedad"
-                        name="humedad"
-                        value={editedAmbiente.humedad}
-                        onChange={handleAmbienteInputChange}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                      />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Punto de rocío (°C)</label>
+                    <div className="w-full p-2 border rounded-md bg-gray-50 flex items-center">
+                      <span className="text-blue-600 font-medium">{editedAmbiente.dewpoint}</span>
+                      <span className="ml-1 text-gray-500 text-sm">calculado automáticamente</span>
                     </div>
-                    
-                    <div>
-                      <label htmlFor="vpd" className="block text-sm font-medium text-gray-700 mb-1">
-                          VPD (kPa)
-                        </label>
-                      <input
-                        type="text"
-                        id="vpd"
-                        name="vpd"
-                        value={editedAmbiente.vpd}
-                        onChange={handleAmbienteInputChange}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                        disabled
-                      />
-                      </div>
-                    
-                    <div>
-                      <label htmlFor="dewpoint" className="block text-sm font-medium text-gray-700 mb-1">
-                        Punto de Rocío (°C)
-                      </label>
-                      <input
-                        type="text"
-                        id="dewpoint"
-                        name="dewpoint"
-                        value={editedAmbiente.dewpoint}
-                        onChange={handleAmbienteInputChange}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                        disabled
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-gray-50 rounded-lg p-3 relative">
-                      <p className="text-sm text-gray-500">Temperatura</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xl font-semibold text-gray-800">{selectedAmbienteLog.temperatura.toFixed(1)} °C</p>
-                        <button 
-                          onClick={() => editSpecificField('temperatura')}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="Editar temperatura"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-3 relative">
-                      <p className="text-sm text-gray-500">Humedad</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xl font-semibold text-gray-800">{selectedAmbienteLog.humedad.toFixed(1)} %</p>
-                        <button 
-                          onClick={() => editSpecificField('humedad')}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="Editar humedad"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500">VPD</p>
-                      <p className="text-xl font-semibold text-gray-800">{selectedAmbienteLog.vpd.toFixed(2)} kPa</p>
-                    </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500">Punto de Rocío</p>
-                      <p className="text-xl font-semibold text-gray-800">{selectedAmbienteLog.dewpoint.toFixed(2)} °C</p>
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="flex justify-end space-x-2 mt-4">
-                {ambienteModal.isEditing ? (
-                  <>
+                  </div>
+                  
+                  <div className="col-span-2 flex justify-end gap-2 mt-4">
                     <button
                       onClick={cancelAmbienteEdit}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
                       disabled={ambienteModal.isSaving}
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={saveEditedAmbiente}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
                       disabled={ambienteModal.isSaving}
                     >
-                      {ambienteModal.isSaving ? (
-                        <span className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Guardando...
-                        </span>
-                      ) : (
-                        'Guardar Cambios'
-                      )}
+                      {ambienteModal.isSaving ? 'Guardando...' : 'Guardar'}
                     </button>
-                  </>
-                ) : (
-                  <>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Temperatura:</p>
+                      <p className="text-2xl font-bold text-orange-500">{formatNumber(selectedAmbienteLog.temperatura)}°C</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Humedad:</p>
+                      <p className="text-2xl font-bold text-blue-500">{formatNumber(selectedAmbienteLog.humedad)}%</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">VPD:</p>
+                      <p className="text-2xl font-bold text-purple-500">{formatNumber(selectedAmbienteLog.vpd)} kPa</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Punto de rocío:</p>
+                      <p className="text-2xl font-bold text-teal-500">{formatNumber(selectedAmbienteLog.dewpoint)}°C</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 mt-6">
                     <button
                       onClick={() => handleDeleteAmbienteLog(selectedAmbienteLog.timestamp)}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      className="flex items-center text-sm text-red-600 hover:text-red-800"
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                       Eliminar
                     </button>
-                  </>
-                )}
-              </div>
+                    <button
+                      onClick={enableAmbienteEditMode}
+                      className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar valores
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1471,174 +1535,327 @@ function CompleteLogsView({ cultivoId, user_id, ambiente_logs: initialLogs = [] 
 
       {/* Modal para visualizar/editar acciones */}
       {actionModal.isOpen && selectedActionLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-3 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {getActionName(selectedActionLog.tipo, selectedActionLog.data)}
-              </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full bg-white rounded-lg overflow-hidden">
+            <div className="bg-amber-50 p-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium text-amber-700">
+                  {getActionIcon(selectedActionLog.tipo)} {getActionName(selectedActionLog.tipo, selectedActionLog.data)}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {formatReadableDate(selectedActionLog.timestamp)}
+                </p>
+              </div>
               <button 
                 onClick={closeActionViewer}
-                className="text-gray-500 hover:text-gray-700"
+                className="rounded-full p-2 text-gray-500 hover:bg-amber-100"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                </svg>
               </button>
-                      </div>
+            </div>
             
-            <div className="px-6 py-4">
-              <div className="mb-4">
-                <p className="text-sm text-gray-500">
-                  {new Date(selectedActionLog.timestamp).toLocaleString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-              
-              <div className="mb-4">
-                <div className="bg-yellow-50 p-3 rounded-lg flex items-center">
-                  <span className="text-2xl mr-2">{getActionIcon(selectedActionLog.tipo)}</span>
-                  <span className="font-medium text-yellow-800">{getActionName(selectedActionLog.tipo, selectedActionLog.data)}</span>
-                </div>
-              </div>
-              
+            <div className="p-6">
               {actionModal.isEditing ? (
                 <div className="space-y-4">
                   {selectedActionLog.tipo === 'riego' && (
                     <>
-                      <div>
-                        <label htmlFor="cantidad" className="block text-sm font-medium text-gray-700 mb-1">
-                          Cantidad (L)
-                        </label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Cantidad (L)</label>
                         <input
-                          type="text"
-                          id="cantidad"
+                          type="number"
+                          step="0.1"
                           value={editedAction.cantidad || ''}
-                          onChange={(e) => setEditedAction({...editedAction, cantidad: e.target.value})}
-                          className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, cantidad: parseFloat(e.target.value)}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
                         />
                       </div>
-                      
-                      <div>
-                        <label htmlFor="ph" className="block text-sm font-medium text-gray-700 mb-1">
-                          pH
-                        </label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Tipo de riego</label>
+                        <select
+                          value={editedAction.tipo || 'manual'}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, tipo: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        >
+                          <option value="manual">Manual</option>
+                          <option value="goteo">Goteo</option>
+                          <option value="aspersion">Aspersión</option>
+                          <option value="otro">Otro</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-medium text-gray-700">Notas</label>
+                        <textarea
+                          value={editedAction.notas || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, notas: e.target.value}))}
+                          className="text-xs w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {selectedActionLog.tipo === 'poda' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Tipo de poda</label>
+                        <select
+                          value={editedAction.tipo || 'formacion'}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, tipo: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        >
+                          <option value="formacion">Formación</option>
+                          <option value="mantenimiento">Mantenimiento</option>
+                          <option value="sanitaria">Sanitaria</option>
+                          <option value="rejuvenecimiento">Rejuvenecimiento</option>
+                          <option value="otro">Otro</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Herramientas</label>
                         <input
                           type="text"
-                          id="ph"
-                          value={editedAction.ph || ''}
-                          onChange={(e) => setEditedAction({...editedAction, ph: e.target.value})}
-                          className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
+                          value={editedAction.herramientas || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, herramientas: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Notas</label>
+                        <textarea
+                          value={editedAction.notas || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, notas: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          rows={3}
                         />
                       </div>
                     </>
                   )}
                   
                   {selectedActionLog.tipo === 'fertilizacion' && (
-                    <div>
-                      <label htmlFor="producto" className="block text-sm font-medium text-gray-700 mb-1">
-                        Producto
-                      </label>
-                      <input
-                        type="text"
-                        id="producto"
-                        value={editedAction.producto || ''}
-                        onChange={(e) => setEditedAction({...editedAction, producto: e.target.value})}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Tipo de fertilización</label>
+                        <select
+                          value={editedAction.tipo || 'organico'}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, tipo: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        >
+                          <option value="organico">Orgánico</option>
+                          <option value="mineral">Mineral</option>
+                          <option value="foliar">Foliar</option>
+                          <option value="compuesto">Compuesto NPK</option>
+                          <option value="otro">Otro</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Cantidad (kg/L)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editedAction.cantidad || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, cantidad: parseFloat(e.target.value)}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Notas</label>
+                        <textarea
+                          value={editedAction.notas || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, notas: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          rows={3}
+                        />
+                      </div>
+                    </>
                   )}
                   
                   {selectedActionLog.tipo === 'tratamiento' && (
-                    <div>
-                      <label htmlFor="tratamiento" className="block text-sm font-medium text-gray-700 mb-1">
-                        Tratamiento
-                      </label>
-                      <input
-                        type="text"
-                        id="tratamiento"
-                        value={editedAction.tratamiento || ''}
-                        onChange={(e) => setEditedAction({...editedAction, tratamiento: e.target.value})}
-                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Tipo de tratamiento</label>
+                        <select
+                          value={editedAction.tipo || 'fungicida'}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, tipo: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        >
+                          <option value="fungicida">Fungicida</option>
+                          <option value="insecticida">Insecticida</option>
+                          <option value="herbicida">Herbicida</option>
+                          <option value="otro">Otro</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Producto</label>
+                        <input
+                          type="text"
+                          value={editedAction.producto || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, producto: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Dosis</label>
+                        <input
+                          type="text"
+                          value={editedAction.dosis || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, dosis: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Notas</label>
+                        <textarea
+                          value={editedAction.notas || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, notas: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          rows={3}
+                        />
+                      </div>
+                    </>
                   )}
                   
-                  <div>
-                    <label htmlFor="notas" className="block text-sm font-medium text-gray-700 mb-1">
-                      Notas
-                    </label>
-                    <textarea
-                      id="notas"
-                      value={editedAction.notas || ''}
-                      onChange={(e) => setEditedAction({...editedAction, notas: e.target.value})}
-                      rows={3}
-                      className="w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {Object.entries(selectedActionLog.data || {}).map(([key, value]) => (
-                    <div key={key} className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500 capitalize">{key}</p>
-                      <p className="text-gray-800">{String(value)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="flex justify-end space-x-2 mt-4">
-                {actionModal.isEditing ? (
-                  <>
-                        <button 
+                  {selectedActionLog.tipo === 'otro' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Nombre de la acción</label>
+                        <input
+                          type="text"
+                          value={editedAction.nombre || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, nombre: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea
+                          value={editedAction.descripcion || ''}
+                          onChange={(e) => setEditedAction((prev: any) => ({...prev, descripcion: e.target.value}))}
+                          className="w-full p-2 border rounded-md focus:ring-amber-500 focus:border-amber-500"
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
                       onClick={cancelActionEdit}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
                       disabled={actionModal.isSaving}
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={saveEditedAction}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="px-3 py-1 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded"
                       disabled={actionModal.isSaving}
                     >
-                      {actionModal.isSaving ? (
-                        <span className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Guardando...
-                        </span>
-                      ) : (
-                        'Guardar Cambios'
-                      )}
-                        </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={enableActionEditMode}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Editar
+                      {actionModal.isSaving ? 'Guardando...' : 'Guardar'}
                     </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {selectedActionLog.tipo === 'riego' && (
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Cantidad:</span> {selectedActionLog.data.cantidad} L</p>
+                      <p><span className="font-medium">Tipo:</span> {selectedActionLog.data.tipo === 'manual' ? 'Manual' : 
+                                                             selectedActionLog.data.tipo === 'goteo' ? 'Goteo' : 
+                                                             selectedActionLog.data.tipo === 'aspersion' ? 'Aspersión' : 
+                                                             selectedActionLog.data.tipo}</p>
+                      {selectedActionLog.data.notas && (
+                        <p><span className="font-medium">Notas:</span> {selectedActionLog.data.notas}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {selectedActionLog.tipo === 'poda' && (
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Tipo:</span> {selectedActionLog.data.tipo === 'formacion' ? 'Formación' :
+                                                            selectedActionLog.data.tipo === 'mantenimiento' ? 'Mantenimiento' :
+                                                            selectedActionLog.data.tipo === 'sanitaria' ? 'Sanitaria' :
+                                                            selectedActionLog.data.tipo === 'rejuvenecimiento' ? 'Rejuvenecimiento' :
+                                                            selectedActionLog.data.tipo}</p>
+                      {selectedActionLog.data.herramientas && (
+                        <p><span className="font-medium">Herramientas:</span> {selectedActionLog.data.herramientas}</p>
+                      )}
+                      {selectedActionLog.data.notas && (
+                        <p><span className="font-medium">Notas:</span> {selectedActionLog.data.notas}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {selectedActionLog.tipo === 'fertilizacion' && (
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Tipo:</span> {selectedActionLog.data.tipo === 'organico' ? 'Orgánico' :
+                                                            selectedActionLog.data.tipo === 'mineral' ? 'Mineral' :
+                                                            selectedActionLog.data.tipo === 'foliar' ? 'Foliar' :
+                                                            selectedActionLog.data.tipo === 'compuesto' ? 'Compuesto NPK' :
+                                                            selectedActionLog.data.tipo}</p>
+                      {selectedActionLog.data.cantidad && (
+                        <p><span className="font-medium">Cantidad:</span> {selectedActionLog.data.cantidad} kg/L</p>
+                      )}
+                      {selectedActionLog.data.notas && (
+                        <p><span className="font-medium">Notas:</span> {selectedActionLog.data.notas}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {selectedActionLog.tipo === 'tratamiento' && (
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Tipo:</span> {selectedActionLog.data.tipo === 'fungicida' ? 'Fungicida' :
+                                                            selectedActionLog.data.tipo === 'insecticida' ? 'Insecticida' :
+                                                            selectedActionLog.data.tipo === 'herbicida' ? 'Herbicida' :
+                                                            selectedActionLog.data.tipo === 'otro' ? 'Otro' :
+                                                            selectedActionLog.data.tipo}</p>
+                      {selectedActionLog.data.producto && (
+                        <p><span className="font-medium">Producto:</span> {selectedActionLog.data.producto}</p>
+                      )}
+                      {selectedActionLog.data.dosis && (
+                        <p><span className="font-medium">Dosis:</span> {selectedActionLog.data.dosis}</p>
+                      )}
+                      {selectedActionLog.data.notas && (
+                        <p><span className="font-medium">Notas:</span> {selectedActionLog.data.notas}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {selectedActionLog.tipo === 'otro' && (
+                    <div className="space-y-2 text-sm">
+                      {selectedActionLog.data.nombre && (
+                        <p><span className="font-medium">Acción:</span> {selectedActionLog.data.nombre}</p>
+                      )}
+                      {selectedActionLog.data.descripcion && (
+                        <p><span className="font-medium">Descripción:</span> {selectedActionLog.data.descripcion}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 mt-4">
                     <button
-                      onClick={() => handleDeleteActionLog(selectedActionLog.id || selectedActionLog.timestamp, selectedActionLog.timestamp)}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      onClick={() => handleDeleteActionLog(selectedActionLog.id || selectedActionLog.data?.id || selectedActionLog.timestamp, selectedActionLog.timestamp)}
+                      className="flex items-center text-sm text-red-600 hover:text-red-800"
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                       Eliminar
                     </button>
-                  </>
-                )}
-                      </div>
-                    </div>
+                    <button
+                      onClick={enableActionEditMode}
+                      className="flex items-center text-sm text-amber-600 hover:text-amber-800"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Editar detalles
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
