@@ -25,13 +25,15 @@ function FaseFenologicaView({ cultivoId, fasesFenologicas = {} }: FaseFenologica
 
   // Normalizar los datos de las fases
   const normalizedFases: Record<string, FaseData> = {};
-  Object.entries(fasesFenologicas).forEach(([key, value]) => {
-    if (typeof value === 'string') {
-      normalizedFases[key] = { start: value, end: null };
-    } else if (value && typeof value === 'object') {
-      normalizedFases[key] = value as FaseData;
-    }
-  });
+  if (fasesFenologicas) {
+    Object.entries(fasesFenologicas).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        normalizedFases[key] = { start: value, end: null };
+      } else if (value && typeof value === 'object') {
+        normalizedFases[key] = value as FaseData;
+      }
+    });
+  }
 
   // Obtener la fase activa actual
   const getCurrentActiveFase = (): string | null => {
