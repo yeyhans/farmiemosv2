@@ -513,6 +513,8 @@ export default function AmbienteLogs({ cultivoId, user_id, ambiente_logs }: Prop
               </svg>
               Acciones
             </button>
+
+            
             
             
           </div>

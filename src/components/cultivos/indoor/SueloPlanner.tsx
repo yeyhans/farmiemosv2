@@ -18,6 +18,13 @@ interface ComposicionSuelo {
   };
 }
 
+interface SueloConfig {
+  tipo: 'suelo' | 'sustrato';
+  marca?: string;
+  cantidad?: number;
+  composicion?: ComposicionSuelo;
+}
+
 interface Strain {
   id: number;
   color?: string;
@@ -25,10 +32,13 @@ interface Strain {
   selected: false;
   nombreBase?: string;
   suelo?: {
-    tipo: 'suelo' | 'sustrato';
-    marca?: string;
-    cantidad?: number;
-    composicion?: ComposicionSuelo;
+    modo: 'unificado' | 'porEtapa';
+    configuracion: {
+      propagacion?: SueloConfig;
+      vegetacion?: SueloConfig;
+      floracion?: SueloConfig;
+      unificado?: SueloConfig;
+    };
   };
 }
 
@@ -57,6 +67,12 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+
+  // Primero, actualiza el estado de etapaCrecimiento para manejar múltiples selecciones
+  const [etapasSeleccionadas, setEtapasSeleccionadas] = useState<string[]>([]);
+
+  // Add state for tracking configured stages
+  const [configuracionesEtapas, setConfiguracionesEtapas] = useState<Record<string, SueloConfig>>({});
 
   const componentesDisponibles = [
     { id: 'tierra', nombre: 'Tierra', emoji: '🌍', descripcion: 'Base principal del sustrato' },
@@ -104,17 +120,9 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
       }
     });
 
-    // Si es la primera selección, cargar la configuración de esa planta
-    if (selectedStrainIds.length === 0) {
-      if (strain.suelo) {
-        setMedioSeleccionado(strain.suelo.tipo);
-        if (strain.suelo.tipo === 'sustrato') {
-          setMarcaSustrato(strain.suelo.marca || '');
-          setCantidadSustrato(strain.suelo.cantidad?.toString() || '');
-        } else {
-          setComponentesSuelo(strain.suelo.composicion || componentesSuelo);
-        }
-      }
+    // Si es la primera selección, cargar las configuraciones existentes
+    if (selectedStrainIds.length === 0 && strain.suelo?.configuracion) {
+      setConfiguracionesEtapas(strain.suelo.configuracion);
     }
   };
 
@@ -129,7 +137,10 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
   };
 
   const handleGuardarConfiguracion = async () => {
-    if (selectedStrainIds.length === 0) return;
+    if (etapasSeleccionadas.length === 0) {
+      mostrarAlerta('Selecciona al menos una etapa');
+      return;
+    }
 
     const configuracion = medioSeleccionado === 'sustrato' 
       ? {
@@ -142,11 +153,24 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
           composicion: componentesSuelo
         };
 
+    // Actualizar configuraciones para todas las etapas seleccionadas
+    const newConfiguraciones = { ...configuracionesEtapas };
+    etapasSeleccionadas.forEach(etapa => {
+      newConfiguraciones[etapa] = configuracion;
+    });
+    setConfiguracionesEtapas(newConfiguraciones);
+
     try {
       // Actualizar todas las plantas seleccionadas
       const updatedStrains = strains.map(strain => 
         selectedStrainIds.includes(strain.id)
-          ? { ...strain, suelo: configuracion }
+          ? {
+              ...strain,
+              suelo: {
+                modo: 'porEtapa',
+                configuracion: newConfiguraciones
+              }
+            }
           : strain
       );
 
@@ -164,10 +188,11 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
       if (!response.ok) throw new Error('Error al guardar la configuración');
       
       setStrains(updatedStrains);
-      // Limpiar selección después de guardar
-      setSelectedStrainIds([]);
+      setEtapasSeleccionadas([]); // Limpiar selección después de guardar
+      mostrarAlerta('Configuración guardada correctamente');
     } catch (error) {
       console.error('Error al guardar la configuración:', error);
+      mostrarAlerta('Error al guardar la configuración');
     }
   };
 
@@ -201,6 +226,50 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
   const validarTotal = (porcentajes: Record<string, number>) => {
     const total = Object.values(porcentajes).reduce((a, b) => a + b, 0);
     return total <= 100;
+  };
+
+  // Agregar una nueva función para manejar la eliminación
+  const handleEliminarConfiguracion = async (etapaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      // Eliminar la configuración del estado local
+      const newConfiguraciones = { ...configuracionesEtapas };
+      delete newConfiguraciones[etapaId];
+      setConfiguracionesEtapas(newConfiguraciones);
+
+      // Actualizar las plantas seleccionadas en el backend
+      const updatedStrains = strains.map(strain => 
+        selectedStrainIds.includes(strain.id)
+          ? {
+              ...strain,
+              suelo: {
+                modo: 'porEtapa',
+                configuracion: newConfiguraciones
+              }
+            }
+          : strain
+      );
+
+      const response = await fetch('/api/cultivos/config-strain', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cultivoId,
+          strains: updatedStrains
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar la configuración');
+      
+      setStrains(updatedStrains);
+      mostrarAlerta('Configuración eliminada correctamente');
+    } catch (error) {
+      console.error('Error al eliminar la configuración:', error);
+      mostrarAlerta('Error al eliminar la configuración');
+    }
   };
 
   const renderComposicionSuelo = () => (
@@ -461,6 +530,142 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
     </div>
   );
 
+  const renderConfiguracionResumen = (config: SueloConfig) => {
+    if (config.tipo === 'sustrato') {
+      return (
+        <div className="text-xs">
+          <div className="font-medium">🏭 Sustrato</div>
+          <div className="text-gray-600">Marca: {config.marca}</div>
+          <div className="text-gray-600">{config.cantidad}L</div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="text-xs">
+          <div className="font-medium">🌍 Suelo Natural</div>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {Object.entries(config.composicion || {}).map(([componente, valor]) => {
+              const componenteInfo = componentesDisponibles.find(c => c.id === componente);
+              if (!valor) return null;
+              return (
+                <div key={componente} className="bg-gray-100 rounded px-1 py-0.5 flex items-center">
+                  <span>{componenteInfo?.emoji}</span>
+                  <span className="ml-1">{valor}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+  };
+
+  const renderEtapaCrecimiento = () => (
+    <div className="mb-6">
+      <h3 className="text-lg font-medium mb-4">Etapas de crecimiento</h3>
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { id: 'propagacion', nombre: 'Propagación', emoji: '🌱', desc: 'Germinación y enraizamiento' },
+            { id: 'vegetacion', nombre: 'Vegetación', emoji: '🌿', desc: 'Crecimiento vegetativo' },
+            { id: 'floracion', nombre: 'Floración', emoji: '🌺', desc: 'Desarrollo de flores' }
+          ].map((etapa) => {
+            const isConfigured = configuracionesEtapas[etapa.id];
+            const isSelected = etapasSeleccionadas.includes(etapa.id);
+            
+            return (
+              <div
+                key={etapa.id}
+                className={`
+                  p-4 rounded-lg border-2 cursor-pointer text-center transition-all relative
+                  ${isSelected ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-green-300'}
+                  ${isConfigured ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}
+                `}
+                onClick={() => {
+                  setEtapasSeleccionadas(prev => {
+                    if (prev.includes(etapa.id)) {
+                      return prev.filter(id => id !== etapa.id);
+                    } else {
+                      return [...prev, etapa.id];
+                    }
+                  });
+                }}
+              >
+                {/* Indicador de configuración */}
+                {isConfigured && (
+                  <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-blue-500" />
+                )}
+                
+                <div className="text-2xl mb-2">{etapa.emoji}</div>
+                <div className="font-medium">{etapa.nombre}</div>
+                <div className="text-xs text-gray-600 mt-1">{etapa.desc}</div>
+                
+                {isConfigured && (
+                  <div className="mt-3 border-t pt-2">
+                    {renderConfiguracionResumen(configuracionesEtapas[etapa.id])}
+                    <div className="flex items-center justify-center space-x-2 mt-2">
+                      <button
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const config = configuracionesEtapas[etapa.id];
+                          setMedioSeleccionado(config.tipo);
+                          if (config.tipo === 'sustrato') {
+                            setMarcaSustrato(config.marca || '');
+                            setCantidadSustrato(config.cantidad?.toString() || '');
+                          } else {
+                            setComponentesSuelo(config.composicion || componentesSuelo);
+                            setComponentesSeleccionados(
+                              Object.entries(config.composicion || {})
+                                .filter(([_, valor]) => valor > 0)
+                                .map(([componente]) => componente)
+                            );
+                          }
+                        }}
+                      >
+                        Ver/Editar
+                      </button>
+                      <button
+                        className="text-xs text-red-600 hover:text-red-800 underline"
+                        onClick={(e) => handleEliminarConfiguracion(etapa.id, e)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Resumen de etapas seleccionadas */}
+        {etapasSeleccionadas.length > 0 && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div className="text-sm text-gray-600">
+              <div className="font-medium mb-1">Configurando para:</div>
+              <div className="flex flex-wrap gap-2">
+                {etapasSeleccionadas.map(id => {
+                  const etapa = [
+                    { id: 'propagacion', nombre: 'Propagación', emoji: '🌱' },
+                    { id: 'vegetacion', nombre: 'Vegetación', emoji: '🌿' },
+                    { id: 'floracion', nombre: 'Floración', emoji: '🌺' }
+                  ].find(e => e.id === id);
+                  return (
+                    <div key={id} className="bg-white px-2 py-1 rounded-full border flex items-center">
+                      <span>{etapa?.emoji}</span>
+                      <span className="ml-1">{etapa?.nombre}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   if (isLoading) {
     return <div className="text-center py-8">Cargando...</div>;
   }
@@ -490,32 +695,32 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {strains.map((strain) => (
             <div
               key={strain.id}
               onClick={() => handleStrainSelect(strain)}
               className={`
-                p-4 rounded-lg border-2 cursor-pointer transition-all relative
+                p-2 sm:p-4 rounded-lg border-2 cursor-pointer transition-all relative
                 ${selectedStrainIds.includes(strain.id) ? 'border-green-600 bg-green-50' : 'border-gray-200'}
                 ${strain.nombre ? 'bg-white' : 'bg-gray-50'}
               `}
               style={{ backgroundColor: strain.color }}
             >
               {/* Checkbox de selección */}
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
                 <input
                   type="checkbox"
                   checked={selectedStrainIds.includes(strain.id)}
                   onChange={() => handleStrainSelect(strain)}
-                  className="h-4 w-4 text-green-600 rounded border-gray-300"
+                  className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 rounded border-gray-300"
                   onClick={e => e.stopPropagation()}
                 />
               </div>
 
               <div className="text-center">
-                <div className="text-3xl mb-2">🌱</div>
-                <div className="text-sm font-medium">
+                <div className="text-xl sm:text-3xl mb-1 sm:mb-2">🌱</div>
+                <div className="text-xs sm:text-xs font-medium truncate">
                   {strain.nombre || `Planta ${strain.id + 1}`}
                 </div>
                 {strain.suelo && (
@@ -536,6 +741,8 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
             <h2 className="text-xl font-bold">
               Configurar suelo para {selectedStrainIds.length} planta{selectedStrainIds.length !== 1 ? 's' : ''}
             </h2>
+
+            {renderEtapaCrecimiento()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div 
@@ -607,23 +814,32 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
               {medioSeleccionado === 'sustrato' ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Marca del sustrato
+                    🏭 Marca del sustrato
                   </label>
                   <input
                     type="text"
                     value={marcaSustrato}
                     onChange={(e) => setMarcaSustrato(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    placeholder="Ej: BioBizz, Canna, etc."
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 hover:border-green-400 transition-colors"
                   />
                   <label className="block text-sm font-medium text-gray-700 mt-4">
-                    Cantidad (litros)
+                    📏 Cantidad (litros)
                   </label>
-                  <input
-                    type="number"
-                    value={cantidadSustrato}
-                    onChange={(e) => setCantidadSustrato(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={cantidadSustrato}
+                      onChange={(e) => setCantidadSustrato(e.target.value)}
+                      placeholder="Ej: 50"
+                      min="0"
+                      step="0.1"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 hover:border-green-400 transition-colors pr-12"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      L
+                    </span>
+                  </div>
                 </div>
               ) : (
                 renderComposicionSuelo()

@@ -735,7 +735,7 @@ function AmbienteBitacoraViews({ cultivoId, user_id, ambiente_logs: initialLogs 
       <div className="flex justify-between items-center">
         
         <div>
-        <h2 className="text-xl font-semibold">Bitácora del Cultivo</h2>
+
         {(bitacoraEntries.length + filteredLogs.length + actionLogs.length > 4) && (
           <span className="text-xs text-gray-500">
             Mostrando 4 de {bitacoraEntries.length + filteredLogs.length + actionLogs.length} entradas

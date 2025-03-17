@@ -491,9 +491,10 @@ function IluminacionPlanner({ cultivoId, ambiente, config: initialConfig }: Prop
               <div className="mt-1 text-xs md:text-sm text-yellow-700">
                 <ul className="list-disc pl-5 space-y-1">
                   {validacion.alertas.map((alerta, index) => (
-                    <li key={index}>{alerta}</li>
+                    <li key={index}>{alerta}</li>                    
                   ))}
                 </ul>
+                <p>Aun nos faltan generar mejores recomendaciones de iluminación para tu cultivo.</p>
               </div>
             </div>
           </div>
