@@ -79,6 +79,7 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
     const [showDuplicateNameModal, setShowDuplicateNameModal] = useState(false);
     const [editingGroup, setEditingGroup] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
     useEffect(() => {
         const handleUpdatePlanner = (event: CustomEvent<FormData>) => {
@@ -266,9 +267,12 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
             if (!response.ok) {
                 throw new Error('Error al guardar las plantas');
             }
+
+            // Mostrar alerta de éxito
+            setShowSuccessAlert(true);
+            setTimeout(() => setShowSuccessAlert(false), 3000); // La alerta desaparecerá después de 3 segundos
         } catch (error) {
             console.error('Error al guardar las plantas:', error);
-            // Manejar el error apropiadamente
         }
 
         setShowModal(false);
@@ -708,6 +712,18 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                 Aceptar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Alerta de éxito */}
+            {showSuccessAlert && (
+                <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
+                    <div className="flex items-center space-x-2">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Plantas registradas exitosamente</span>
                     </div>
                 </div>
             )}

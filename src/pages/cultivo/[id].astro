@@ -32,6 +32,7 @@ const config = cultivo?.config || {
     espacioAncho: 0,
     espacioLargo: 0,
     maxCapacity: 0,
+    nombreCultivo: '',
 };
 
 
@@ -44,6 +45,17 @@ const config = cultivo?.config || {
         
         <form id="cultivoForm" class="text-xs space-y-4">
             <input type="hidden" name="maxCapacity" value={config.maxCapacity} />
+            <div class="space-y-2">
+                <label class="block">
+                    Nombre del cultivo:
+                    <input
+                        type="text"
+                        name="nombreCultivo"
+                        required
+                        class="border p-2 rounded w-full"
+                    />
+                </label>
+            </div>
             <div class="space-y-2">
                 <label class="block">
                     Número de plantas:
@@ -129,6 +141,7 @@ const config = cultivo?.config || {
                             <option value="80,80" selected={config.espacioAncho === 80 && config.espacioLargo === 80}>80 ancho x 80 largo</option>
                             <option value="100,100" selected={config.espacioAncho === 100 && config.espacioLargo === 100}>100 ancho x 100 largo</option>
                             <option value="120,120" selected={config.espacioAncho === 120 && config.espacioLargo === 120}>120 ancho x 120 largo</option>
+                            <option value="150,150" selected={config.espacioAncho === 150 && config.espacioLargo === 150}>150 ancho x 150 largo</option>
                             <option value="240,120" selected={config.espacioAncho === 240 && config.espacioLargo === 120}>240 ancho x 120 largo</option>
                             <option value="240,240" selected={config.espacioAncho === 240 && config.espacioLargo === 240}>240 ancho x 240 largo</option>
                         </select>
@@ -140,7 +153,8 @@ const config = cultivo?.config || {
 
             <button 
                 type="submit" 
-                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                id="submitButton"
+                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
                 Guardar Configuración
             </button>
@@ -257,11 +271,21 @@ const config = cultivo?.config || {
         // Calculamos maxCapacity y lo añadimos al objeto data
         data.maxCapacity = calculateMaxCapacity(data);
         
-        
         // Actualizamos el valor del input oculto
         const maxCapacityInput = form.querySelector('input[name="maxCapacity"]') as HTMLInputElement;
+        const submitButton = document.getElementById('submitButton') as HTMLButtonElement;
+        
         if (maxCapacityInput) {
             maxCapacityInput.value = data.maxCapacity.toString();
+        }
+
+        // Deshabilitar el botón si se excede la capacidad
+        if (submitButton) {
+            const exceedsCapacity = data.numPlantas > data.maxCapacity;
+            submitButton.disabled = exceedsCapacity;
+            submitButton.title = exceedsCapacity ? 
+                'No se puede guardar: el número de plantas excede la capacidad máxima' : 
+                '';
         }
 
         const event = new CustomEvent('updatePlanner', { detail: data });
@@ -280,7 +304,14 @@ const config = cultivo?.config || {
             espacioAncho: Number(formData.get('espacioAncho')) || 0,
             espacioLargo: Number(formData.get('espacioLargo')) || 0,
             maxCapacity: Number(formData.get('maxCapacity')) || 0,
+            nombreCultivo: formData.get('nombreCultivo')?.toString() || '',
         };
+
+        // Validación adicional antes de guardar
+        if (config.numPlantas > config.maxCapacity) {
+            alert('No se puede guardar la configuración: el número de plantas excede la capacidad máxima');
+            return;
+        }
 
         try {
             const response = await fetch('/api/cultivos/config-cultivo', {
@@ -298,7 +329,7 @@ const config = cultivo?.config || {
             
             if (data.success) {
                 // Redirect after successful save
-                window.location.href = `/cultivo/${cultivoId}/indoor/strains`;
+                window.location.href = `/cultivo/${cultivoId}/indoor`;
             } else {
                 alert('Error al guardar la configuración: ' + data.error);
             }

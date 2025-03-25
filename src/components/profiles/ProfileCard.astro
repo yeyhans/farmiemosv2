@@ -1,5 +1,19 @@
 ---
-const { profile, chats, total_prompts } = Astro.props;
+const { profile, chats, total_prompts, cultivos } = Astro.props;
+
+// Extraer el cultivo principal
+// Count total cultivos
+const cultivosCount = cultivos?.length || 0;
+
+// Count total logs across all cultivos
+const totalLogs = cultivos?.reduce((total, cultivo) => {
+  const ambienteLogs = cultivo.ambiente_logs?.length || 0;
+  const bitacoraLogs = cultivo.bitacora_logs?.length || 0;
+  const actionsLogs = cultivo.actions_logs?.length || 0;
+  return total + ambienteLogs + bitacoraLogs + actionsLogs;
+}, 0) || 0;
+
+
 
 // Extract key profile data
 const count_chats = chats?.length || 0;
@@ -20,7 +34,7 @@ const isProfileCardComplete = profile?.cultivo_principal && profile?.experience_
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <img 
-          src={profile?.img_avatar || '/default-avatar.png'} 
+          src={profile?.img_avatar || '/logo.png'} 
           alt={`Avatar de ${user_name}`}
           class="w-8 h-8 rounded-full object-cover border-2 border-white"
         />
@@ -34,18 +48,31 @@ const isProfileCardComplete = profile?.cultivo_principal && profile?.experience_
   
   <div class={`p-4 ${!isProfileCardComplete ? 'opacity-80' : ''}`}>
     <!-- Key Metrics -->
-    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+    <div class="grid grid-cols-5 gap-2 mb-4 text-center">
       <div class="bg-green-50 p-2 rounded-lg">
         <p class="text-xs text-gray-500">Experiencia</p>
-        <p class="font-semibold text-sm">{experience_level}</p>
+        <p class="font-semibold text-xs">
+          {experience_level === 'Principiante' && '🌱'}
+          {experience_level === 'Intermedio' && '🌿'}
+          {experience_level === 'Avanzado' && '🌳'}
+          {!['Principiante', 'Intermedio', 'Avanzado'].includes(experience_level) && experience_level}
+        </p>
       </div>
       <div class="bg-green-50 p-2 rounded-lg">
         <p class="text-xs text-gray-500">Chats</p>
-        <p class="font-semibold text-sm">{count_chats}</p>
+        <p class="font-semibold text-xs">{count_chats}</p>
       </div>
       <div class="bg-green-50 p-2 rounded-lg">
         <p class="text-xs text-gray-500">Consultas</p>
-        <p class="font-semibold text-sm">{total_prompts}</p>
+        <p class="font-semibold text-xs">{total_prompts}</p>
+      </div>
+      <div class="bg-green-50 p-2 rounded-lg">
+        <p class="text-xs text-gray-500">Cultivos</p>
+        <p class="font-semibold text-xs">{cultivosCount}</p>
+      </div>
+      <div class="bg-green-50 p-2 rounded-lg">
+        <p class="text-xs text-gray-500">Logs</p>
+        <p class="font-semibold text-xs">{totalLogs}</p>
       </div>
     </div>
     

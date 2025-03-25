@@ -45,16 +45,21 @@ const CultivosList = ({ cultivos }) => {
     }
   };
   
-  // Verificar si un cultivo tiene actividad reciente
-  const hasRecentActivity = (cultivo) => {
-    if (!cultivo.updated_at) return false;
+  // Modificar la función hasRecentActivity para que solo retorne true para el cultivo más reciente
+  const hasRecentActivity = (cultivo, allCultivos) => {
+    if (!cultivo.updated_at || !allCultivos) return false;
     
-    const lastUpdate = new Date(cultivo.updated_at).getTime();
-    const now = new Date().getTime();
-    const oneDayInMs = 24 * 60 * 60 * 1000;
+    const cultivoTimestamp = new Date(cultivo.updated_at).getTime();
     
-    // Considera actividad reciente si fue actualizado en las últimas 24 horas
-    return (now - lastUpdate) < oneDayInMs;
+    // Encontrar el timestamp más reciente entre todos los cultivos
+    const mostRecentTimestamp = Math.max(
+      ...allCultivos
+        .filter(c => c.updated_at)
+        .map(c => new Date(c.updated_at).getTime())
+    );
+    
+    // Solo retornar true si este cultivo tiene el timestamp más reciente
+    return cultivoTimestamp === mostRecentTimestamp;
   };
   
   // Aplicar filtrado y búsqueda, luego ordenar por fecha de creación
@@ -63,9 +68,9 @@ const CultivosList = ({ cultivos }) => {
     let filtered = cultivos;
     
     if (filterType === 'active') {
-      filtered = cultivos.filter(cultivo => hasRecentActivity(cultivo));
+      filtered = cultivos.filter(cultivo => hasRecentActivity(cultivo, cultivos));
     } else if (filterType === 'inactive') {
-      filtered = cultivos.filter(cultivo => !hasRecentActivity(cultivo));
+      filtered = cultivos.filter(cultivo => !hasRecentActivity(cultivo, cultivos));
     }
     
     // Luego filtrar por término de búsqueda
@@ -78,7 +83,7 @@ const CultivosList = ({ cultivos }) => {
     const withDates = filtered.map(cultivo => ({
       ...cultivo,
       _latestActivityTimestamp: getLatestActivityDate(cultivo),
-      _hasRecentActivity: hasRecentActivity(cultivo)
+      _hasRecentActivity: hasRecentActivity(cultivo, cultivos)
     }));
     
     // Ordenar primero por actividad reciente y luego por última actualización
@@ -217,7 +222,7 @@ const CultivosList = ({ cultivos }) => {
                     <div className="p-5">
                       {/* Cabecera */}
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-xl font-bold text-gray-800">Cultivo #{cultivo.id}</h3>
+                        <h3 className="text-xl font-bold text-gray-800">{cultivo.config?.nombreCultivo}</h3>
                         <span className="flex items-center text-gray-600 text-sm">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -270,7 +275,7 @@ const CultivosList = ({ cultivos }) => {
                         </div>
                         
                         {/* Indicador de actividad */}
-                        {hasRecentActivity(cultivo) ? (
+                        {hasRecentActivity(cultivo, cultivos) ? (
                           <div className="flex items-center text-sm">
                             <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
                             <span className="text-green-600">Actividad reciente</span>

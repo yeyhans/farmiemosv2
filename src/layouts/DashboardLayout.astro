@@ -2,12 +2,21 @@
 import BaseHead from '../components/BaseHead.astro';
 import '../styles/global.css';
 import { authenticate } from '../lib/auth';
+import { supabase } from '../lib/supabase';
+
 
 
 const { user } = await authenticate(Astro);
 
 const { title, description } = Astro.props;
-const avatarUrl = user?.user_metadata.avatar_url;
+
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .single();
+
+const avatarUrl = profile?.img_avatar || '/logo.png';
 ---
 
 

@@ -134,8 +134,20 @@ if (user) {
               </div>
               <div id="accordion-cultivos" class="transition-all duration-300 px-4 pb-2">
                   <div class="gap-4 mb-4">
-                    <ResumenCultivosList client:load cultivos={cultivos_data} />
+                    
+                    {cultivos_data.length > 0 ? (
+                      <ResumenCultivosList client:load cultivos={cultivos_data} />
+                    ) : (
+                      <div class="text-center py-4 text-xs">
+                        <p class="text-gray-600 mb-3">Aún no tienes cultivos registrados</p>
+                        <a href="/cultivo" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                          Crear cultivo
+                        </a>
+                      </div>
+                    )}
                   </div>
+                  
               </div>
           </div>
                 
@@ -154,7 +166,7 @@ if (user) {
                       </button>
                     </div>
                     <div id="accordion-tarjet-profile" class="transition-all duration-300">
-                      <ProfileCard profile={profile} chats={chats} total_prompts={total_prompts}/> 
+                      <ProfileCard profile={profile} chats={chats} total_prompts={total_prompts} cultivos={cultivos_data}/> 
 
                     </div>
                   </div>
