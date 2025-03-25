@@ -129,5 +129,23 @@ if (accessToken && refreshToken) {
       </div>
     </div>
 
+    <script>
+      // Check for redirect parameter to use after successful login
+      document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('form[action="/api/auth/signin"]');
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        
+        if (redirectParam) {
+          forms.forEach(form => {
+            // Add hidden input with redirect information
+            const redirectInput = document.createElement('input');
+            redirectInput.type = 'hidden';
+            redirectInput.name = 'redirect';
+            redirectInput.value = redirectParam;
+            form.appendChild(redirectInput);
+          });
+        }
+      });
+    </script>
 
 </Layout>

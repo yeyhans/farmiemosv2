@@ -37,3 +37,32 @@ function clearSessionCookies(Astro) {
     Astro.cookies.delete("sb-access-token", { path: "/" });
     Astro.cookies.delete("sb-refresh-token", { path: "/" });
 }
+
+// Ejemplo de implementación básica si no funciona la anterior
+export async function getSession({ cookies }) {
+  try {
+    // Obtener el token de la cookie
+    const sessionCookie = cookies.get('session');
+    
+    if (!sessionCookie || !sessionCookie.value) {
+      console.log('No se encontró cookie de sesión');
+      return null;
+    }
+    
+    // Decodificar el token (esto podría variar según tu implementación)
+    let decodedSession;
+    try {
+      // Para sesiones simples almacenadas como JSON
+      decodedSession = JSON.parse(decodeURIComponent(sessionCookie.value));
+    } catch (e) {
+      // Si no es JSON, podría ser un token JWT o algún otro formato
+      console.error('Error al decodificar sesión:', e);
+      return null;
+    }
+    
+    return decodedSession;
+  } catch (error) {
+    console.error('Error en getSession:', error);
+    return null;
+  }
+}

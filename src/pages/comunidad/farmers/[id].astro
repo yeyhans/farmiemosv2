@@ -1,0 +1,84 @@
+---
+import { authenticate } from "../../../lib/auth";
+import Layout from "../../../layouts/DashboardLayout.astro";
+import { connectToDatabase } from "../../api/comunidad/mongodb";
+import PostList from "../../../components/comunidad/PostList";
+
+// Obtener el ID del usuario de los parámetros
+const { id } = Astro.params;
+
+// Autenticar al usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtener datos del perfil del usuario
+let profile = null;
+let error = null;
+
+try {
+  if (id) {
+    const { db } = await connectToDatabase();
+    profile = await db.collection('users').findOne({ _id: id });
+  }
+} catch (err) {
+  console.error("Error al obtener el perfil:", err);
+  error = "No se pudo cargar el perfil solicitado";
+}
+
+// Si no se encuentra el perfil, mostrar un error
+---
+
+<Layout title={profile ? `Perfil de ${profile.name}` : "Usuario no encontrado"}>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    {error && (
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {error}
+      </div>
+    )}
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8">
+        {profile ? (
+          <div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+              <h1 class="text-2xl font-bold">Publicaciones de {profile.name}</h1>
+              <p class="text-gray-600 dark:text-gray-300">Miembro desde {new Date(profile.createdAt).toLocaleDateString()}</p>
+            </div>
+            
+            <PostList client:load userId={id} />
+          </div>
+        ) : (
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+            <h1 class="text-xl font-semibold text-center">Usuario no encontrado</h1>
+            <p class="text-center mt-2">El perfil que buscas no existe o no está disponible.</p>
+          </div>
+        )}
+      </div>
+      
+      <div class="lg:col-span-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-24">
+          <h3 class="text-lg font-semibold mb-3">Sobre el autor</h3>
+          {profile ? (
+            <div>
+              <p class="mb-4">{profile.bio || "Este usuario no ha añadido una biografía."}</p>
+              <div class="text-sm text-gray-500">
+                <p>Publicaciones: {profile.postCount || 0}</p>
+                <p>Comentarios: {profile.commentCount || 0}</p>
+              </div>
+            </div>
+          ) : (
+            <p>Información no disponible</p>
+          )}
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-4">
+      <a href="/comunidad" class="text-blue-600 hover:underline">
+        ← Volver a la comunidad
+      </a>
+    </div>
+  </div>
+</Layout>

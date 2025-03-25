@@ -50,5 +50,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     secure: true,
   });
 
-  return redirect("/dashboard");
+  // Check if there's a redirect URL in the request
+  const redirectUrl = new URL(request.url).searchParams.get('redirect');
+  return redirect(redirectUrl || "/dashboard");
 };

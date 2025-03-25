@@ -1,0 +1,83 @@
+---
+import { authenticate } from "../../../lib/auth";
+import Layout from "../../../layouts/DashboardLayout.astro";
+import { connectToDatabase } from "../../api/comunidad/mongodb";
+import { ObjectId } from "mongodb";
+
+// Obtener el ID del post de los parámetros
+const { id } = Astro.params;
+
+// Autenticar al usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Obtener datos del post
+let post = null;
+let error = null;
+
+try {
+  if (id) {
+    const { db } = await connectToDatabase();
+    post = await db.collection('posts').findOne({ _id: new ObjectId(id) });
+  }
+} catch (err) {
+  console.error("Error al obtener el post:", err);
+  error = "No se pudo cargar el post solicitado";
+}
+
+// Si no se encuentra el post, redirigir a la página de comunidad
+if (!post) {
+  return Astro.redirect('/comunidad');
+}
+---
+
+<Layout title={post ? post.title : "Post no encontrado"}>
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    {error && (
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {error}
+      </div>
+    )}
+    
+    {post && (
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold mb-2">{post.title}</h1>
+          <div class="flex items-center text-sm text-gray-500 mb-4">
+            <a href={`/comunidad/farmers/${post.authorId}`} class="text-blue-600 hover:underline">
+              {post.authorName}
+            </a>
+            <span class="mx-2">·</span>
+            <a href={`/comunidad/category/${post.category}`} class="text-green-600 hover:underline">
+              {post.category}
+            </a>
+            <span class="mx-2">·</span>
+            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+        
+        <div class="prose dark:prose-invert max-w-none">
+          <p>{post.content}</p>
+        </div>
+        
+        <hr class="my-6 border-gray-200 dark:border-gray-700" />
+        
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-4">Comentarios</h3>
+          <!-- Aquí puedes agregar un componente de comentarios -->
+          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+            Próximamente: sistema de comentarios
+          </div>
+        </div>
+      </div>
+    )}
+    
+    <div class="mt-4">
+      <a href="/comunidad" class="text-blue-600 hover:underline">
+        ← Volver a la comunidad
+      </a>
+    </div>
+  </div>
+</Layout>

@@ -9,25 +9,16 @@ const CultivosList = ({ cultivos }) => {
   const getLatestActivityDate = (cultivo) => {
     const dates = [];
     
-    // Recopilar todas las fechas de actividad
-    if (cultivo.ambiente_logs?.length) {
-      dates.push(...cultivo.ambiente_logs.map(log => new Date(log.created_at).getTime()));
+    // Añadir updated_at si existe
+    if (cultivo.updated_at) {
+      dates.push(new Date(cultivo.updated_at).getTime());
     }
     
-    if (cultivo.bitacora_logs?.length) {
-      dates.push(...cultivo.bitacora_logs.map(log => new Date(log.created_at).getTime()));
-    }
-    
-    if (cultivo.actions_logs?.length) {
-      dates.push(...cultivo.actions_logs.map(log => new Date(log.created_at).getTime()));
-    }
-    
-    // Si no hay actividad, usar la fecha de creación
+    // Si no hay updated_at, usar la fecha de creación
     if (dates.length === 0 && cultivo.created_at) {
       return new Date(cultivo.created_at).getTime();
     }
     
-    // Devolver la fecha más reciente o una fecha muy antigua si no hay fechas
     return dates.length > 0 ? Math.max(...dates) : 0;
   };
   
@@ -56,7 +47,14 @@ const CultivosList = ({ cultivos }) => {
   
   // Verificar si un cultivo tiene actividad reciente
   const hasRecentActivity = (cultivo) => {
-    return Boolean(cultivo.ambiente_logs?.length || cultivo.bitacora_logs?.length || cultivo.actions_logs?.length);
+    if (!cultivo.updated_at) return false;
+    
+    const lastUpdate = new Date(cultivo.updated_at).getTime();
+    const now = new Date().getTime();
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    
+    // Considera actividad reciente si fue actualizado en las últimas 24 horas
+    return (now - lastUpdate) < oneDayInMs;
   };
   
   // Aplicar filtrado y búsqueda, luego ordenar por fecha de creación
@@ -76,16 +74,22 @@ const CultivosList = ({ cultivos }) => {
       cultivo.tipo_cultivo?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
-    // Preparar datos para ordenación con fecha calculada
+    // Preparar datos para ordenación
     const withDates = filtered.map(cultivo => ({
       ...cultivo,
-      _latestActivityTimestamp: getLatestActivityDate(cultivo)
+      _latestActivityTimestamp: getLatestActivityDate(cultivo),
+      _hasRecentActivity: hasRecentActivity(cultivo)
     }));
     
-    // Ordenar por fecha de creación (más reciente a más antigua)
+    // Ordenar primero por actividad reciente y luego por última actualización
     return withDates.sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      // Primero ordenar por actividad reciente
+      if (a._hasRecentActivity && !b._hasRecentActivity) return -1;
+      if (!a._hasRecentActivity && b._hasRecentActivity) return 1;
+      
+      // Si tienen el mismo estado de actividad, ordenar por última actualización
+      const dateA = a.updated_at ? new Date(a.updated_at).getTime() : new Date(a.created_at).getTime();
+      const dateB = b.updated_at ? new Date(b.updated_at).getTime() : new Date(b.created_at).getTime();
       return dateB - dateA;
     });
   }, [cultivos, searchTerm, filterType]);
@@ -103,6 +107,39 @@ const CultivosList = ({ cultivos }) => {
   const showDeleteModal = (id) => {
     // Exponer la función al objeto window para mantener compatibilidad
     window.showDeleteModal(id);
+  };
+
+  // Añadir estas nuevas funciones auxiliares
+  const getStatusEmojis = (cultivo) => {
+    return {
+      iluminacion: cultivo.iluminacion ? '💡' : '⚪',
+      ambiente_logs: cultivo.ambiente_logs?.length || 0,
+      bitacora_logs: cultivo.bitacora_logs?.length || 0,
+      actions_logs: cultivo.actions_logs?.length || 0,
+    };
+  };
+
+  const getFaseActual = (fases) => {
+    if (!fases || Object.keys(fases).length === 0) return '❓';
+    
+    // Emojis para cada fase
+    const fasesEmojis = {
+      propagacion: '🌱',
+      crecimiento: '🌿',
+      floracion: '🌺',
+      cosecha: '✂️',
+    };
+
+    // Obtener las fases como un array de nombres
+    const fasesOrdenadas = ['propagacion', 'crecimiento', 'floracion', 'cosecha'];
+    
+    // Encontrar la última fase presente en el objeto fases
+    const ultimaFase = fasesOrdenadas.reduce((ultima, fase) => {
+      if (fases[fase]) return fase;
+      return ultima;
+    }, null);
+
+    return ultimaFase ? fasesEmojis[ultimaFase] : '❓';
   };
 
   return (
@@ -191,24 +228,44 @@ const CultivosList = ({ cultivos }) => {
                       
                       {/* Detalles */}
                       <div className="space-y-2 mb-4">
+                        {/* Status Bar con emojis y contadores en etiquetas */}
+                        <div className="flex flex-wrap items-center gap-2 py-2">
+                          <div className="flex items-center gap-1" title="Iluminación">
+                            <span className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                              {getStatusEmojis(cultivo).iluminacion}
+                            </span>
+                          </div>
+                          <div title="Registros de ambiente" className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                            🌡️ {getStatusEmojis(cultivo).ambiente_logs}
+                          </div>
+                          <div title="Registros de bitácora" className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                            📝 {getStatusEmojis(cultivo).bitacora_logs}
+                          </div>
+                          <div title="Registros de acciones" className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                            ⚡ {getStatusEmojis(cultivo).actions_logs}
+                          </div>
+                          <div title="Fase actual" className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                            {getFaseActual(cultivo.fases_fenologicas)}
+                          </div>
+                          {/* Espacio como etiqueta con formato AxB */}
+                          {cultivo.config?.espacioAncho && cultivo.config?.espacioLargo && (
+                            <div title="Dimensiones del espacio" className="px-2 py-1 bg-gray-100 rounded-md text-sm">
+                              📏 {cultivo.config.espacioAncho}x{cultivo.config.espacioLargo}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Resto de los detalles existentes */}
                         {cultivo.created_at && (
                           <p className="text-sm text-gray-500">
                             <span className="font-medium">Creado:</span> {getTimeAgo(new Date(cultivo.created_at).getTime())}
                           </p>
                         )}
                         
-                        <p className="text-sm text-gray-500">
-                          <span className="font-medium">Espacio:</span> {
-                            cultivo.config?.espacioAncho && cultivo.config?.espacioLargo 
-                              ? `${cultivo.config.espacioAncho}×${cultivo.config.espacioLargo}cm`
-                              : "Dimensiones por definir"
-                          }
-                        </p>
-                        
-                        {/* Badge con tiempo transcurrido desde la última actividad */}
+                        {/* Badge con tiempo transcurrido desde la última actualización */}
                         <div className="flex items-center">
                           <span className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                            {hasRecentActivity(cultivo) ? `Última actividad: ${timeAgo}` : `Creado ${timeAgo}`}
+                            {cultivo.updated_at ? `Última actualización: ${getTimeAgo(new Date(cultivo.updated_at).getTime())}` : `Creado ${timeAgo}`}
                           </span>
                         </div>
                         

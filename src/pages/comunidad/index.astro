@@ -1,22 +1,46 @@
 ---
 import { authenticate } from "../../lib/auth";
-import Layout from "../../layouts/Layout.astro";
+import Layout from "../../layouts/DashboardLayout.astro";
 import InfoBlog from "../../components/InfoBlog.astro";
+import PostList from "../../components/comunidad/PostList";
+import CreatePost from "../../components/comunidad/CreatePost";
 
 const { user, redirect } = await authenticate(Astro);
 if (redirect) {
     return Astro.redirect(redirect);
 }
 
-console.log(user);
+// Obtener posts
 ---
 
 <Layout title="Comunidad Farmiemos">
-    <section class="container mx-auto px-4 py-8 space-y-8">
-        <h1 class="text-3xl font-bold text-gray-800">Comunidad Farmiemos</h1>
-            
-    </section>
-    <section class="container mx-auto px-4 py-8 space-y-8">
-        <InfoBlog />
-    </section>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex flex-col gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Columna principal - Posts */}
+        <div class="lg:col-span-8">
+          <CreatePost client:load user={user} />
+          <div class="mt-6">
+            <PostList client:load />
+          </div>
+        </div>
+
+        {/* Barra lateral - Información y reglas */}
+        <div class="lg:col-span-4">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mt-4">
+            <h3 class="text-lg font-semibold mb-3">Reglas de la comunidad</h3>
+            <ul class="space-y-2 text-sm">
+              <li>1. Sé respetuoso con todos los miembros</li>
+              <li>2. No spam ni contenido promocional</li>
+              <li>3. Mantén las discusiones relacionadas con farmacia</li>
+              <li>4. No compartir información médica sensible</li>
+              <li>5. Verifica tus fuentes antes de compartir</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </Layout>
+

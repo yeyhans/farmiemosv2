@@ -68,22 +68,19 @@ export const POST: APIRoute = async ({ cookies }) => {
         // 4. Construcción del prompt
         const buildProfileString = (): string => {
             const fields = {
-                "Nombre de usuario": profile.instagram,
+                "Nombre de usuario": profile.user_name,
+                "Instagram": profile.instagram ? `@${profile.instagram}` : 'No especificado',
                 "Nivel de experiencia": profile.experience_level,
                 "Cultivo principal": profile.cultivo_principal,
                 "Escala de cultivo": profile.escala_cultivo,
-                Motivación: profile.motivacion,
-                "Tamaño del espacio": profile.tamano_espacio,
-                Comuna: profile.comuna,
-                "Tipo de suelo": profile.tipo_suelo,
-                Iluminación: profile.tipo_iluminacion,
-                Riego: profile.fuente_riego,
-                Fertilización: profile.fertilizacion,
-                "Control de plagas": profile.control_plagas,
-                "Frecuencia de riego": profile.frecuencia_riego,
-                Problemas: profile.problemas_enfrentados,
-                Objetivos: profile.objetivos_mejora,
-                Tecnología: profile.interes_tecnologia,
+                "Motivación": profile.motivacion,
+                "Comuna": profile.comuna,
+                "Principales problemas": profile.problemas_enfrentados,
+                "Áreas de interés": profile.areas_interes,
+                "Objetivos de aprendizaje": profile.objetivos_aprendizaje,
+                "Contenido preferido": profile.contenido_preferido,
+                "Intereses adicionales": profile.intereses_adicionales,
+                "Objetivos": profile.desc_obj,
             };
 
             return Object.entries(fields)
@@ -128,7 +125,10 @@ export const POST: APIRoute = async ({ cookies }) => {
 
             console.log("Perfil generado exitosamente para:", profile.user_name);
             return new Response(
-                JSON.stringify(response.choices[0].message),
+                JSON.stringify({
+                    success: true,
+                    content: generatedProfile
+                }),
                 { status: 200, headers: { "Content-Type": "application/json" } }
             );
 

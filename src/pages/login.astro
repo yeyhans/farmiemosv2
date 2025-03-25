@@ -1,0 +1,23 @@
+---
+// En tu página de login, añade este script para recuperar comentarios guardados localmente
+---
+
+<script>
+  // Después de un login exitoso, verificar si hay comentarios pendientes
+  document.addEventListener('DOMContentLoaded', () => {
+    // Si detectamos que venimos de un login exitoso
+    const isPostLogin = document.referrer.includes('/login');
+    const hasPendingComments = localStorage.getItem('pendingComments');
+    
+    if (isPostLogin && hasPendingComments) {
+      // Verificar si hay una redirección especificada
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectTo = urlParams.get('redirect');
+      
+      if (redirectTo) {
+        // Redirigir de vuelta a la página original
+        window.location.href = redirectTo;
+      }
+    }
+  });
+</script> 

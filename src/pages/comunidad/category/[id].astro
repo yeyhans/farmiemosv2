@@ -1,0 +1,61 @@
+---
+import { authenticate } from "../../../lib/auth";
+import Layout from "../../../layouts/DashboardLayout.astro";
+import PostList from "../../../components/comunidad/PostList";
+
+// Obtener el ID de la categoría de los parámetros
+const { id } = Astro.params;
+
+// Autenticar al usuario
+const { user, redirect } = await authenticate(Astro);
+if (redirect) {
+    return Astro.redirect(redirect);
+}
+
+// Mapeo de categorías a nombres más descriptivos
+const categoryNames = {
+  "general": "Discusión General",
+  "consultas": "Consultas Farmacéuticas",
+  "investigacion": "Investigación y Estudios",
+  "noticias": "Noticias y Actualidad"
+};
+
+const categoryName = categoryNames[id] || id;
+---
+
+<Layout title={`Categoría: ${categoryName}`}>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+          <h1 class="text-2xl font-bold">{categoryName}</h1>
+          <p class="text-gray-600 dark:text-gray-300">Publicaciones relacionadas con esta categoría</p>
+        </div>
+        
+        <PostList client:load category={id} />
+      </div>
+      
+      <div class="lg:col-span-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-24">
+          <h3 class="text-lg font-semibold mb-3">Sobre esta categoría</h3>
+          <p class="mb-4">
+            {id === "general" && "Discusiones generales sobre temas farmacéuticos y salud."}
+            {id === "consultas" && "Espacio para realizar consultas profesionales sobre farmacia."}
+            {id === "investigacion" && "Comparte y discute sobre investigaciones y estudios en el campo farmacéutico."}
+            {id === "noticias" && "Actualidad y noticias relevantes para profesionales de farmacia."}
+            {!["general", "consultas", "investigacion", "noticias"].includes(id) && "Temas relacionados con esta categoría."}
+          </p>
+          <div class="text-sm text-gray-500">
+            <p>Recuerda seguir las reglas de la comunidad al publicar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-4">
+      <a href="/comunidad" class="text-blue-600 hover:underline">
+        ← Volver a la comunidad
+      </a>
+    </div>
+  </div>
+</Layout> 

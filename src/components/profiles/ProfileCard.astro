@@ -1,42 +1,93 @@
 ---
-
-
 const { profile, chats, total_prompts } = Astro.props;
 
-const count_chats = chats.length;
-const cultivo_principal = profile?.cultivo_principal;
-const prompt_profile = profile?.prompt_profile;
+// Extract key profile data
+const count_chats = chats?.length || 0;
+const cultivo_principal = profile?.cultivo_principal || 'No especificado';
+const prompt_profile = profile?.prompt_profile || '';
+const experience_level = profile?.experience_level || 'No especificado';
+const comuna = profile?.comuna || 'No especificada';
+const user_name = profile?.user_name || "Usuario";
+const fecha_registro = profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A';
 
- //Verificar si los campos obligatorios están completos
- const isProfileCardComplete = profile?.cultivo_principal && profile?.experience_level && profile?.comuna
-
-                       
+// Check if mandatory fields are complete
+const isProfileCardComplete = profile?.cultivo_principal && profile?.experience_level && profile?.comuna;
 ---
 
-
-<div class="relative bg-green-100 rounded-lg p-4 shadow-inner">
-    {/* Contenido actual con opacidad condicional */}
-    <div class={`${!isProfileCardComplete ? 'opacity-50 blur-xs' : ''}`}>
-        <p class="text-xs text-gray-700">🤖 chats: <span class="font-semibold">{count_chats}</span></p>
-        <p class="text-xs text-gray-700">💬 P&R: <span class="font-semibold">{total_prompts}</span></p>
-        <p class="text-xs text-gray-700">🌱: <span class="font-semibold">{cultivo_principal}</span></p>
-        <div class="overflow-y-auto h-20 px-4 py-2 border border-gray-300 rounded-md">
-            <p class="text-xs text-gray-700 whitespace-pre-line">{prompt_profile}</p>
-        </div>
+<div class="bg-white rounded-xl shadow-md overflow-hidden relative">
+  <!-- Profile Header -->
+  <div class="bg-gradient-to-r from-green-600 to-green-400 px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img 
+          src={profile?.img_avatar || '/default-avatar.png'} 
+          alt={`Avatar de ${user_name}`}
+          class="w-8 h-8 rounded-full object-cover border-2 border-white"
+        />
+        <h3 class="text-white font-bold text-lg">{user_name}</h3>
+      </div>
+      {!isProfileCardComplete && (
+        <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Perfil Incompleto</span>
+      )}
     </div>
-
-    {/* Overlay de llamado a la acción */}
-    {!isProfileCardComplete && (
-        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-sm rounded-lg">
-            <div class="text-center space-y-2">
-                <h3 class="text-sm font-semibold text-gray-700">¡Perfil incompleto!</h3>
-                <p class="text-xs text-gray-600 max-w-[200px]">
-                    Completa tu perfil para desbloquear toda la información y características
-                </p>
-            </div>
-            <button class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-xs py-2 px-3 rounded transition-colors">
-                Completar Perfil
-            </button>
+  </div>
+  
+  <div class={`p-4 ${!isProfileCardComplete ? 'opacity-80' : ''}`}>
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+      <div class="bg-green-50 p-2 rounded-lg">
+        <p class="text-xs text-gray-500">Experiencia</p>
+        <p class="font-semibold text-sm">{experience_level}</p>
+      </div>
+      <div class="bg-green-50 p-2 rounded-lg">
+        <p class="text-xs text-gray-500">Chats</p>
+        <p class="font-semibold text-sm">{count_chats}</p>
+      </div>
+      <div class="bg-green-50 p-2 rounded-lg">
+        <p class="text-xs text-gray-500">Consultas</p>
+        <p class="font-semibold text-sm">{total_prompts}</p>
+      </div>
+    </div>
+    
+    <!-- Main Information -->
+    <div class="space-y-2">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="flex items-center bg-green-100 px-2 py-1.5 rounded-lg">
+          <span class="text-green-600 mr-1">🌱</span>
+          <span class="text-xs font-medium">{cultivo_principal}</span>
         </div>
-    )}
+        <div class="flex items-center bg-blue-50 px-2 py-1.5 rounded-lg">
+          <span class="text-blue-600 mr-1">📍</span>
+          <span class="text-xs font-medium">{comuna}</span>
+        </div>
+      </div>
+      
+      <div class="bg-gray-50 p-2 rounded-lg max-h-16 overflow-y-auto">
+        <p class="text-xs text-gray-700">{prompt_profile}</p>
+      </div>
+
+      <div class="flex justify-between items-center text-xs text-gray-400">
+        <a href={`https://instagram.com/${profile?.instagram}`} target="_blank" class="hover:text-blue-500">
+          @{profile?.instagram}
+        </a>
+        <span>Desde: {fecha_registro}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay for incomplete profile -->
+  {!isProfileCardComplete && (
+    <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/90 backdrop-blur-sm rounded-xl">
+      <div class="text-center space-y-2 px-4">
+        <div class="text-amber-500 text-2xl font-bold mx-auto">⚠️</div>
+        <h3 class="text-base font-semibold text-gray-800">¡Perfil incompleto!</h3>
+        <p class="text-sm text-gray-600 max-w-[250px]">
+          Completa tu perfil para desbloquear todas las características y conectar mejor con la comunidad.
+        </p>
+      </div>
+      <a href="/profile" class="flex items-center justify-center gap-1 bg-custom-green hover:bg-green-600 text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors">
+        ✏️ Completar Perfil
+      </a>
+    </div>
+  )}
 </div>
