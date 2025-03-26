@@ -1,8 +1,9 @@
 ---
 import { authenticate } from "../../../lib/auth";
 import Layout from "../../../layouts/DashboardLayout.astro";
-import { connectToDatabase } from "../../api/comunidad/mongodb";
-import { ObjectId } from "mongodb";
+import { supabase } from "../../../lib/supabase";
+import PostFooter from "../../../components/comunidad/PostFooter";
+import CommentSection from "../../../components/comunidad/CommentSection";
 
 // Obtener el ID del post de los parámetros
 const { id } = Astro.params;
@@ -13,71 +14,80 @@ if (redirect) {
     return Astro.redirect(redirect);
 }
 
-// Obtener datos del post
-let post = null;
-let error = null;
+// Obtener el post específico
+const { data: post } = await supabase
+  .from("comunidad")
+  .select("*")
+  .eq("id", id)
+  .single();
 
-try {
-  if (id) {
-    const { db } = await connectToDatabase();
-    post = await db.collection('posts').findOne({ _id: new ObjectId(id) });
-  }
-} catch (err) {
-  console.error("Error al obtener el post:", err);
-  error = "No se pudo cargar el post solicitado";
-}
-
-// Si no se encuentra el post, redirigir a la página de comunidad
 if (!post) {
-  return Astro.redirect('/comunidad');
+  return Astro.redirect("/comunidad");
 }
+
+// Verificar si el usuario ha dado like al post
+const { data: userLike } = await supabase
+  .from("post_likes")
+  .select("*")
+  .eq("post_id", id)
+  .eq("user_id", user.id)
+  .single();
+
+const hasLiked = !!userLike;
+
+
 ---
 
-<Layout title={post ? post.title : "Post no encontrado"}>
-  <div class="max-w-3xl mx-auto px-4 py-8">
-    {error && (
-      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        {error}
-      </div>
-    )}
-    
-    {post && (
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold mb-2">{post.title}</h1>
-          <div class="flex items-center text-sm text-gray-500 mb-4">
-            <a href={`/comunidad/farmers/${post.authorId}`} class="text-blue-600 hover:underline">
-              {post.authorName}
-            </a>
-            <span class="mx-2">·</span>
-            <a href={`/comunidad/category/${post.category}`} class="text-green-600 hover:underline">
-              {post.category}
-            </a>
-            <span class="mx-2">·</span>
-            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-          </div>
+<Layout title={post.title || "Post - Farmiemos"}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <article class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-6">
+        <h1 class="text-3xl font-bold mb-4">{post.title}</h1>
+        <div class="text-gray-600 mb-6">
+          {new Date(post.created_at).toLocaleDateString()}
         </div>
         
-        <div class="prose dark:prose-invert max-w-none">
-          <p>{post.content}</p>
-        </div>
-        
-        <hr class="my-6 border-gray-200 dark:border-gray-700" />
-        
-        <div class="mt-6">
-          <h3 class="text-lg font-semibold mb-4">Comentarios</h3>
-          <!-- Aquí puedes agregar un componente de comentarios -->
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-            Próximamente: sistema de comentarios
-          </div>
+        <div class="prose max-w-none">
+          {post.type === 'texto' && <p>{post.content}</p>}
+          {post.type === 'multimedia' && (
+            <img src={post.media_url} alt={post.title} class="w-full rounded-lg" />
+          )}
+          {post.type === 'enlace' && (
+            <a href={post.link_url} target="_blank" rel="noopener noreferrer" 
+               class="text-blue-600 hover:underline">
+              {post.link_url}
+            </a>
+          )}
+          {post.type === 'encuesta' && (
+            <div>
+              <h3 class="font-medium mb-4">{post.poll_question}</h3>
+              <div class="space-y-2">
+                {post.poll_options?.split(',').map((option) => (
+                  <button class="w-full p-3 text-left border rounded-lg hover:bg-gray-50">
+                    {option.trim()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    )}
-    
-    <div class="mt-4">
-      <a href="/comunidad" class="text-blue-600 hover:underline">
-        ← Volver a la comunidad
-      </a>
+      
+      <PostFooter 
+        client:load 
+        postId={post.id} 
+        initialLikesCount={post.likes_count} 
+        commentsCount={post.comments_count}
+        initialIsLiked={hasLiked}
+      />
+    </article>
+    <div id="comments">
+      <h2 class="text-2xl font-bold mb-4">Comentarios</h2>
+      <CommentSection 
+        client:load 
+        postId={post.id} 
+        initialComments={post.comments || []}
+      />
     </div>
   </div>
 </Layout>
