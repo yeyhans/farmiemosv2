@@ -1,0 +1,44 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import StrainInfo from '../../../components/db/StrainInfo';
+import { MongoClient, ObjectId } from 'mongodb';
+
+const { _id } = Astro.params;
+
+if (!_id) {
+  return Astro.redirect('/404');
+}
+
+// Validar que el ID sea un ObjectId válido
+try {
+  new ObjectId(_id);
+} catch (error) {
+  return Astro.redirect('/404');
+}
+
+// Obtener los datos iniciales de la cepa
+const client = new MongoClient(import.meta.env.MONGODB_URI_SEEDFINDER);
+
+try {
+  await client.connect();
+  const database = client.db('seedfinder');
+  const collection = database.collection('strains');
+  
+  const strain = await collection.findOne({ _id: new ObjectId(_id) });
+  
+  if (!strain) {
+    return Astro.redirect('/404');
+  }
+
+} catch (error) {
+  console.error('Error al obtener la cepa:', error);
+} finally {
+  await client.close();
+}
+---
+
+<Layout title="Detalles de la Cepa - Farmiemos">
+  <main class="container mx-auto px-4 py-8">
+    <StrainInfo client:load strainId={_id} />
+  </main>
+</Layout>

@@ -1,0 +1,71 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import BreederDetails from '../../../components/db/BreederDetails';
+import { MongoClient } from 'mongodb';
+
+export async function getStaticPaths() {
+    const client = new MongoClient(import.meta.env.MONGODB_URI_SEEDFINDER);
+    
+    try {
+        await client.connect();
+        const database = client.db('seedfinder');
+        const collection = database.collection('strains');
+
+        const breeders = await collection.distinct('Breeder');
+        
+        return breeders.map(breeder => ({
+            params: { breeder: breeder },
+            props: { breederName: breeder }
+        }));
+    } finally {
+        await client.close();
+    }
+}
+
+const { breederName } = Astro.props;
+
+// SEO metadata
+const title = `${breederName} - Catálogo de Cepas de Cannabis`;
+const description = `Explora el catálogo completo de cepas de cannabis de ${breederName}. Encuentra información detallada sobre genéticas, tiempos de floración y características.`;
+---
+<Layout title={title} description={description}>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-8">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="/db/breeders" class="text-gray-700 hover:text-green-600">
+                            Breeders
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-gray-400 font-medium">{breederName}</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+            
+            <h1 class="mt-4 text-4xl font-bold text-gray-900">
+                Catálogo de {breederName}
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Explora todas las cepas disponibles de este breeder
+            </p>
+        </div>
+
+        <BreederDetails client:load breederName={breederName} />
+    </div>
+</Layout>
+
+<style>
+    h1 {
+        background: linear-gradient(to right, #22c55e, #16a34a);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style> 

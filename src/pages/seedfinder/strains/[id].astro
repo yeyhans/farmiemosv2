@@ -48,6 +48,7 @@ async function getStrainLineage(strain: string, breeder: string) {
     // Hacemos la petición a nuestra API de linaje
     const response = await fetch(`${import.meta.env.PUBLIC_SITE_URL}/api/database/seedfinder/get-strainlinage?strain=${strain}&breeder=${breeder}`);
     const data = await response.json();
+    console.log('Datos del linaje obtenidos:', data);
     return data;
   } catch (error) {
     console.error("Error al obtener datos del linaje:", error);
@@ -75,7 +76,7 @@ const breederName = strainInfo.success ? strainInfo.data.breeder : (parsedId?.br
 <Layout title={`${strainName} - ${breederName} - Información de Cepa de Cannabis`}>
   <div class="container mx-auto px-4 py-8">
     <div class="mb-6">
-      <a href={`/database/seedfinder/breeder/${parsedId?.breeder}`} class="inline-flex items-center text-green-700 hover:text-green-900">
+      <a href={`/seedfinder/breeder/${parsedId?.breeder}`} class="inline-flex items-center text-green-700 hover:text-green-900">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
         </svg>

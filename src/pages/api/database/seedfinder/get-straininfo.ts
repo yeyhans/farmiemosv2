@@ -54,22 +54,7 @@ export const GET: APIRoute = async ({ url }) => {
       const aroma = document.querySelector('#degustation .card:nth-of-type(2)')?.textContent?.trim() || '';
       const taste = document.querySelector('#degustation .card:nth-of-type(3)')?.textContent?.trim() || '';
       
-      // Extraer información del linaje - versión mejorada
-      let lineageData = [];
-      const lineageUl = document.querySelector('#lineage .card ul');
-      if (lineageUl) {
-        lineageData = Array.from(lineageUl.querySelectorAll('li')).map(li => {
-          return {
-            name: li.textContent?.trim() || '',
-            level: parseInt(li.getAttribute('class')?.replace('level-', '') || '0')
-          };
-        });
-      }
-      
-      // Obtener también el HTML para referencia
-      const lineageContainer = document.querySelector('#lineage .card div');
-      const lineageHtml = lineageContainer ? lineageContainer.outerHTML : '';
-      
+
       // Extraer URLs de imágenes si están disponibles
       const imageUrls = Array.from(document.querySelectorAll('.gallery img')).map(img => {
         return (img as HTMLImageElement).src;
@@ -96,8 +81,6 @@ export const GET: APIRoute = async ({ url }) => {
         effect,
         aroma,
         taste,
-        lineageData,
-        lineageHtml,
         imageUrls,
         characteristics,
         infoCardHtml
