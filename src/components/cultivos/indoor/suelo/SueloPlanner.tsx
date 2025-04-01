@@ -82,13 +82,116 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
     { id: 'perlita', nombre: 'Perlita', emoji: '⚪', descripcion: 'Mejora aireación' },
     { id: 'vermiculita', nombre: 'Vermiculita', emoji: '🔘', descripcion: 'Retiene nutrientes y agua' },
     { id: 'bokashi', nombre: 'Bokashi', emoji: '🍱', descripcion: 'Aporte de nutrientes fermentados y microorganismos' },
-    { id: 'turba', nombre: 'Turba', emoji: '🟤', descripcion: 'Mejora la retención de humedad' },
-    { id: 'ceniza', nombre: 'Ceniza', emoji: '🔥', descripcion: 'Aporta minerales y regula pH' },
-    { id: 'guano', nombre: 'Guano', emoji: '🦇', descripcion: 'Fuente natural de nitrógeno y fósforo' },
-    { id: 'biochar', nombre: 'Biochar', emoji: '♨️', descripcion: 'Mejora la estructura del suelo y la retención de carbono' },
-    { id: 'otro', nombre: 'Otro', emoji: '➕', descripcion: 'Agregar componente personalizado' },
+    { id: 'turba', emoji: '🟤', nombre: 'Turba', descripcion: 'Mejora la retención de humedad' },
+    { id: 'ceniza', emoji: '🔥', nombre: 'Ceniza', descripcion: 'Aporta minerales y regula pH' },
+    { id: 'guano', emoji: '🦇', nombre: 'Guano', descripcion: 'Fuente natural de nitrógeno y fósforo' },
+    { id: 'biochar', emoji: '♨️', nombre: 'Biochar', descripcion: 'Mejora la estructura del suelo y la retención de carbono' },
+    { id: 'otro', emoji: '➕', nombre: 'Otro', descripcion: 'Agregar componente personalizado' },
 ];
 
+// Agregar la lista de componentes especializados después de componentesDisponibles
+const componentesEspecializados = [
+  { id: 'arena', emoji: '🪨', nombre: 'Arena', descripcion: 'Mejora el drenaje y evita compactación' },
+  { id: 'arcilla', emoji: '🏔️', nombre: 'Arcilla', descripcion: 'Aumenta retención de agua (en exceso compacta)' },
+  { id: 'zeolita', emoji: '💎', nombre: 'Zeolita', descripcion: 'Libera nutrientes y agua gradualmente' },
+  { id: 'turbaRubia', emoji: '🌿', nombre: 'Turba rubia', descripcion: 'Acidifica el suelo (ideal para plantas acidófilas)' },
+  { id: 'salesMinerales', emoji: '🧂', nombre: 'Sales minerales (NPK)', descripcion: 'Aporte rápido de nutrientes esenciales' },
+  { id: 'microorganismos', emoji: '🦠', nombre: 'Microorganismos eficientes (EM)', descripcion: 'Mejoran la salud del suelo' },
+  { id: 'teCompost', emoji: '🍵', nombre: 'Té de compost', descripcion: 'Líquido rico en microbios beneficiosos' },
+  { id: 'cortezaPino', emoji: '🌲', nombre: 'Corteza de pino', descripcion: 'Mejora drenaje (ideal para orquídeas)' },
+  { id: 'hidrogel', emoji: '🌊', nombre: 'Hidrogel', descripcion: 'Polímeros que retienen agua' },
+  { id: 'aserrin', emoji: '🪵', nombre: 'Aserrín compostado', descripcion: 'Materia orgánica (evitar fresco)' },
+  { id: 'estiercol', emoji: '💩', nombre: 'Estiércol compostado', descripcion: 'Fuente rica en nutrientes (debe estar curado)' },
+  { id: 'micorrizas', emoji: '🦠', nombre: 'Micorrizas', descripcion: 'Hongos que mejoran absorción de raíces' },
+  { id: 'lombricomposta', emoji: '🌱', nombre: 'Lombricomposta', descripcion: 'Humus enriquecido por lombrices' },
+  { id: 'residuosVerdes', emoji: '🌿', nombre: 'Residuos verdes', descripcion: 'Materia orgánica en descomposición' },
+  { id: 'carbonActivado', emoji: '🪴', nombre: 'Carbón activado', descripcion: 'Filtra impurezas en sustratos' },
+  { id: 'harinaRocas', emoji: '🌱', nombre: 'Harina de rocas', descripcion: 'Aporta minerales traza' },
+  { id: 'conchas', emoji: '🐚', nombre: 'Conchas trituradas', descripcion: 'Fuente de calcio (regula pH)' }
+];
+
+// Agregar estados necesarios después de los estados existentes
+const [searchTerm, setSearchTerm] = useState('');
+const [componentesAgregados, setComponentesAgregados] = useState<typeof componentesDisponibles[0][]>([]);
+
+// Agregar función para manejar la adición de componentes especializados
+const agregarComponenteEspecializado = (componente: typeof componentesDisponibles[0]) => {
+  if (!componentesAgregados.some(c => c.id === componente.id)) {
+    setComponentesAgregados(prev => [...prev, componente]);
+  }
+  setComponentesSeleccionados(prev => [...prev, componente.id]);
+  setComponentesSuelo(prev => ({
+    ...prev,
+    [componente.id]: 0
+  }));
+  setShowOtroModal(false);
+  setSearchTerm('');
+};
+
+// Modificar el modal de "Otro" componente
+const renderOtroModal = () => {
+  if (!showOtroModal) return null;
+
+  const componentesFiltrados = componentesEspecializados.filter(comp => 
+    comp.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    comp.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Componentes Especializados</h3>
+          <button
+            onClick={() => {
+              setShowOtroModal(false);
+              setSearchTerm('');
+            }}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Buscar componente..."
+            className="w-full px-3 py-2 border rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="overflow-y-auto flex-1 pr-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {componentesFiltrados.map((componente) => (
+              <button
+                key={componente.id}
+                onClick={() => agregarComponenteEspecializado(componente)}
+                className={`
+                  flex items-start p-2 rounded-lg border transition-colors text-left
+                  ${componentesAgregados.some(c => c.id === componente.id)
+                    ? 'bg-green-50 border-green-500'
+                    : 'hover:bg-green-50 hover:border-green-300'}
+                `}
+              >
+                <span className="text-xl mr-2 mt-1">{componente.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{componente.nombre}</div>
+                  <div className="text-xs text-gray-500 line-clamp-2">{componente.descripcion}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modificar la lista de componentes disponibles para incluir los componentes agregados
+const todosLosComponentes = [...componentesDisponibles, ...componentesAgregados];
 
   // Cargar strains existentes
   useEffect(() => {
@@ -222,6 +325,26 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
     setTimeout(() => setShowAlert(false), 3000); // La alerta desaparecerá después de 3 segundos
   };
 
+    // Función para formatear litros
+    const formatearLitros = (valor: number): string => {
+      // Si el valor es entero (ejemplo: 10.0), mostrar sin decimales
+      if (Number.isInteger(valor)) {
+        return `${Math.round(valor)}L`;
+      }
+      // Si tiene decimales, redondear a un decimal
+      return `${valor.toFixed(1)}L`;
+    };
+  
+    // Función para formatear porcentajes
+    const formatearPorcentaje = (valor: number): string => {
+      // Si el valor es entero (ejemplo: 10.0), mostrar sin decimales
+      if (Number.isInteger(valor)) {
+        return `${Math.round(valor)}`;
+      }
+      // Si tiene decimales, redondear a un decimal
+      return `${valor.toFixed(1)}`;
+    };
+
   // Función para validar el total de porcentajes
   const validarTotal = (porcentajes: Record<string, number>) => {
     const total = Object.values(porcentajes).reduce((a, b) => a + b, 0);
@@ -284,7 +407,7 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
       <div>
         <h3 className="text-lg font-medium mb-4">Selecciona los componentes del suelo</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {componentesDisponibles.map((componente) => (
+          {todosLosComponentes.map((componente) => (
             <button
               key={componente.id}
               onClick={() => {
@@ -357,7 +480,7 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {componentesSeleccionados.map((componenteId) => {
-              const componente = componentesDisponibles.find(c => c.id === componenteId);
+              const componente = todosLosComponentes.find(c => c.id === componenteId);
               const valor = medidaSeleccionada === 'litros' 
                 ? componentesLitros[componenteId] || 0
                 : componentesSuelo[componenteId] || 0;
@@ -485,48 +608,7 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
         </div>
       )}
 
-      {/* Modal para "Otro" componente */}
-      {showOtroModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-medium mb-4">Agregar otro componente</h3>
-            <input
-              type="text"
-              placeholder="Nombre del componente"
-              value={otroComponente}
-              onChange={(e) => setOtroComponente(e.target.value)}
-              className="w-full rounded-md border-gray-300 mb-4"
-            />
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowOtroModal(false);
-                  setOtroComponente('');
-                }}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  if (otroComponente.trim()) {
-                    setComponentesSeleccionados(prev => [...prev, 'otro']);
-                    setComponentesSuelo(prev => ({
-                      ...prev,
-                      otro: { nombre: otroComponente, porcentaje: 0 }
-                    }));
-                  }
-                  setShowOtroModal(false);
-                  setOtroComponente('');
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                Agregar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderOtroModal()}
     </div>
   );
 
@@ -536,7 +618,7 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
         <div className="text-xs">
           <div className="font-medium">🏭 Sustrato</div>
           <div className="text-gray-600">Marca: {config.marca}</div>
-          <div className="text-gray-600">{config.cantidad}L</div>
+          <div className="text-gray-600">{formatearLitros(config.cantidad)}</div>
         </div>
       );
     } else {
@@ -545,12 +627,12 @@ function SueloPlanner({ cultivoId, ambiente }: SueloPlannerProps) {
           <div className="font-medium">🌍 Suelo Natural</div>
           <div className="flex flex-wrap gap-1 mt-1">
             {Object.entries(config.composicion || {}).map(([componente, valor]) => {
-              const componenteInfo = componentesDisponibles.find(c => c.id === componente);
+              const componenteInfo = todosLosComponentes.find(c => c.id === componente);
               if (!valor) return null;
               return (
                 <div key={componente} className="bg-gray-100 rounded px-1 py-0.5 flex items-center">
                   <span>{componenteInfo?.emoji}</span>
-                  <span className="ml-1">{valor}%</span>
+                  <span className="ml-1">{formatearPorcentaje(valor)}%</span>
                 </div>
               );
             })}

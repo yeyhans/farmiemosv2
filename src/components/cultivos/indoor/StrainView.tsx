@@ -77,8 +77,6 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
     const [macetasParaActualizar, setMacetasParaActualizar] = useState<Maceta[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedPlant, setSelectedPlant] = useState<Maceta | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedPlant, setEditedPlant] = useState<Maceta | null>(null);
     const [currentScaleFactor, setCurrentScaleFactor] = useState(1);
 
     useEffect(() => {
@@ -295,46 +293,6 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
         }
     }, [cultivoId]);
 
-    const handleEdit = () => {
-        setIsEditing(true);
-        setEditedPlant(selectedPlant);
-    };
-
-    const handleSave = async () => {
-        if (!editedPlant) return;
-
-        try {
-            const updatedMacetas = macetas.map(maceta => 
-                maceta.id === editedPlant.id ? editedPlant : maceta
-            );
-
-            const response = await fetch('/api/cultivos/config-strain', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    cultivoId: cultivoId,
-                    strains: updatedMacetas
-                })
-            });
-
-            if (!response.ok) throw new Error('Error al guardar los cambios');
-
-            setMacetas(updatedMacetas);
-            setSelectedPlant(editedPlant);
-            setIsEditing(false);
-            setEditedPlant(null);
-        } catch (error) {
-            console.error('Error al guardar los cambios:', error);
-        }
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setEditedPlant(null);
-    };
-
     return (
         <div className="mt-8 flex flex-col lg:flex-row">
             {isLoading ? (
@@ -434,60 +392,12 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                         </a>
                                     </div>
                                 ) : (
-                                    <div className="absolute top-4 right-4 space-x-2">
-                                        {!isEditing ? (
-                                            <button 
-                                                onClick={handleEdit}
-                                                className="text-white hover:text-gray-200"
-                                            >
-                                                ✏️
-                                            </button>
-                                        ) : (
-                                            <>
-                                                <button 
-                                                    onClick={handleSave}
-                                                    className="text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded"
-                                                >
-                                                    ✓
-                                                </button>
-                                                <button 
-                                                    onClick={handleCancel}
-                                                    className="text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded"
-                                                >
-                                                    ✕
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                                <h3 className="text-base font-semibold mb-4">Información de la Planta</h3>
-                                <div className="text-xs space-y-2">
-                                    <p>
-                                        <span className="font-medium">ID:</span> {selectedPlant.id + 1}
-                                    </p>
-                                    {isEditing ? (
-                                        <>
-                                            <div>
-                                                <span className="font-medium">Nombre:</span>{' '}
-                                                <input
-                                                    type="text"
-                                                    value={editedPlant?.nombre || ''}
-                                                    onChange={(e) => setEditedPlant(prev => prev ? {...prev, nombre: e.target.value} : null)}
-                                                    className="border rounded px-2 py-1 ml-1"
-                                                />
-                                            </div>
-                                            <div>
-                                                <span className="font-medium">Cepa:</span>{' '}
-                                                <input
-                                                    type="text"
-                                                    value={editedPlant?.nombreBase || ''}
-                                                    onChange={(e) => setEditedPlant(prev => prev ? {...prev, nombreBase: e.target.value} : null)}
-                                                    className="border rounded px-2 py-1 ml-1"
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
+                                    <>
+                                        <h3 className="text-base font-semibold mb-4">Información de la Planta</h3>
+                                        <div className="text-xs space-y-2">
+                                            <p>
+                                                <span className="font-medium">ID:</span> {selectedPlant.id + 1}
+                                            </p>
                                             <p>
                                                 <span className="font-medium">Nombre:</span>{' '}
                                                 {selectedPlant.nombre || 'Sin nombre'}
@@ -498,20 +408,17 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                                     {selectedPlant.nombreBase}
                                                 </p>
                                             )}
-                                        </>
-                                    )}
-                                    {selectedPlant.color && (
-                                        <>
-                                            
-                                            <a
-                                                href={`/cultivo/${cultivoId}/indoor/strains/${selectedPlant.id}`}
-                                                className="mt-4 block w-full bg-custom-green hover:bg-green-600 text-white text-center py-2 px-4 rounded transition-colors"
-                                            >
-                                                Ver detalles de la cepa
-                                            </a>
-                                        </>
-                                    )}
-                                </div>
+                                            {selectedPlant.color && (
+                                                <a
+                                                    href={`/cultivo/${cultivoId}/indoor/strains/${selectedPlant.id}`}
+                                                    className="mt-4 block w-full bg-custom-green hover:bg-green-600 text-white text-center py-2 px-4 rounded transition-colors"
+                                                >
+                                                    Ver detalles de la cepa
+                                                </a>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <div className="text-xs bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-500 text-center">

@@ -2,7 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import { supabase } from '../../../lib/supabase';
 import { authenticate } from '../../../lib/auth';
-import SueloPlanner from '../../../components/cultivos/indoor/SueloPlanner';
+import SueloPlanner from '../../../components/cultivos/indoor/suelo/SueloPlanner';
 
 const { id } = Astro.params;
 const { user } = await authenticate(Astro);
