@@ -64,11 +64,13 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
             plantasPorColumna
         };
     });
-    const [macetas, setMacetas] = useState<Maceta[]>(
+    const [macetas, setMacetas] = useState<Maceta[]>(() => 
         Array.from({ length: formData.numPlantas }, (_, i) => ({
             id: i,
             nombre: '',
-            selected: false
+            selected: false,
+            color: undefined,
+            nombreBase: undefined
         }))
     );
     const [showModal, setShowModal] = useState(false);
@@ -251,7 +253,6 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
 
         setMacetas(nuevasMacetas);
 
-        // Guardar en la base de datos
         try {
             const response = await fetch('/api/cultivos/config-strain', {
                 method: 'PUT',
@@ -270,12 +271,11 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
 
             // Mostrar alerta de éxito
             setShowSuccessAlert(true);
-            setTimeout(() => setShowSuccessAlert(false), 3000); // La alerta desaparecerá después de 3 segundos
+            setTimeout(() => setShowSuccessAlert(false), 3000);
         } catch (error) {
             console.error('Error al guardar las plantas:', error);
         }
 
-        setShowModal(false);
         setShowConfirmModal(false);
         setMacetasParaActualizar([]);
         setNombreBase('');
@@ -465,12 +465,118 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                             })}                    
                         </div>
                     </div>
+
+                    {/* Formulario de nombrado cuando hay selección */}
+                    {macetas.some(maceta => maceta.selected) && !editingGroup && (
+                        <div className="mt-4 bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Nombrar plantas seleccionadas
+                                </h3>
+                                <span className="text-sm text-green-600 font-medium">
+                                    {macetas.filter(m => m.selected).length} plantas seleccionadas
+                                </span>
+                            </div>
+
+                            {/* Lista de plantas seleccionadas */}
+                            <div className="mb-4 bg-gray-50 rounded-lg p-3">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Plantas seleccionadas:</h4>
+                                <div className="space-y-2 max-h-32 overflow-y-auto">
+                                    {macetas.filter(m => m.selected).map((maceta, index) => (
+                                        <div key={maceta.id} className="flex items-center justify-between text-sm bg-white p-2 rounded shadow-sm">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-800 rounded-full font-medium">
+                                                    {index + 1}
+                                                </span>
+                                                <div>
+                                                    {maceta.nombre ? (
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-900">{maceta.nombre}</span>
+                                                            <span className="text-xs text-red-500">
+                                                                Se sobreescribirá el nombre actual
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-500 italic">Sin nombre asignado</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => toggleSeleccion(maceta.id)}
+                                                className="text-gray-400 hover:text-gray-600"
+                                                title="Quitar de la selección"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="nombreBase" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Nombre base para el grupo
+                                    </label>
+                                    <div className="mt-1">
+                                        <input
+                                            id="nombreBase"
+                                            type="text"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-sm"
+                                            placeholder="Ingresa el nombre base"
+                                            value={nombreBase}
+                                            onChange={(e) => setNombreBase(e.target.value)}
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Se añadirá numeración automática (n1, n2, n3, etc.)
+                                    </p>
+                                    {nombreBase.trim() && (
+                                        <div className="mt-2 text-sm text-gray-600">
+                                            <p>Vista previa:</p>
+                                            <div className="mt-1 flex gap-2 flex-wrap">
+                                                {macetas.filter(m => m.selected).map((_, index) => (
+                                                    <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        {`${nombreBase} n${index + 1}`}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex space-x-3 pt-2">
+                                    <button 
+                                        onClick={() => {
+                                            setMacetas(macetas.map(maceta => ({...maceta, selected: false})));
+                                            setNombreBase('');
+                                        }}
+                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                    >
+                                        Cancelar selección
+                                    </button>
+                                    <button 
+                                        onClick={nombrarSeleccionadas}
+                                        disabled={!nombreBase.trim()}
+                                        className={`flex-1 px-4 py-2 rounded-md text-sm font-medium text-white 
+                                            ${nombreBase.trim() 
+                                                ? 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500' 
+                                                : 'bg-green-400 cursor-not-allowed'}`}
+                                    >
+                                        Nombrar plantas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
             <div className="w-full lg:w-1/4 lg:ml-4 mt-4 lg:mt-0 pb-20">
-                <h3 className="text-lg font-bold mb-4 px-2 text-center whitespace-nowrap overflow-hidden text-ellipsis">Grupos de Plantas</h3>
-                
+                <h3 className="text-lg font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis">Grupos de Plantas</h3>
+                <p className="text-sm text-gray-500 px-2 text-center">
+                    {Object.keys(gruposMacetas).length} grupos registrados
+                </p>
                 {Object.keys(gruposMacetas).length === 0 ? (
                     <div className="text-center p-4 bg-gray-50 rounded-lg text-gray-500">
                         No hay grupos de plantas definidos
@@ -492,28 +598,19 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                                                 color: '#000',
                                             }}
                                         >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="text-base font-bold truncate max-w-[80%]">{nombreBase}</h4>
-                                                <button
-                                                    onClick={() => startEditingGroup(nombreBase)}
-                                                    className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-md hover:bg-gray-100 active:bg-gray-200 transition-colors flex-shrink-0"
-                                                    title="Editar grupo"
-                                                    aria-label="Editar grupo"
-                                                >
-                                                    <span className="text-lg">✏️</span>
-                                                </button>
-                                            </div>
-                                            
                                             <div className="bg-white bg-opacity-80 px-3 py-2 rounded-md flex-grow flex flex-col">
-                                                <p className="text-xs font-medium text-gray-700">
-                                                    <span className="font-semibold">Plantas:</span> 
-                                                    <span className="ml-1">{macetas.length}</span>
-                                                </p>
-                                                <div className="mt-1 flex flex-wrap gap-1 overflow-y-auto max-h-[80px]">
+                                                <h3 className="text-sm font-medium text-gray-700">{nombreBase}</h3>
+                                                <div className="mt-3 flex flex-wrap gap-2 overflow-y-auto max-h-[80px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-1">
                                                     {macetas.map(m => (
-                                                        <span key={m.id} className="inline-flex items-center justify-center bg-white px-2 py-0.5 text-xs rounded-full shadow-sm">
-                                                            {m.nombre.split('n').pop()}
-                                                        </span>
+                                                        <a
+                                                            key={m.id}
+                                                            href={`/cultivo/${cultivoId}/indoor/strains/${m.id}`}
+                                                            className="group relative inline-flex items-center justify-center bg-white/95 hover:bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:text-gray-900 rounded-lg ring-1 ring-gray-200 hover:ring-gray-300 shadow-sm transition-all duration-200 ease-in-out"
+                                                        >
+                                                            <span className="mr-1 text-xs text-gray-400 font-normal">{nombreBase}</span>
+                                                            <span className="font-semibold">{m.nombre.split('n').pop()}</span>
+                                                            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 bg-gradient-to-r from-green-50 to-transparent transition-opacity duration-200"/>
+                                                        </a>
                                                     ))}
                                                 </div>
                                             </div>
@@ -570,102 +667,6 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                 )}
             </div>
 
-            {/* Banner para nombrar plantas cuando hay selección - Versión móvil mejorada */}
-            {macetas.some(maceta => maceta.selected) && !editingGroup && (
-                <div className="fixed bottom-0 left-0 right-0 bg-green-600 text-white py-2 px-3 z-40 shadow-lg">
-                    <span className="font-semibold text-center block mb-2">
-                        Plantas seleccionadas: {macetas.filter(m => m.selected).length}
-                    </span>
-                    <div className="flex flex-col w-full">
-                        <input
-                            type="text"
-                            className="w-full mb-2 px-3 py-1.5 text-green-600 rounded"
-                            placeholder="Nombre base"
-                            value={nombreBase}
-                            onChange={(e) => setNombreBase(e.target.value)}
-                        />
-                        <div className="flex justify-between w-full space-x-2">
-                            <button 
-                                onClick={() => {
-                                    setMacetas(macetas.map(maceta => ({...maceta, selected: false})));
-                                    setNombreBase('');
-                                }} 
-                                className="px-4 py-2 bg-white text-green-600 rounded font-medium hover:bg-gray-100 flex-1"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={nombrarSeleccionadas} 
-                                className="px-4 py-2 bg-white text-green-600 rounded font-medium hover:bg-gray-100 flex-1"
-                                disabled={!nombreBase.trim()}
-                            >
-                                Nombrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Banner de edición de grupo - Versión móvil mejorada */}
-            {editingGroup && (
-                <div className="fixed bottom-0 left-0 right-0 bg-green-600 text-white py-2 px-3 z-40 shadow-lg">
-                    <span className="font-semibold text-center block mb-2">
-                        Editando grupo: {editingGroup}
-                    </span>
-                    <div className="flex justify-between w-full space-x-2">
-                        <button 
-                            onClick={() => {
-                                setEditingGroup(null);
-                                setMacetas(macetas.map(maceta => ({...maceta, selected: false})));
-                            }} 
-                            className="px-4 py-2 bg-white text-green-600 rounded font-medium hover:bg-gray-100 flex-1"
-                        >
-                            Cancelar
-                        </button>
-                        <button 
-                            onClick={finishEditing} 
-                            className="px-4 py-2 bg-white text-green-600 rounded font-medium hover:bg-gray-100 flex-1"
-                        >
-                            Guardar
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-                        <h3 className="text-lg font-bold mb-4">Nombrar Macetas Seleccionadas</h3>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nombre base para las plantas
-                            </label>
-                            <input
-                                type="text"
-                                className="border p-2 rounded w-full"
-                                placeholder="Nombre base para las plantas"
-                                value={nombreBase}
-                                onChange={(e) => setNombreBase(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={nombrarSeleccionadas}
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                            >
-                                Guardar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {showConfirmModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
@@ -716,7 +717,6 @@ export const StrainPlanner: React.FC<Props> = ({ formData: initialFormData, cult
                 </div>
             )}
 
-            {/* Alerta de éxito */}
             {showSuccessAlert && (
                 <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
                     <div className="flex items-center space-x-2">
